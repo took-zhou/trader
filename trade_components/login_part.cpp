@@ -9,6 +9,7 @@
 #include <time.h>
 #include <vector>
 #include <stdlib.h>
+#include <unordered_map>
 
 extern GlobalSem globalSem;
 
@@ -30,14 +31,14 @@ namespace {
         vector<string> res;
         if(str == "")
             return res;
-        //在字符串末尾也加入分隔符，方便截取最后一殄1�7�1�7
+        //在字符串末尾也加入分隔符，方便截取最后一殄1�7�1�7
         string strs = str + pattern;
         size_t pos = strs.find(pattern);
         while(pos != strs.npos)
         {
             string temp = strs.substr(0, pos);
             res.push_back(temp);
-            //去掉已分割的字符丄1�7�1�7在剩下的字符串中进行分割
+            //去掉已分割的字符丄1�7�1�7在剩下的字符串中进行分割
             strs = strs.substr(pos+1, strs.size());
             pos = strs.find(pattern);
         }
@@ -77,9 +78,17 @@ namespace {
         }
         return false;
     }
-
+    unordered_map<string,int> logMode = {
+            {"7x24",  0},
+            {"normal",1}
+    };
     bool isDuringTradeTime()
     {
+        string mode = getConfig("trade", "LoginMode");
+        if(logMode.at(string(mode.c_str())) == 0)
+        {
+            return true;
+        }
         string local_time = getLogInSystemLocalTime();
 
         vector<string> splitedTimeStr = splitString(local_time, string(" "));
@@ -126,7 +135,7 @@ bool LogInPart::logIn()
     ROLE(CtpClient).init();
     auto& traderHandle= ROLE(CtpClient).sh;
     auto* pUserApi =  ROLE(CtpClient).pUserApi;
-    pUserApi->Init();    //连接交易扄1�7
+    pUserApi->Init();    //连接交易扄1�7
     sem_wait(&globalSem.sem_login);       //等待连接成功 // @suppress("Function cannot be resolved")
     WARNING_LOG("hai********init ok");
 
@@ -144,7 +153,7 @@ bool LogInPart::logIn()
     sem_wait(&globalSem.sem_login); // @suppress("Function cannot be resolved")
     WARNING_LOG("hai********ReqUserLogin ok");
 
-    INFO_LOG("接受到了sem_login信号, 登陆成功＄1�7"); // @suppress("Invalid arguments")
+    INFO_LOG("接受到了sem_login信号, login ctp ok!"); // @suppress("Invalid arguments")
     INFO_LOG("trading day:%s",pUserApi->GetTradingDay()); // @suppress("Invalid arguments")
     isLogIN = true;
     while(true)
@@ -170,7 +179,7 @@ bool LogInPart::logOut()
     RequestID++;
     sem_wait(&globalSem.sem_logout);
     ROLE(CtpClient).release();
-    INFO_LOG("接受到了sem_logout信号, lot out ok!");
+    INFO_LOG("接受到了sem_logout信号, log out ok!");
     isLogIN = false;
     return true;
 }

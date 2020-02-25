@@ -15,7 +15,7 @@ bool OrderStates::insertState(const std::string& key, const char& state)
         }
     }
     orderKey2StateMap.at(key)->push_back(state);
-    INFO_LOG("new order state add success");
+    INFO_LOG("new order state [%c] add success",state);
     return true;
 }
 
@@ -40,7 +40,7 @@ bool OrderStates::insertOrderKey(std::string key)
     }
     charVector* newKey = new charVector();
     orderKey2StateMap.insert({key, newKey});
-    INFO_LOG("new order key add success");
+    INFO_LOG("new order key [%s] add success",key.c_str());
     return true;
 }
 
@@ -92,7 +92,6 @@ size_t OrderStates::size()
 {
     return (size_t)orderKey2StateMap.size();
 }
-
 
 namespace orderkey
 {

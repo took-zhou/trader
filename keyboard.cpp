@@ -49,10 +49,18 @@ int scanKeyboard()
 }
 //这个方法就可以，返回值是该键的ASCII码值，不需要回车的，
 
+
+namespace
+{
+    void showState(const Trader& trader)
+    {
+        INFO_LOG("router login state:%s", trader.ROLE(SocketClient).isRouterConnected ? "true":"false");
+        INFO_LOG("ctp login state:%s\n", trader.ROLE(LogInPart).isLogIN ? "true":"false");
+    }
+}
 void monitorKeyBoard()
 {
     std::string command;
-    Trader& trader = Trader::getInstance();
     while (true)
     {
         INFO_LOG("command read is ready......");
@@ -72,23 +80,31 @@ void monitorKeyBoard()
             exit(0);
             return;
         }
-        if(splitedStr.at(0) == string("showorders"))
+        if(splitedStr.at(0) == string("showOrders"))
         {
+            Trader& trader = Trader::getInstance();
             auto& orderState = OrderStates::getInstance();
             orderState.showAllOrderStates();
             continue;
         }
         if(splitedStr.at(0) == string("query"))
         {
+            Trader& trader = Trader::getInstance();
             trader.ROLE(InfoShow).infoShowTest(command);
             continue;
         }
+        if(splitedStr.at(0) == string("showStates"))
+       {
+           Trader& trader = Trader::getInstance();
+           showState(trader);
+           continue;
+       }
         if(splitedStr.at(0) == string("help"))
         {
-            INFO_LOG("%s\n"," quit\n showorders\n query+instrumentID+exchangeId");
+            INFO_LOG("%s\n"," quit\n showorders\n query+instrumentID+exchangeId\n showStates");
             continue;
         }
 
-        ERROR_LOG("can not find the command:%s",splitedStr.at(0).c_str());
+        ERROR_LOG("Invalid command:%s",splitedStr.at(0).c_str());
     }
 }

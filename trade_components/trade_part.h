@@ -9,6 +9,8 @@
 #include "socket/socketClient.h"
 #include "ctpClient.h"
 #include "trade_components/trader_commom.h"
+#include "coroutine.h"
+#include <atomic>
 
 using json = nlohmann::json;
 enum InsertResult
@@ -19,10 +21,11 @@ enum InsertResult
 
 struct TradePart
 {
-    virtual void handleTradeMsg(const TradeMsgHead& msgHead);
+    TradePart();
+    virtual void handleTradeMsg(const json& msgBody);
 
     virtual bool handleMsgFromJsonFile();
-    bool insertOrderByMsg(const int socketfd, const TradeMsgHead& msgHead);
+    bool insertOrderByMsg(const json& msgBody);
     bool sendResult(InsertResult result);
 
 private:
@@ -42,6 +45,8 @@ public:
     USE_ROLE(SocketClient);
     USE_ROLE(CtpClient);
     USE_ROLE(Trader_Info);
+
+
 };
 
 #endif

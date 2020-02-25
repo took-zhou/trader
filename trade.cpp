@@ -17,11 +17,12 @@
 #include "trade_components/orderstates.h"
 #include <iostream>
 #include <mutex>
+#include <atomic>
+#include <unistd.h>
 
 std::mutex mtx;
 int main() {
 
-    /**********键盘监控zxc联按退出整个程序************/
     std::thread keyboardMonitor(monitorKeyBoard); // @suppress("Type cannot be resolved")
     Trader& trader = Trader::getInstance();
 //    if( atoi(getConfig("trade","dbgSwitch").c_str()) == 0)
@@ -34,7 +35,7 @@ int main() {
     //t.detach();
     t.join();
 
-
-
     return 0;
 }
+
+

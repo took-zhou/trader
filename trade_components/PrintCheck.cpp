@@ -6,6 +6,14 @@ constexpr const char* ORDERNAME = "order_1";
 }
 void PintCheck::printOrderInfo(const CThostFtdcInputOrderField& order, const string& orderName)
 {
+    string direction;
+    direction.push_back(order.Direction);
+    string forceCloseReason;
+    forceCloseReason.push_back(order.ForceCloseReason);
+    string orderPriceType;
+    orderPriceType.push_back(order.OrderPriceType);
+    string timeCondition;
+    timeCondition.push_back(order.TimeCondition);
     json jorder ={
             {orderName.c_str(),{
                     {"BrokerID",    order.BrokerID},
@@ -24,11 +32,11 @@ void PintCheck::printOrderInfo(const CThostFtdcInputOrderField& order, const str
                     {"MacAddress",  order.MacAddress},
 
                     {"InstrumentID",    order.InstrumentID},
-                    {"Direction",       order.Direction},
+                    {"Direction",       direction},
                     {"CombOffsetFlag",  order.CombOffsetFlag},
                     {"LimitPrice",      order.LimitPrice},
-                    {"OrderPriceType",  order.OrderPriceType},
-                    {"TimeCondition",   order.TimeCondition},
+                    {"OrderPriceType",  orderPriceType},
+                    {"TimeCondition",   timeCondition},
                     {"ContingentCondition",order.ContingentCondition},
                     {"MinVolume",           order.MinVolume},
                     {"StopPrice",           order.StopPrice},
@@ -38,7 +46,7 @@ void PintCheck::printOrderInfo(const CThostFtdcInputOrderField& order, const str
 
                     {"CurrencyID",      order.CurrencyID},
                     {"UserForceClose",  order.UserForceClose},
-                    {"ForceCloseReason",order.ForceCloseReason},
+                    {"ForceCloseReason",forceCloseReason},
                     {"IsAutoSuspend",   order.IsAutoSuspend},
                     {"IsSwapOrder",     order.IsSwapOrder},
                     }

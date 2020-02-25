@@ -61,18 +61,18 @@ namespace
 }
 
 
-void HandleSel::tradeHandle(const TradeMsgHead& msgHead, void* __this)
+void HandleSel::tradeHandle(const json& msgBody, void* __this)
 {
 
     DEBUG_LOG("tradeHandle reach");
     TradePart* _this = (TradePart*)__this;
-    _this->handleTradeMsg(msgHead);
+    _this->handleTradeMsg(msgBody);
 }
 
-void HandleSel::marketHandle(const TradeMsgHead& msgHead, void* __this)
+void HandleSel::marketHandle(const json& msgBody, void* __this)
 {
     Query* _this = (Query*)__this;
-    _this->handleQueryMsg(msgHead);
+    _this->handleQueryMsg(msgBody);
 }
 
 void HandleSel::msgHandleSel()
@@ -83,7 +83,7 @@ void HandleSel::msgHandleSel()
     while(true)
     {
 
-        INFO_LOG("wait for msghead ......");
+        INFO_LOG("**********************wait for msghead ......**********************");
         if(!parseMsgHead(sockfd, msgHead))
         {
             ERROR_LOG("parse head msg error!");
@@ -114,8 +114,15 @@ void HandleSel::msgHandleSel()
             case ClientType::Strategy:
             {
                 INFO_LOG("create stategy thread by msg");
-                tradeThread = std::thread(tradeHandle,msgHead, (void*)&ROLE(TradePart)); // @suppress("Type cannot be resolved")
-                tradeThread.join();
+//                tradeThread = std::thread(tradeHandle,msgHead, (void*)&ROLE(TradePart)); // @suppress("Type cannot be resolved")
+                json msgBody;
+                if(!getMsgBody(msgBody, msgHead))
+                {
+                    break;
+                }
+                std::thread tradeThread(tradeHandle,msgBody, (void*)&ROLE(TradePart));
+                tradeThread.detach();
+//                tradeThread.join();
                 break;
             }
             case ClientType::Route:
@@ -125,7 +132,12 @@ void HandleSel::msgHandleSel()
             case ClientType::Market:
             {
                 INFO_LOG("create Market thread by msg");
-                marketThread = std::thread(marketHandle,msgHead,(void*)&ROLE(Query)); // @suppress("Type cannot be resolved")
+                json msgBody;
+                if(!getMsgBody(msgBody, msgHead))
+                {
+                    break;
+                }
+                std::thread marketThread(marketHandle,msgBody,(void*)&ROLE(Query)); // @suppress("Type cannot be resolved")
                 marketThread.detach();
                 break;
             }
@@ -161,6 +173,30 @@ bool HandleSel::parseMsgHead(int sockfd, TradeMsgHead& msgHead)
         return false;
     }
 
+    return true;
+}
+
+bool HandleSel::getMsgBody(json& msgBody, TradeMsgHead& msgHead)
+{
+    char *bodyMsg = new char[msgHead.length];
+    std::memset(bodyMsg,0,msgHead.length);
+
+    int sockfd = ROLE(SocketClient).newSocket;
+    int n = recv(sockfd, bodyMsg, msgHead.length, 0);
+    if(n < 0)
+    {
+        ERROR_LOG("read body msg from socket error!"); // @suppress("Invalid arguments")
+        return false;
+    }
+    if(n == 0)
+    {
+        ERROR_LOG("router is disconnected!!!!!");
+        ROLE(SocketClient).isRouterConnected = false;
+        ROLE(SocketClient).routerReconnect();
+        return false;
+    }
+    msgBody = json::parse(string(bodyMsg));
+    delete[] bodyMsg;
     return true;
 }
 

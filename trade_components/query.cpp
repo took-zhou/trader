@@ -56,29 +56,19 @@ namespace{
     };
 }
 
-bool Query::handleQueryMsg(const TradeMsgHead& msgHead)
+bool Query::handleQueryMsg(const json& msgBody)
 {
-    int sockfd = ROLE(SocketClient).newSocket;
-    char *bodyMsg = new char[msgHead.length];
-    std::memset(bodyMsg,0,msgHead.length);
-    if(!parseMsgBody(sockfd,bodyMsg,msgHead.length))
-    {
-       ERROR_LOG("parse body msg error!"); // @suppress("Invalid arguments")
-       return false;
-    }
     INFO_LOG("parse body msg to char buff ok!"); // @suppress("Invalid arguments")
-    json reqData = json::parse(string(bodyMsg));
-    delete[] bodyMsg;
-    switch(QueryType[reqData["reqFor"].get<string>()])
+    switch(QueryType[msgBody["reqFor"].get<string>()])
+    {
+        case 1:
         {
-            case 1:
-            {
-                ROLE(QueryActiveContracts).ReqQryInstrument();
-                break;
-            }
-            default:
-                break;
+            ROLE(QueryActiveContracts).ReqQryInstrument();
+            break;
         }
+        default:
+            break;
+    }
     return true;
 }
 

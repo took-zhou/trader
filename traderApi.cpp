@@ -941,16 +941,16 @@ int CTraderApi::ReqQryProduct(CThostFtdcQryProductField *pQryProduct, int nReque
 
 int CTraderApi::ReqQryInstrument(CThostFtdcQryInstrumentField *pQryInstrument, int nRequestID)
 {
-	INFO_LOG("<ReqQryInstrument>\n");
+	INFO_LOG("%s","<ReqQryInstrument>");
 	if (pQryInstrument)
 	{
-		INFO_LOG("\tInstrumentID [%s]\n", pQryInstrument->InstrumentID);
-		INFO_LOG("\tExchangeID [%s]\n", pQryInstrument->ExchangeID);
-		INFO_LOG("\tExchangeInstID [%s]\n", pQryInstrument->ExchangeInstID);
-		INFO_LOG("\tProductID [%s]\n", pQryInstrument->ProductID);
+		INFO_LOG("\tInstrumentID [%s]", pQryInstrument->InstrumentID);
+		INFO_LOG("\tExchangeID [%s]", pQryInstrument->ExchangeID);
+		INFO_LOG("\tExchangeInstID [%s]", pQryInstrument->ExchangeInstID);
+		INFO_LOG("\tProductID [%s]", pQryInstrument->ProductID);
 	}
-	INFO_LOG("\tnRequestID [%d]\n", nRequestID);
-	INFO_LOG("</ReqQryInstrument>\n");
+	INFO_LOG("\tnRequestID [%d]", nRequestID);
+	INFO_LOG("%s","</ReqQryInstrument>\n");
 
 	return m_pApi->ReqQryInstrument(pQryInstrument, nRequestID);
 };

@@ -2502,7 +2502,19 @@ void CTraderSpi::OnRtnTrade(CThostFtdcTradeField *pTrade)
         PURE_LOG("\tPrice [%.8lf]", pTrade->Price);
 	}
     INFO_LOG("******</OnRtnTrade>******");
-    sem_post(&globalSem.sem);
+    string orderRef = pTrade->OrderRef;
+    globalSem.postSemByOrderRef(orderRef);
+    DEBUG_LOG("post globalSem.sem, orderRef:%s",orderRef.c_str());
+//    if(globalSem.semOrder1.orderRef == orderRef)
+//    {
+//       DEBUG_LOG("post globalSem.semOrder1.sem, orderRef:%s",orderRef.c_str());
+//       sem_post(&globalSem.semOrder1.sem);
+//    }
+//    if(globalSem.semOrder2.orderRef == orderRef)
+//    {
+//        DEBUG_LOG("post globalSem.semOrder2.sem, orderRef:%s",orderRef.c_str());
+//       sem_post(&globalSem.semOrder2.sem);
+//    }
 };
 void CTraderSpi::OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo)
 {

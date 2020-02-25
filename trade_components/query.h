@@ -26,7 +26,7 @@ public:
 struct Query:QueryActiveContracts
 {
 public:
-    bool handleQueryMsg(const TradeMsgHead& msgHead);
+    bool handleQueryMsg(const json& msgBody);
 private:
     bool parseMsgBody(int sockfd, char* msg, const unsigned short length);
 public:

@@ -347,15 +347,15 @@ bool OrderManage::fillOrderByJsonFile()
         return true;
 }
 
-bool OrderManage::fillOrderByJsonString(const char* orderMsg, json& orderData)
+bool OrderManage::fillOrderByJsonString(const json& orderData)
 {
-    if(orderMsg == nullptr)
-    {
-        ERROR_LOG("the pointer orderMsg is nullptr!"); // @suppress("Invalid arguments")
-        return false;
-    }
-    printf("%s\n",orderMsg);
-    orderData = json::parse(string(orderMsg));
+//    if(orderMsg == nullptr)
+//    {
+//        ERROR_LOG("the pointer orderMsg is nullptr!"); // @suppress("Invalid arguments")
+//        return false;
+//    }
+//    printf("%s\n",orderMsg);
+//    orderData = json::parse(string(orderMsg));
 //    if(! orderDataCheck(orderData))
 //    {
 //        ERROR_LOG("orderDataCheck failed");
@@ -388,7 +388,7 @@ bool OrderManage::fillOrderByJsonString(const char* orderMsg, json& orderData)
     return true;
 }
 
-bool OrderManage::buildFirstOrder(json& orderData, const char& direction)
+bool OrderManage::buildFirstOrder(const json& orderData, const char& direction)
 {
     static size_t requestID;
     json orderCfg;
@@ -522,7 +522,7 @@ bool OrderManage::buildFirstOrder(json& orderData, const char& direction)
     return true;
 }
 
-bool OrderManage::buildSecondOrder(json& orderData, const char& direction)
+bool OrderManage::buildSecondOrder(const json& orderData, const char& direction)
 {
     static size_t requestID2;
     json orderCfg;

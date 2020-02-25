@@ -5,9 +5,12 @@
 #include "OrderRef.h"
 #include "semaphorePart.h"
 #include "orderAction.h"
+#include "orderstates.h"
+
 extern GlobalSem globalSem;
 extern FillFlag fillFlag;
 extern CThostFtdcInstrumentField InstrumentInfo;
+
 namespace
 {
     void msgHeadShow(const TradeMsgHead& msgHead)
@@ -35,6 +38,12 @@ bool isInsertOrderSuccess()
         return true;
     }
     return false;
+}
+
+TradePart::TradePart()
+{
+    // 创建一个调度器
+
 }
 
 bool TradePart::adjustOrderPrice(CThostFtdcInputOrderField& order, const json& recCfg)
@@ -78,71 +87,130 @@ bool TradePart::adjustOrderPrice(CThostFtdcInputOrderField& order, const json& r
         return false;
     }
 }
-bool TradePart::insertOrderByMsg(const int socketfd, const TradeMsgHead& msgHead)
+bool TradePart::insertOrderByMsg(const json& msgBody)
 {
-    char *bodyMsg = new char[msgHead.length];
-    std::memset(bodyMsg,0,msgHead.length);
-    if(!parseMsgBody(socketfd,bodyMsg,msgHead.length))
+    if(!ROLE(OrderManage).fillOrderByJsonString(msgBody))
     {
-       ERROR_LOG("parse body msg error!"); // @suppress("Invalid arguments")
-       return false;
-    }
-    INFO_LOG("parse body msg to char buff ok!"); // @suppress("Invalid arguments")
-    json recCfg;
-    if(!ROLE(OrderManage).fillOrderByJsonString(bodyMsg,recCfg))
-    {
-        delete[] bodyMsg;
         ERROR_LOG("fillOrderByJsonString failed!"); // @suppress("Invalid arguments")
         return false;
     }
-    delete[] bodyMsg;
     INFO_LOG("parse body msg to json format ok!"); // @suppress("Invalid arguments")
     auto& pTraderApi= ROLE(CtpClient).sh;
-    while(true)
+
+    co::Scheduler* sched = co::Scheduler::Create();
+    std::atomic<int> done{0};
+    bool orderResultState1{false};
+    go co_scheduler(sched) [&]()
     {
-        auto& RequestID = ROLE(Trader_Info).RequestID;
-        pTraderApi.ReqOrderInsert_Ordinary_hai(ROLE(OrderManage).order1,RequestID);
-        RequestID++;
-        sem_wait(&globalSem.sem); // @suppress("Function cannot be resolved")
+        int orderInsertCnt_1{1};
+        while(true)
+        {
+            INFO_LOG("order1 insert begin");
+            auto& RequestID = ROLE(Trader_Info).RequestID;
+            pTraderApi.ReqOrderInsert_Ordinary_hai(ROLE(OrderManage).order1,RequestID);
+            RequestID++;
+            string orderRef = ROLE(OrderManage).order1.OrderRef;
+            if(globalSem.addOrderSem(orderRef))
+            {
+                INFO_LOG("new sem has been add to globalSem");
+            }
+            INFO_LOG("wait for order1 globalSem.sem  of %s post",orderRef.c_str());
+//            sem_wait(&globalSem.orderSems); // @suppress("Function cannot be resolved")
+            globalSem.waitSemByOrderRef(orderRef);
+            globalSem.delOrderSem(orderRef);
+            INFO_LOG("got globalSem.semOrder1.sem post");
+            if(isInsertOrderSuccess())
+            {
+                orderResultState1 = true;
+                INFO_LOG("order1 insert success!"); // @suppress("Invalid arguments")
+                done++;
+                return;
+            }
 
-        if(isInsertOrderSuccess())
-        {
-            break;
+            ERROR_LOG("indert order1 failed!");
+            orderResultState1 = false;
+            done++;
+            return;
         }
-        if(!adjustOrderPrice(ROLE(OrderManage).order1, recCfg))
+    };
+
+    bool orderResultState2{false};
+    go co_scheduler(sched) [&]()
+    {
+        int orderInsertCnt_2 = 1;
+        while(true)
         {
-            ERROR_LOG("indert order1 failed!"); // @suppress("Invalid arguments")
-            return false;
+            INFO_LOG("order2 insert begin");
+            auto& RequestID = ROLE(Trader_Info).RequestID;
+            pTraderApi.ReqOrderInsert_Ordinary_hai(ROLE(OrderManage).order2,RequestID);
+            RequestID++;
+            string orderRef = ROLE(OrderManage).order2.OrderRef;
+            if(globalSem.addOrderSem(orderRef))
+            {
+                INFO_LOG("new sem has been add to globalSem");
+            }
+            INFO_LOG("wait for order2 globalSem.sem  of %s post",orderRef.c_str());;
+//            sem_wait(&globalSem.semOrder2.sem); // @suppress("Function cannot be resolved")
+            globalSem.waitSemByOrderRef(orderRef);
+            globalSem.delOrderSem(orderRef);
+            INFO_LOG("got globalSem.semOrder2.sem post");
+            if(isInsertOrderSuccess())
+            {
+                orderResultState2 = true;
+                INFO_LOG("order2 insert success!"); // @suppress("Invalid arguments")
+                done++;
+                return;
+            }
+
+            ERROR_LOG("indert order2 failed!");
+            orderResultState2 = false;
+            done++;
+            return;
         }
+    };
+    go co_scheduler(sched) [&]()
+    {
+        while(true)
+        {
+            if(done == 2)
+            {
+                sched->Stop();
+                INFO_LOG("done == 2 sched->Stop ok");
+                return;
+            }
+        }
+    };
+    DEBUG_LOG("sched start");
+    // 启动0-10个线程执行新创建的调度器
+    std::thread insertThrad([&sched]{ sched->Start(0,10); });
+    insertThrad.join();
+    DEBUG_LOG("sched stop");
+    auto& orderState = OrderStates::getInstance();
+    orderState.showAllOrderStates();
+    if(orderResultState2 && orderResultState1)
+    {
+        INFO_LOG("order1 and order2 insert ok!");
+        return true;
     }
-    INFO_LOG("order1 insert success!"); // @suppress("Invalid arguments")
-
-    while(true)
-    {   auto& RequestID = ROLE(Trader_Info).RequestID;
-        pTraderApi.ReqOrderInsert_Ordinary_hai(ROLE(OrderManage).order2,RequestID);
-        RequestID++;
-        sem_wait(&globalSem.sem); // @suppress("Function cannot be resolved")
-        if(isInsertOrderSuccess())
-        {
-            break;
-        }
-        if(!adjustOrderPrice(ROLE(OrderManage).order2,recCfg))
-        {
-            ERROR_LOG("indert order2 failed!"); // @suppress("Invalid arguments")
-            return false;
-        }
+    else if(!orderResultState2 && orderResultState1)
+    {
+        INFO_LOG("order1 ok, but order2 insert failed!");
     }
-
-    INFO_LOG("order2 insert success!"); // @suppress("Invalid arguments")
-    return true;
+    else if(orderResultState2 && !orderResultState1)
+    {
+        INFO_LOG("order1 insert failed, but order2 insert ok!");
+    }
+    else
+    {
+        INFO_LOG("order1 insert failed, order2 insert failed!");
+    }
+    return false;
 }
 
-void TradePart::handleTradeMsg(const TradeMsgHead& msgHead)
+void TradePart::handleTradeMsg(const json& msgBody)
 {
     INFO_LOG("begin to handle trade Msg"); // @suppress("Invalid arguments")
-    int sockfd = ROLE(SocketClient).newSocket;
-
-    if (insertOrderByMsg(sockfd, msgHead))
+    if (insertOrderByMsg(msgBody))
     {
         sendResult(InsertResult::Success);
         INFO_LOG("order pair insert success!"); // @suppress("Invalid arguments")

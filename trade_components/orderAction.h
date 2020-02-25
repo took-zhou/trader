@@ -25,11 +25,11 @@ struct OrderManage
     }
     bool fillOrder();
     bool fillOrderByJsonFile();
-    bool fillOrderByJsonString(const char* orderMsg, json& orderData);
+    bool fillOrderByJsonString(const json& orderData);
 private:
     bool determineBuyAndSaleDirection(const json orderData, char* direction_flag);
-    bool buildFirstOrder(json& orderData, const char& direction);
-    bool buildSecondOrder(json& orderData, const char& direction);
+    bool buildFirstOrder(const json& orderData, const char& direction);
+    bool buildSecondOrder(const json& orderData, const char& direction);
 public:
     CThostFtdcInputOrderField order;
     CThostFtdcInputOrderField order1;
