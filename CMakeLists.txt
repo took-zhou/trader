@@ -1,7 +1,5 @@
 aux_source_directory(. srcs_list)
 
-
-
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/socket")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/trade_components")
