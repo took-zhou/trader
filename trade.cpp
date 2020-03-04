@@ -22,11 +22,14 @@
 
 std::mutex mtx;
 int main() {
-
     std::thread keyboardMonitor(monitorKeyBoard); // @suppress("Type cannot be resolved")
-    Trader& trader = Trader::getInstance();
+
 //    if( atoi(getConfig("trade","dbgSwitch").c_str()) == 0)
-    LOG_INIT("log", "tradelog", 6);
+    std::string tradeLogPath = getConfig("trade","LogPath");
+    LOG_INIT(tradeLogPath.c_str(), "tradelog", 6);
+    INFO_LOG("TRADE LOG PATH is %s",tradeLogPath.c_str());
+
+    Trader& trader = Trader::getInstance();
     go [&] {
         SELF(trader, LogInPart).startLoginOutControl();
         SELF(trader, HandleSel).msgHandleSel();
