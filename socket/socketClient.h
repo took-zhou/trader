@@ -14,8 +14,9 @@ using namespace std;
 
 struct SocketClient
 {
-    SocketClient();
+//    SocketClient();
 
+    void init();
     int getSocketFd();
     bool sendStringMsg(const string msg);
     bool recMsg(char* strMsg, const size_t length);

@@ -21,7 +21,7 @@ enum InsertResult
 
 struct TradePart
 {
-    TradePart();
+//    TradePart();
     virtual void handleTradeMsg(const json& msgBody);
 
     virtual bool handleMsgFromJsonFile();

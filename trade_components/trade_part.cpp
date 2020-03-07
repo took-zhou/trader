@@ -40,11 +40,6 @@ bool isInsertOrderSuccess()
     return false;
 }
 
-TradePart::TradePart()
-{
-    // 创建一个调度器
-
-}
 
 bool TradePart::adjustOrderPrice(CThostFtdcInputOrderField& order, const json& recCfg)
 {

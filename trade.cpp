@@ -30,8 +30,14 @@ int main() {
     INFO_LOG("TRADE LOG PATH is %s",tradeLogPath.c_str());
 
     Trader& trader = Trader::getInstance();
+
     go [&] {
-        SELF(trader, LogInPart).startLoginOutControl();
+            SELF(trader, SocketClient).init();
+    };
+    go [&] {
+            SELF(trader, LogInPart).startLoginOutControl();
+    };
+    go [&] {
         SELF(trader, HandleSel).msgHandleSel();
     };
     std::thread t([]{ co_sched.Start(0,2); });

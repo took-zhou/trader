@@ -82,7 +82,13 @@ void HandleSel::msgHandleSel()
     TradeMsgHead msgHead{0};
     while(true)
     {
-
+        while(1)    // route must connected
+        {
+            if(ROLE(SocketClient).isRouterConnected)
+            {
+                break;
+            }
+        }
         INFO_LOG("**********************wait for msghead ......**********************");
         if(!parseMsgHead(sockfd, msgHead))
         {

@@ -40,6 +40,7 @@ struct Trader :   OrderManage
         static Trader instance;
         return instance;
     }
+    void init();
 public:
     IMPL_ROLE(PintCheck);
     IMPL_ROLE(SocketClient);

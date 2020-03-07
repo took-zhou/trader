@@ -10,7 +10,8 @@
 #include "json.h"
 
 using json = nlohmann::json;
-SocketClient::SocketClient()
+
+void SocketClient::init()
 {
     WARNING_LOG("SocketClient init");
     newSocket = socket(AF_INET, SOCK_STREAM, 0);
