@@ -32,15 +32,18 @@ int main() {
     Trader& trader = Trader::getInstance();
 
     go [&] {
-            SELF(trader, SocketClient).init();
+        SELF(trader,TraderInteractor).start();
     };
     go [&] {
-            SELF(trader, LogInPart).startLoginOutControl();
+        SELF(trader, SocketClient).init();
+    };
+    go [&] {
+        SELF(trader, LogInPart).startLoginOutControl();
     };
     go [&] {
         SELF(trader, HandleSel).msgHandleSel();
     };
-    std::thread t([]{ co_sched.Start(0,2); });
+    std::thread t([]{ co_sched.Start(0,10);});
     //t.detach();
     t.join();
 

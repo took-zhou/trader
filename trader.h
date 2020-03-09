@@ -19,6 +19,7 @@
 #include "trade_components/settlementConfirm.h"
 #include "trade_components/trader_commom.h"
 #include "trade_components/InfoShow.h"
+#include "trade_components/traderInteractor.h"
 
 struct Trader :   OrderManage
                 , SocketClient
@@ -31,6 +32,7 @@ struct Trader :   OrderManage
                 , SettlementConfirm
                 , Trader_Info
                 , InfoShow
+                ,TraderInteractor
 {
     Trader(){}
     Trader(const Trader&)=delete;
@@ -52,6 +54,7 @@ public:
     IMPL_ROLE(SettlementConfirm);
     IMPL_ROLE(Trader_Info);
     IMPL_ROLE(InfoShow);
+    IMPL_ROLE(TraderInteractor);
 };
 
 #endif
