@@ -9,16 +9,19 @@
 #include "log.h"
 #include <stdio.h>
 #include <unistd.h>
+#include "getconfig.h"
 
 
 namespace{
     enum struct CommandType
     {
         showTraderLoginState,
+        showTraderConfig
     };
     std::map<std::string, CommandType> cmdToCommandType =
     {
-            {"showTraderLoginState",CommandType::showTraderLoginState}
+            {"showTraderLoginState",CommandType::showTraderLoginState},
+            {"showTraderConfig",CommandType::showTraderConfig}
     };
 }
 
@@ -63,8 +66,23 @@ void TraderInteractor::start()
 
 bool TraderInteractor::buildShowTraderLoginStateRsp()
 {
+    rspMsg["title"] = "login state";
     rspMsg["ctp_state"] = ROLE(LogInPart).isLogIN;
     rspMsg["route_state"] = ROLE(SocketClient).isRouterConnected;
+    return true;
+}
+
+bool TraderInteractor::buildShowTraderConfigRsp()
+{
+    rspMsg["title"] = "trader config";
+//    std::vector<std::string> allTitles = getAllTitles();
+    json data;
+    auto tmpPair = getAllKeyValueOfTitle("trade");
+    for(auto& iter : tmpPair)
+    {
+        data[iter.first.c_str()] = iter.second.c_str();
+    }
+    rspMsg["data"] = data;
     return true;
 }
 
@@ -84,6 +102,11 @@ bool TraderInteractor::buildResponse()
         case CommandType::showTraderLoginState:
         {
             buildShowTraderLoginStateRsp();
+            break;
+        }
+        case CommandType::showTraderConfig:
+        {
+            buildShowTraderConfigRsp();
             break;
         }
         default:

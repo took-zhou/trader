@@ -15,11 +15,11 @@
 #include <vector>
 #include <stdio.h>
 
-/*º¯ÊıÃû³Æ£ºgetConfig()
-º¯Êı¹¦ÄÜ£º»ñÈ¡ÅäÖÃÎÄ¼şiniÖĞÏàÓ¦´ó±êÌâtitleÏÂÖ¸¶¨ÅäÖÃ×Ö¶ÎcfgnameµÄÖµ
-²ÎÊı1£ºstring title		´ó±êÌâ[***]
-²ÎÊı2£ºstring cfgName		´ó±êÌâÏÂµÄÅäÖÃ×Ö¶Î
-·µ»ØÖµ£ºÅäÖÃÎÄ¼şiniÖĞÏàÓ¦´ó±êÌâtitleÏÂÖ¸¶¨ÅäÖÃ×Ö¶ÎcfgnameµÄÖµ
+/*å‡½æ•°åç§°ï¼šgetConfig()
+å‡½æ•°åŠŸèƒ½ï¼šè·å–é…ç½®æ–‡ä»¶iniä¸­ç›¸åº”å¤§æ ‡é¢˜titleä¸‹æŒ‡å®šé…ç½®å­—æ®µcfgnameçš„å€¼
+å‚æ•°1ï¼šstring title		å¤§æ ‡é¢˜[***]
+å‚æ•°2ï¼šstring cfgName		å¤§æ ‡é¢˜ä¸‹çš„é…ç½®å­—æ®µ
+è¿”å›å€¼ï¼šé…ç½®æ–‡ä»¶iniä¸­ç›¸åº”å¤§æ ‡é¢˜titleä¸‹æŒ‡å®šé…ç½®å­—æ®µcfgnameçš„å€¼
 */
 using namespace std;
 
@@ -41,22 +41,22 @@ void getConfig_(string title, string cfgName,char* target)
 	int flag = 0;
 	while (getline(inifile, strtmp,'\n'))
 	{	
-		std::size_t found = strtmp.find_last_of("\r");     //È¥³ı'\r'
+		std::size_t found = strtmp.find_last_of("\r");     //å»é™¤'\r'
 		if(found !=std::string::npos){
 			strtmp[found]='\0';
 		}
 		
-		if (strtmp.substr(0, 1) == "#")	continue;	//¹ıÂË×¢ÊÍ		
+		if (strtmp.substr(0, 1) == "#")	continue;	//è¿‡æ»¤æ³¨é‡Š
 		if (flag == 0)
 		{
 			if (strtmp.find(title) != string::npos)
 			{
 				if (strtmp.substr(0, 1) == "[")
 				{
-					if (strtmp.find("]") == string::npos) 	break;	//È±Ê§¡°]¡±ÍË³ö
+					if (strtmp.find("]") == string::npos) 	break;	//ç¼ºå¤±â€œ]â€é€€å‡º
 					strtitle = strtmp.substr(1);
 					strtitle = strtitle.erase(strtitle.find("]"));
-					if (strtitle == title)		//ÕÒµ½´ó±êÌâÉèÖÃ±êÖ¾Î»Îª1£¬ÕâÑù¾Í²»ÔÙÕÒÏÂÒ»¸ö´ó±êÌâÁË
+					if (strtitle == title)		//æ‰¾åˆ°å¤§æ ‡é¢˜è®¾ç½®æ ‡å¿—ä½ä¸º1ï¼Œè¿™æ ·å°±ä¸å†æ‰¾ä¸‹ä¸€ä¸ªå¤§æ ‡é¢˜äº†
 					{
 						flag = 1;
 						continue;
@@ -66,13 +66,13 @@ void getConfig_(string title, string cfgName,char* target)
 		}
 		if (flag == 1)
 		{
-			if (strtmp.substr(0, 1) == "[")	break;	//Èç¹ûÓöµ½ÏÂÒ»¸ö[]ºÅËµÃ÷µ±Ç°´ó±êÌâ¶ÔÓ¦µÄÅäÖÃ×Ö¶ÎËÑË÷Íê±Ï£¬½áÊøËÑË÷¡£
+			if (strtmp.substr(0, 1) == "[")	break;	//å¦‚æœé‡åˆ°ä¸‹ä¸€ä¸ª[]å·è¯´æ˜å½“å‰å¤§æ ‡é¢˜å¯¹åº”çš„é…ç½®å­—æ®µæœç´¢å®Œæ¯•ï¼Œç»“æŸæœç´¢ã€‚
 			if (strtmp.find(cfgName) != string::npos)
 			{
-				if (strtmp.find("=") == string::npos)	break;	//È±Ê§¡°=¡±ÍË³ö
+				if (strtmp.find("=") == string::npos)	break;	//ç¼ºå¤±â€œ=â€é€€å‡º
 				strcfgname = strtmp;
 				strcfgname = strcfgname.erase(strcfgname.find("="));
-				if (strcfgname == cfgName)		//ÕÒµ½´ó±êÌâÏàÓ¦µÄ×Ö¶Îºó£¬·µ»ØÖµ
+				if (strcfgname == cfgName)		//æ‰¾åˆ°å¤§æ ‡é¢˜ç›¸åº”çš„å­—æ®µåï¼Œè¿”å›å€¼
 				{
 					// target = strtmp.substr(strtmp.find("=") + 1).c_str();
 					strcpy(target,strtmp.substr(strtmp.find("=") + 1).c_str());
@@ -90,7 +90,7 @@ void getConfig_(string title, string cfgName,char* target)
 			}
 		}
 	}
-	cout << "ÅäÖÃÎÄ¼ş´íÎó£ºÃ»ÕÒµ½" << title << "¶ÔÓ¦ÅäÖÃÏî" << cfgName << "£¡" << endl;
+	cout << "é…ç½®æ–‡ä»¶é”™è¯¯ï¼šæ²¡æ‰¾åˆ°" << title << "å¯¹åº”é…ç½®é¡¹" << cfgName << "ï¼" << endl;
 	// _getch();
 	getchar();
 	exit(-1);
@@ -117,22 +117,22 @@ string getConfigFromFile(const string configFile, string title, string cfgName)
 	int flag = 0;
 	while (getline(inifile, strtmp, '\n'))
 	{
-		std::size_t found = strtmp.find_last_of("\r"); //È¥³ı'\r'
+		std::size_t found = strtmp.find_last_of("\r"); //å»é™¤'\r'
 		if (found != std::string::npos) {
 			strtmp[found] = '\0';
 		}
 
-		if (strtmp.substr(0, 1) == "#")	continue;	//¹ıÂË×¢ÊÍ		
+		if (strtmp.substr(0, 1) == "#")	continue;	//è¿‡æ»¤æ³¨é‡Š
 		if (flag == 0)
 		{
 			if (strtmp.find(title) != string::npos)
 			{
 				if (strtmp.substr(0, 1) == "[")
 				{
-					if (strtmp.find("]") == string::npos) 	break;	//È±Ê§¡°]¡±ÍË³ö
+					if (strtmp.find("]") == string::npos) 	break;	//ç¼ºå¤±â€œ]â€é€€å‡º
 					strtitle = strtmp.substr(1);
 					strtitle = strtitle.erase(strtitle.find("]"));
-					if (strtitle == title)		//ÕÒµ½´ó±êÌâÉèÖÃ±êÖ¾Î»Îª1£¬ÕâÑù¾Í²»ÔÙÕÒÏÂÒ»¸ö´ó±êÌâÁË
+					if (strtitle == title)		//æ‰¾åˆ°å¤§æ ‡é¢˜è®¾ç½®æ ‡å¿—ä½ä¸º1ï¼Œè¿™æ ·å°±ä¸å†æ‰¾ä¸‹ä¸€ä¸ªå¤§æ ‡é¢˜äº†
 					{
 						flag = 1;
 						continue;
@@ -142,13 +142,13 @@ string getConfigFromFile(const string configFile, string title, string cfgName)
 		}
 		if (flag == 1)
 		{
-			if (strtmp.substr(0, 1) == "[")	break;	//Èç¹ûÓöµ½ÏÂÒ»¸ö[]ºÅËµÃ÷µ±Ç°´ó±êÌâ¶ÔÓ¦µÄÅäÖÃ×Ö¶ÎËÑË÷Íê±Ï£¬½áÊøËÑË÷¡£
+			if (strtmp.substr(0, 1) == "[")	break;	//å¦‚æœé‡åˆ°ä¸‹ä¸€ä¸ª[]å·è¯´æ˜å½“å‰å¤§æ ‡é¢˜å¯¹åº”çš„é…ç½®å­—æ®µæœç´¢å®Œæ¯•ï¼Œç»“æŸæœç´¢ã€‚
 			if (strtmp.find(cfgName) != string::npos)
 			{
-				if (strtmp.find("=") == string::npos)	break;	//È±Ê§¡°=¡±ÍË³ö
+				if (strtmp.find("=") == string::npos)	break;	//ç¼ºå¤±â€œ=â€é€€å‡º
 				strcfgname = strtmp;
 				strcfgname = strcfgname.erase(strcfgname.find("="));
-				if (strcfgname == cfgName)		//ÕÒµ½´ó±êÌâÏàÓ¦µÄ×Ö¶Îºó£¬·µ»ØÖµ
+				if (strcfgname == cfgName)		//æ‰¾åˆ°å¤§æ ‡é¢˜ç›¸åº”çš„å­—æ®µåï¼Œè¿”å›å€¼
 				{
 					returnValue = strtmp.substr(strtmp.find("=") + 1);
 					// std::cout << returnValue << std::endl;
@@ -159,9 +159,136 @@ string getConfigFromFile(const string configFile, string title, string cfgName)
 			}
 		}
 	}
-	cout << "ÅäÖÃÎÄ¼ş´íÎó£ºÃ»ÕÒµ½" << title << "¶ÔÓ¦ÅäÖÃÏî" << cfgName << "£¡" << endl;
-	// _getch();
-	getchar();
-	exit(-1);
+	cout << "é…ç½®æ–‡ä»¶é”™è¯¯ï¼šæ²¡æ‰¾åˆ°" << title << "å¯¹åº”é…ç½®é¡¹" << cfgName << "ï¼" << endl;
+}
+
+std::vector<std::string> getAllTitles()
+{
+    const string INIFile = "../../project/projroot/config.ini";
+    return getAllTitlesFromFile(INIFile);
+}
+
+std::vector<std::string> getAllTitlesFromFile(const string configFile)
+{
+    ifstream inifile(configFile.c_str());
+    if (!inifile.is_open())
+    {
+        cerr << "Could not open " << configFile << endl;
+        inifile.clear();
+        // _getch();
+        getchar();
+        exit(-1);
+    }
+    std::vector<std::string> titles;
+    string strtmp, strtitle, strcfgname, returnValue;
+    while (getline(inifile, strtmp, '\n'))
+    {
+        std::size_t found = strtmp.find_last_of("\r"); //å»é™¤'\r'
+        if (found != std::string::npos) {
+            strtmp[found] = '\0';
+        }
+
+        if (strtmp.substr(0, 1) == "#") continue;   //è¿‡æ»¤æ³¨é‡Š
+        if(strtmp.substr(0,1) == "[")
+        {
+            std::size_t posTail = strtmp.find("]");
+            if(posTail == std::string::npos)
+            {
+                continue;
+            }
+            titles.push_back(strtmp.substr(1,posTail-1));
+        }
+    }
+    return titles;
+}
+
+namespace
+{
+    vector<string> split(const string &str, const string &pattern)
+    {
+        vector<string> res;
+        if(str == "")
+        {
+            return res;
+        }
+        string strs = str + pattern;
+        size_t pos = strs.find(pattern);
+        while(pos != strs.npos)
+        {
+            string temp = strs.substr(0, pos);
+            res.push_back(temp);
+            strs = strs.substr(pos+1, strs.size());
+            pos = strs.find(pattern);
+        }
+        return res;
+    }
+}
+
+std::vector<std::pair<std::string,std::string>> getAllKeyValueOfTitle(std::string title)
+{
+    const string INIFile = "../../project/projroot/config.ini";
+    return getAllKeyValueOfTitleFromFile(INIFile,title);
+}
+std::vector<std::pair<std::string,std::string>> getAllKeyValueOfTitleFromFile(const std::string configFile, std::string title)
+{
+    ifstream inifile(configFile.c_str());
+    if (!inifile.is_open())
+    {
+        cerr << "Could not open " << configFile << endl;
+        inifile.clear();
+        // _getch();
+        getchar();
+        exit(-1);
+    }
+    std::vector<std::pair<std::string,std::string>> keyValueAarray;
+    string strtmp, strtitle, strcfgname, returnValue;
+    int flag = 0;
+    while (getline(inifile, strtmp, '\n'))
+    {
+        std::size_t found = strtmp.find_last_of("\r"); //å»é™¤'\r'
+        if (found != std::string::npos) {
+            strtmp[found] = '\0';
+        }
+
+        if (strtmp.substr(0, 1) == "#") continue;   //è¿‡æ»¤æ³¨é‡Š
+        if (flag == 0)
+        {
+            if (strtmp.find(title) != string::npos)
+            {
+                if (strtmp.substr(0, 1) == "[")
+                {
+                    if (strtmp.find("]") == string::npos)   break;  //ç¼ºå¤±â€œ]â€é€€å‡º
+                    strtitle = strtmp.substr(1);
+                    strtitle = strtitle.erase(strtitle.find("]"));
+                    if (strtitle == title)      //æ‰¾åˆ°å¤§æ ‡é¢˜è®¾ç½®æ ‡å¿—ä½ä¸º1ï¼Œè¿™æ ·å°±ä¸å†æ‰¾ä¸‹ä¸€ä¸ªå¤§æ ‡é¢˜äº†
+                    {
+                        flag = 1;
+                        continue;
+                    }
+                }
+            }
+        }
+
+        if (flag == 1)
+        {
+            if (strtmp.substr(0, 1) == "[")
+            {
+                flag = 0;
+                continue;  //å¦‚æœé‡åˆ°ä¸‹ä¸€ä¸ª[]å·è¯´æ˜å½“å‰å¤§æ ‡é¢˜å¯¹åº”çš„é…ç½®å­—æ®µæœç´¢å®Œæ¯•ï¼Œç»“æŸæœç´¢ã€‚
+            }
+
+            if (strtmp.find("=") == std::string::npos)
+            {
+                continue;  //ç¼ºå¤±â€œ=â€
+            }
+            auto splitedStr = split(strtmp,std::string("="));
+            std::pair<std::string,std::string> tmpPair = {splitedStr.at(0),splitedStr.at(1)};
+            keyValueAarray.push_back(tmpPair);
+        }
+    }
+    return keyValueAarray;
 
 }
+
+
+

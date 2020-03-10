@@ -23,7 +23,6 @@
 std::mutex mtx;
 int main() {
     std::thread keyboardMonitor(monitorKeyBoard); // @suppress("Type cannot be resolved")
-
 //    if( atoi(getConfig("trade","dbgSwitch").c_str()) == 0)
     std::string tradeLogPath = getConfig("trade","LogPath");
     LOG_INIT(tradeLogPath.c_str(), "tradelog", 6);

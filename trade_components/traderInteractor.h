@@ -82,6 +82,7 @@ public:
 
 public:
     bool buildShowTraderLoginStateRsp();
+    bool buildShowTraderConfigRsp();
 
 private:
     json reqMsg;
