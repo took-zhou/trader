@@ -10,18 +10,27 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "getconfig.h"
+#include "orderstates.h"
+#include "semaphorePart.h"
 
-
+extern GlobalSem globalSem;
+extern json AllInstruments;
 namespace{
     enum struct CommandType
     {
         showTraderLoginState,
-        showTraderConfig
+        showTraderConfig,
+        showAllConfig,
+        showOrderState,
+        queryInstrument
     };
     std::map<std::string, CommandType> cmdToCommandType =
     {
-            {"showTraderLoginState",CommandType::showTraderLoginState},
-            {"showTraderConfig",CommandType::showTraderConfig}
+            {"showTraderLoginState",    CommandType::showTraderLoginState},
+            {"showTraderConfig",        CommandType::showTraderConfig},
+            {"showAllConfig",           CommandType::showAllConfig},
+            {"showOrderState",          CommandType::showOrderState},
+            {"queryInstrument",         CommandType::queryInstrument}
     };
 }
 
@@ -85,9 +94,80 @@ bool TraderInteractor::buildShowTraderConfigRsp()
     rspMsg["data"] = data;
     return true;
 }
+bool TraderInteractor::buildShowAllConfigRsp()
+{
+    json data;
+    std::vector<std::string> allTitles = getAllTitles();
+    for(auto& iter : allTitles)
+    {
+        json tmpPart;
+        auto tmpPairs = getAllKeyValueOfTitle(iter);
+        for(auto& kv : tmpPairs)
+        {
+            tmpPart[kv.first.c_str()] = kv.second.c_str();
+        }
+        data[iter.c_str()] = tmpPart;
+    }
+    rspMsg["data"] = data;
+    rspMsg["title"] = "all config";
+    return true;
+}
+
+bool TraderInteractor::buildShowOrderStateRsp()
+{
+    rspMsg["title"] = "order state";
+    auto& orderState = OrderStates::getInstance();
+    auto& orderStateRecords = orderState.orderKey2StateMap;
+    if(orderStateRecords.size() == 0)
+    {
+        rspMsg["data"] = "null";
+        return true;
+    }
+    json data;
+    for(const auto& orderRecord : orderStateRecords)
+    {
+        std::string states{""};
+        if(orderRecord.second->size() == 0)
+        {
+            continue;
+        }
+        for(const auto& state : *(orderRecord.second))
+        {
+            states.push_back(state);
+            states += string("->");
+        }
+        data[orderRecord.first.c_str()] = states.c_str();
+    }
+    rspMsg["data"] = data;
+}
+
+bool TraderInteractor::buildQueryInstrumentRsp()
+{
+    rspMsg["title"] = "QueryInstrumentRsp";
+    auto parmNum = reqMsg["paramNum"].get<int>();
+    if(parmNum<2)
+    {
+        rspMsg["result"] = "paramNum error!";
+        return true;
+    }
+
+    std::string exchangeId = reqMsg["params"]["param1"].get<std::string>();
+    std::string instrumentId = reqMsg["params"]["param2"].get<std::string>();
+    AllInstruments.clear();
+    CThostFtdcQryInstrumentField qryBody{0};
+    std::strcpy(qryBody.ExchangeID, exchangeId.c_str());
+    std::strcpy(qryBody.InstrumentID, instrumentId.c_str());
+    ROLE(CtpClient).sh.ReqQryInstrument_hai(qryBody);
+    sem_wait(&globalSem.sem_query);
+
+    AllInstruments["result"] = "0";
+    rspMsg["data"] = AllInstruments;
+    return true;
+}
 
 bool TraderInteractor::buildResponse()
 {
+    INFO_LOG("interactor request:");
     JsonPrint(reqMsg);
     rspMsg.clear();
     std::string cmd = reqMsg["cmd"].get<std::string>();
@@ -95,7 +175,9 @@ bool TraderInteractor::buildResponse()
     if(it == cmdToCommandType.end())
     {
         ERROR_LOG("can't find the cmd [%s]",cmd.c_str());
-        return false;
+        std::string value = "can't find command [" + cmd + "]";
+        rspMsg["error"] = value.c_str() ;
+        return true;
     }
     switch(it->second)
     {
@@ -109,14 +191,31 @@ bool TraderInteractor::buildResponse()
             buildShowTraderConfigRsp();
             break;
         }
+        case CommandType::showAllConfig:
+        {
+            buildShowAllConfigRsp();
+            break;
+        }
+        case CommandType::showOrderState:
+        {
+            buildShowOrderStateRsp();
+            break;
+        }
+        case CommandType::queryInstrument:
+        {
+            buildQueryInstrumentRsp();
+            break;
+        }
         default:
         {
             WARNING_LOG("%s","can't match, return false");
-            return false;
+            std::string value = "can't find command [" + cmd + "]";
+            rspMsg["error"] = value.c_str() ;
+            break;
         }
 
     }
-
+    INFO_LOG("interactor response:");
     JsonPrint(rspMsg);
     return true;
 }
@@ -231,7 +330,7 @@ void TraderWriteFifo::Close()
 {
     if(pipe_fd < 0)
     {
-        ERROR_LOG("close fifo file error!");
+        ERROR_LOG("close write fifo file error!");
         return;
     }
     close(pipe_fd);
@@ -276,15 +375,16 @@ bool TraderReadFifo::Read(json& msg)
 {
     MsgHeader msgHead;
     int res = read(pipe_fd,&msgHead,sizeof(msgHead));
-    if(res < 0)
+    INFO_LOG("read res from interactor = %d",res);
+    if(res <= 0)
     {
         ERROR_LOG("receive msg error!");
         return false;
     }
     char buff[msgHead.length];
-
     res = read(pipe_fd,buff,msgHead.length);
-    if(res < 0)
+    INFO_LOG("read res from interactor = %d",res);
+    if(res <=0)
     {
         ERROR_LOG("receive msg error!");
         return false;
@@ -299,7 +399,7 @@ void TraderReadFifo::Close()
 {
     if(pipe_fd < 0)
     {
-        ERROR_LOG("close fifo file error!");
+        ERROR_LOG("close read fifo file error!");
         return;
     }
     close(pipe_fd);

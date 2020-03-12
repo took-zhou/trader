@@ -18,7 +18,7 @@
 
 #include "login_part.h"
 #include "socket/socketClient.h"
-
+#include "trade_components/ctpClient.h"
 
 typedef unsigned char  U8;
 typedef unsigned short U16;
@@ -83,6 +83,9 @@ public:
 public:
     bool buildShowTraderLoginStateRsp();
     bool buildShowTraderConfigRsp();
+    bool buildShowAllConfigRsp();
+    bool buildShowOrderStateRsp();
+    bool buildQueryInstrumentRsp();
 
 private:
     json reqMsg;
@@ -95,6 +98,7 @@ public:
 public:
     USE_ROLE(LogInPart);
     USE_ROLE(SocketClient);
+    USE_ROLE(CtpClient);
 
 };
 
