@@ -6,6 +6,9 @@
 #include <string>
 #include "trader.h"
 #include "orderstates.h"
+#include "define.h"
+
+extern U8 rspSuccessSwitch;
 
 namespace
 {
@@ -14,14 +17,14 @@ namespace
         vector<string> res;
         if(str == "")
             return res;
-        //在字符串末尾也加入分隔符，方便截取最后一殄1�7
+        //鍦ㄥ瓧绗︿覆鏈熬涔熷姞鍏ュ垎闅旂锛屾柟渚挎埅鍙栨渶鍚庝竴娈�1�7
         string strs = str + pattern;
         size_t pos = strs.find(pattern);
         while(pos != strs.npos)
         {
             string temp = strs.substr(0, pos);
             res.push_back(temp);
-            //去掉已分割的字符丄1�7,在剩下的字符串中进行分割
+            //鍘绘帀宸插垎鍓茬殑瀛楃涓�1�7,鍦ㄥ墿涓嬬殑瀛楃涓蹭腑杩涜鍒嗗壊
             strs = strs.substr(pos+1, strs.size());
             pos = strs.find(pattern);
         }
@@ -47,7 +50,7 @@ int scanKeyboard()
     tcsetattr(0, TCSANOW, &stored_settings);
     return in;
 }
-//��������Ϳ��ԣ�����ֵ�Ǹü���ASCII��ֵ������Ҫ�س��ģ�
+//这个方法就可以，返回值是该键的ASCII码值，不需要回车的，
 
 
 namespace
@@ -65,9 +68,9 @@ void monitorKeyBoard()
     {
         INFO_LOG("command read is ready......");
         command = "";
-        std::cin.clear();  // ����cin��״̬��ʾ��
-        std::cin.sync();  // �����������������
-        getline(std::cin, command); //��ȡһ���ַ�
+        std::cin.clear();  // 更改cin的状态标示符
+        std::cin.sync();  // 清除缓存区的数据流
+        getline(std::cin, command); //读取一行字符
 //        std::cout << command << std::endl;
         INFO_LOG("command:%s",command.c_str());
         auto splitedStr = stringSplit(command, string(" "));
@@ -94,14 +97,29 @@ void monitorKeyBoard()
             continue;
         }
         if(splitedStr.at(0) == string("showStates"))
-       {
+        {
            Trader& trader = Trader::getInstance();
            showState(trader);
            continue;
-       }
+        }
         if(splitedStr.at(0) == string("help"))
         {
             INFO_LOG("%s\n"," quit\n showorders\n query+instrumentID+exchangeId\n showStates");
+            continue;
+        }
+        if(splitedStr.at(0) == string("rspSuccessSwitch"))
+        {
+            if(splitedStr.size() != 2)
+            {
+                ERROR_LOG("%s","rspSuccessSwitch need one param!!!!");
+                continue;
+            }
+            if(splitedStr.at(1) != string("0") and splitedStr.at(1) != string("1"))
+            {
+                ERROR_LOG("%s"," error param for rspSuccessSwitch!!!!");
+                continue;
+            }
+            rspSuccessSwitch = static_cast<U8>(atoi(splitedStr.at(1).c_str()));
             continue;
         }
 

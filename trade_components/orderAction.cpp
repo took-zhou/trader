@@ -20,13 +20,73 @@ FillFlag fillFlag;
 //    }
 //}
 
+std::unordered_map<std::string, std::string> OrderPriceTypeMap =
+{
+        {"THOST_FTDC_OPT_AnyPrice","1"},
+        {"THOST_FTDC_OPT_LimitPrice","2"},
+        {"THOST_FTDC_OPT_BestPrice","3"},
+        {"THOST_FTDC_OPT_LastPrice","4"},
+        {"THOST_FTDC_OPT_LastPricePlusOneTicks","5"},
+        {"THOST_FTDC_OPT_LastPricePlusTwoTicks","6"},
+        {"THOST_FTDC_OPT_LastPricePlusThreeTicks","7"},
+        {"THOST_FTDC_OPT_AskPrice1","8"},
+        {"THOST_FTDC_OPT_AskPrice1PlusOneTicks","9"},
+        {"THOST_FTDC_OPT_AskPrice1PlusTwoTicks","A"},
+        {"THOST_FTDC_OPT_AskPrice1PlusThreeTicks","B"},
+        {"THOST_FTDC_OPT_BidPrice1","C"},
+        {"THOST_FTDC_OPT_BidPrice1PlusOneTicks","D"},
+        {"THOST_FTDC_OPT_BidPrice1PlusTwoTicks","E"},
+        {"THOST_FTDC_OPT_BidPrice1PlusThreeTicks","F"},
+        {"THOST_FTDC_OPT_FiveLevelPrice","G"}
+};
+
+std::unordered_map<std::string, std::string> ContingentConditionMap =
+{
+        {"THOST_FTDC_CC_Immediately","1"},
+        {"THOST_FTDC_CC_Touch","2"},
+        {"THOST_FTDC_CC_TouchProfit","3"},
+        {"THOST_FTDC_CC_ParkedOrder","4"},
+        {"THOST_FTDC_CC_LastPriceGreaterThanStopPrice","5"},
+        {"THOST_FTDC_CC_LastPriceGreaterEqualStopPrice","6"},
+        {"THOST_FTDC_CC_LastPriceLesserThanStopPrice","7"},
+        {"THOST_FTDC_CC_LastPriceLesserEqualStopPrice","8"},
+        {"THOST_FTDC_CC_AskPriceGreaterThanStopPrice","9"},
+        {"THOST_FTDC_CC_AskPriceGreaterEqualStopPrice","A"},
+        {"THOST_FTDC_CC_AskPriceLesserThanStopPrice","B"},
+        {"THOST_FTDC_CC_AskPriceLesserEqualStopPrice","C"},
+        {"THOST_FTDC_CC_BidPriceGreaterThanStopPrice","D"},
+        {"THOST_FTDC_CC_BidPriceGreaterEqualStopPrice","E"},
+        {"THOST_FTDC_CC_BidPriceLesserThanStopPrice","F"},
+        {"THOST_FTDC_CC_BidPriceLesserEqualStopPrice","H"}
+};
+
+std::unordered_map<std::string, std::string> TimeConditionMap =
+{
+        {"THOST_FTDC_TC_GFD","1"},
+        {"THOST_FTDC_TC_GFS","2"},
+        {"THOST_FTDC_TC_GFD","3"},
+        {"THOST_FTDC_TC_GTD","4"},
+        {"THOST_FTDC_TC_GTC","5"},
+        {"THOST_FTDC_TC_GFA","6"}
+};
+
+std::unordered_map<std::string, std::string> VolumeConditionMap =
+{
+        {"THOST_FTDC_VC_AV","1"},
+        {"THOST_FTDC_VC_MV","2"},
+        {"THOST_FTDC_VC_CV","3"}
+};
+
+
+
+
 bool OrderManage::fillOrder()
 {
         INFO_LOG("begin to fill order"); // @suppress("Invalid arguments")
         ///经纪公司代码 TThostFtdcBrokerIDType char[11]
         strcpy(order.BrokerID, getConfig("trade", "BrokerID").c_str());
 
-        ///投资者代砄1�7 TThostFtdcInvestorIDType char[13]
+        ///投资者代砄1�7 TThostFtdcInvestorIDType char[13]
         strcpy(order.InvestorID, getConfig("trade", "InvestorID").c_str());
 
         ///报单引用 TThostFtdcOrderRefType char[13]
@@ -38,25 +98,25 @@ bool OrderManage::fillOrder()
 
         strcpy(order.ExchangeID, "DCE");
         ///报单价格条件 TThostFtdcOrderPriceTypeType char
-        //// THOST_FTDC_OPT_AnyPrice '1' 任意仄1�7
+        //// THOST_FTDC_OPT_AnyPrice '1' 任意仄1�7
         //// THOST_FTDC_OPT_LimitPrice '2' 限价
-        //// THOST_FTDC_OPT_BestPrice '3' 朄1�7优价
-        //// THOST_FTDC_OPT_LastPrice '4' 朄1�7新价
-        //// THOST_FTDC_OPT_LastPricePlusOneTicks '5' 朄1�7新价浮动上浮1个ticks
-        //// THOST_FTDC_OPT_LastPricePlusTwoTicks '6' 朄1�7新价浮动上浮2个ticks
-        //// THOST_FTDC_OPT_LastPricePlusThreeTicks '7' 朄1�7新价浮动上浮3个ticks
-        //// THOST_FTDC_OPT_AskPrice1 '8' 卖一仄1�7
-        //// THOST_FTDC_OPT_AskPrice1PlusOneTicks '9' 卖一价浮动上浄1�7�ticks
-        //// THOST_FTDC_OPT_AskPrice1PlusTwoTicks 'A' 卖一价浮动上浄1�7�ticks
-        //// THOST_FTDC_OPT_AskPrice1PlusThreeTicks 'B' 卖一价浮动上浄1�7�ticks
-        //// THOST_FTDC_OPT_BidPrice1 'C' 买一仄1�7
-        //// THOST_FTDC_OPT_BidPrice1PlusOneTicks 'D' 买一价浮动上浄1�7�ticks
-        //// THOST_FTDC_OPT_BidPrice1PlusTwoTicks 'E' 买一价浮动上浄1�7�ticks
-        //// THOST_FTDC_OPT_BidPrice1PlusThreeTicks 'F' 买一价浮动上浄1�7�ticks
+        //// THOST_FTDC_OPT_BestPrice '3' 朄1�7优价
+        //// THOST_FTDC_OPT_LastPrice '4' 朄1�7新价
+        //// THOST_FTDC_OPT_LastPricePlusOneTicks '5' 朄1�7新价浮动上浮1个ticks
+        //// THOST_FTDC_OPT_LastPricePlusTwoTicks '6' 朄1�7新价浮动上浮2个ticks
+        //// THOST_FTDC_OPT_LastPricePlusThreeTicks '7' 朄1�7新价浮动上浮3个ticks
+        //// THOST_FTDC_OPT_AskPrice1 '8' 卖一仄1�7
+        //// THOST_FTDC_OPT_AskPrice1PlusOneTicks '9' 卖一价浮动上浄1�7�ticks
+        //// THOST_FTDC_OPT_AskPrice1PlusTwoTicks 'A' 卖一价浮动上浄1�7�ticks
+        //// THOST_FTDC_OPT_AskPrice1PlusThreeTicks 'B' 卖一价浮动上浄1�7�ticks
+        //// THOST_FTDC_OPT_BidPrice1 'C' 买一仄1�7
+        //// THOST_FTDC_OPT_BidPrice1PlusOneTicks 'D' 买一价浮动上浄1�7�ticks
+        //// THOST_FTDC_OPT_BidPrice1PlusTwoTicks 'E' 买一价浮动上浄1�7�ticks
+        //// THOST_FTDC_OPT_BidPrice1PlusThreeTicks 'F' 买一价浮动上浄1�7�ticks
         order.OrderPriceType = '2';
 
-        ///组合弄1�7平标忄1�7 TThostFtdcCombOffsetFlagType char[5]
-        //// THOST_FTDC_OF_Open '0' 弄1�7仄1�7
+        ///组合弄1�7平标忄1�7 TThostFtdcCombOffsetFlagType char[5]
+        //// THOST_FTDC_OF_Open '0' 弄1�7仄1�7
         //// THOST_FTDC_OF_Close '1' 平仓
         //// THOST_FTDC_OF_ForceClose '2' 强平
         //// THOST_FTDC_OF_CloseToday '3' 平今
@@ -73,36 +133,36 @@ bool OrderManage::fillOrder()
         strcpy(order.CombHedgeFlag, "1");
 
 
-        ///有效期类垄1�7 TThostFtdcTimeConditionType char
-        //// THOST_FTDC_TC_IOC '1' 立即完成，否则撤锄1�7
+        ///有效期类垄1�7 TThostFtdcTimeConditionType char
+        //// THOST_FTDC_TC_IOC '1' 立即完成，否则撤锄1�7
         //// THOST_FTDC_TC_GFS '2' 本节有效
         //// THOST_FTDC_TC_GFD '3' 当日有效
-        //// THOST_FTDC_TC_GTD '4' 指定日期前有敄1�7
-        //// THOST_FTDC_TC_GTC '5' 撤销前有敄1�7
+        //// THOST_FTDC_TC_GTD '4' 指定日期前有敄1�7
+        //// THOST_FTDC_TC_GTC '5' 撤销前有敄1�7
         //// THOST_FTDC_TC_GFA '6' 集合竞价有效
         order.TimeCondition = THOST_FTDC_TC_GFS;
 
         ///GTD日期 TThostFtdcDateType char[9]
         strcpy(order.GTDDate, "");
 
-        ///成交量类垄1�7 TThostFtdcVolumeConditionType char
+        ///成交量类垄1�7 TThostFtdcVolumeConditionType char
         //// THOST_FTDC_VC_AV '1' 任何数量
-        //// THOST_FTDC_VC_MV '2' 朄1�7小数釄1�7
+        //// THOST_FTDC_VC_MV '2' 朄1�7小数釄1�7
         //// THOST_FTDC_VC_CV '3' 全部数量
         order.VolumeCondition = THOST_FTDC_VC_CV;
 
-        ///朄1�7小成交量 TThostFtdcVolumeType int
+        ///朄1�7小成交量 TThostFtdcVolumeType int
         order.MinVolume = 1;
 
         ///触发条件 TThostFtdcContingentConditionType char
         //// THOST_FTDC_CC_Immediately '1' 立即
         //// THOST_FTDC_CC_Touch '2' 止损
         //// THOST_FTDC_CC_TouchProfit '3' 止赢
-        //// THOST_FTDC_CC_ParkedOrder '4' 预埋卄1�7
-        //// THOST_FTDC_CC_LastPriceGreaterThanStopPrice '5' 朄1�7新价大于条件仄1�7
-        //// THOST_FTDC_CC_LastPriceGreaterEqualStopPrice '6' 朄1�7新价大于等于条件仄1�7
-        //// THOST_FTDC_CC_LastPriceLesserThanStopPrice '7' 朄1�7新价小于条件仄1�7
-        //// THOST_FTDC_CC_LastPriceLesserEqualStopPrice '8' 朄1�7新价小于等于条件仄1�7
+        //// THOST_FTDC_CC_ParkedOrder '4' 预埋卄1�7
+        //// THOST_FTDC_CC_LastPriceGreaterThanStopPrice '5' 朄1�7新价大于条件仄1�7
+        //// THOST_FTDC_CC_LastPriceGreaterEqualStopPrice '6' 朄1�7新价大于等于条件仄1�7
+        //// THOST_FTDC_CC_LastPriceLesserThanStopPrice '7' 朄1�7新价小于条件仄1�7
+        //// THOST_FTDC_CC_LastPriceLesserEqualStopPrice '8' 朄1�7新价小于等于条件仄1�7
         //// THOST_FTDC_CC_AskPriceGreaterThanStopPrice '9' 卖一价大于条件价
         //// THOST_FTDC_CC_AskPriceGreaterEqualStopPrice 'A' 卖一价大于等于条件价
         //// THOST_FTDC_CC_AskPriceLesserThanStopPrice 'B' 卖一价小于条件价
@@ -113,18 +173,18 @@ bool OrderManage::fillOrder()
         //// THOST_FTDC_CC_BidPriceLesserEqualStopPrice 'H' 买一价小于等于条件价
         order.ContingentCondition = THOST_FTDC_CC_Immediately;
 
-        ///止损仄1�7 TThostFtdcPriceType double
+        ///止损仄1�7 TThostFtdcPriceType double
         order.StopPrice = 0;
 
         ///强平原因 TThostFtdcForceCloseReasonType char
-        //// THOST_FTDC_FCC_NotForceClose '0' 非强幄1�7
+        //// THOST_FTDC_FCC_NotForceClose '0' 非强幄1�7
         //// THOST_FTDC_FCC_LackDeposit '1' 资金不足
         //// THOST_FTDC_FCC_ClientOverPositionLimit '2' 客户超仓
         //// THOST_FTDC_FCC_MemberOverPositionLimit '3' 会员超仓
-        //// THOST_FTDC_FCC_NotMultiple '4' 持仓非整数�1�7�1�7
+        //// THOST_FTDC_FCC_NotMultiple '4' 持仓非整数�1�7�1�7
         //// THOST_FTDC_FCC_Violation '5' 违规
         //// THOST_FTDC_FCC_Other '6' 其它
-        //// THOST_FTDC_FCC_PersonDeliv '7' 自然人临近交剄1�7
+        //// THOST_FTDC_FCC_PersonDeliv '7' 自然人临近交剄1�7
         order.ForceCloseReason = THOST_FTDC_FCC_NotForceClose;
 
         ///自动挂起标志 TThostFtdcBoolType int
@@ -139,7 +199,7 @@ bool OrderManage::fillOrder()
         ///用户强评标志 TThostFtdcBoolType int
         order.UserForceClose = 0;
 
-        ///互换单标忄1�7 TThostFtdcBoolType int
+        ///互换单标忄1�7 TThostFtdcBoolType int
         order.IsSwapOrder = 0;
 
         return true;
@@ -165,7 +225,7 @@ bool OrderManage::fillOrderByJsonFile()
     strcpy(order.BrokerID, brokerId.c_str());
     printf("BrokerID fill ok!\n");
 
-    ///投资者代砄1�7 TThostFtdcInvestorIDType char[13]
+    ///投资者代砄1�7 TThostFtdcInvestorIDType char[13]
     string investorId = orderCfg["InvestorID"].get<string>();
     strcpy(order.InvestorID, investorId.c_str());
     printf("InvestorID fill ok!\n");
@@ -201,27 +261,27 @@ bool OrderManage::fillOrderByJsonFile()
     order.VolumeTotalOriginal = orderCfg["VolumeTotalOriginal"].get<int>();
     printf("VolumeTotalOriginal fill ok!\n");
     ///报单价格条件 TThostFtdcOrderPriceTypeType char
-    //// THOST_FTDC_OPT_AnyPrice '1' 任意仄1�7
+    //// THOST_FTDC_OPT_AnyPrice '1' 任意仄1�7
     //// THOST_FTDC_OPT_LimitPrice '2' 限价
-    //// THOST_FTDC_OPT_BestPrice '3' 朄1�7优价
-    //// THOST_FTDC_OPT_LastPrice '4' 朄1�7新价
-    //// THOST_FTDC_OPT_LastPricePlusOneTicks '5' 朄1�7新价浮动上浮1个ticks
-    //// THOST_FTDC_OPT_LastPricePlusTwoTicks '6' 朄1�7新价浮动上浮2个ticks
-    //// THOST_FTDC_OPT_LastPricePlusThreeTicks '7' 朄1�7新价浮动上浮3个ticks
-    //// THOST_FTDC_OPT_AskPrice1 '8' 卖一仄1�7
-    //// THOST_FTDC_OPT_AskPrice1PlusOneTicks '9' 卖一价浮动上浄1�7�ticks
-    //// THOST_FTDC_OPT_AskPrice1PlusTwoTicks 'A' 卖一价浮动上浄1�7�ticks
-    //// THOST_FTDC_OPT_AskPrice1PlusThreeTicks 'B' 卖一价浮动上浄1�7�ticks
-    //// THOST_FTDC_OPT_BidPrice1 'C' 买一仄1�7
-    //// THOST_FTDC_OPT_BidPrice1PlusOneTicks 'D' 买一价浮动上浄1�7�ticks
-    //// THOST_FTDC_OPT_BidPrice1PlusTwoTicks 'E' 买一价浮动上浄1�7�ticks
-    //// THOST_FTDC_OPT_BidPrice1PlusThreeTicks 'F' 买一价浮动上浄1�7�ticks
+    //// THOST_FTDC_OPT_BestPrice '3' 朄1�7优价
+    //// THOST_FTDC_OPT_LastPrice '4' 朄1�7新价
+    //// THOST_FTDC_OPT_LastPricePlusOneTicks '5' 朄1�7新价浮动上浮1个ticks
+    //// THOST_FTDC_OPT_LastPricePlusTwoTicks '6' 朄1�7新价浮动上浮2个ticks
+    //// THOST_FTDC_OPT_LastPricePlusThreeTicks '7' 朄1�7新价浮动上浮3个ticks
+    //// THOST_FTDC_OPT_AskPrice1 '8' 卖一仄1�7
+    //// THOST_FTDC_OPT_AskPrice1PlusOneTicks '9' 卖一价浮动上浄1�7�ticks
+    //// THOST_FTDC_OPT_AskPrice1PlusTwoTicks 'A' 卖一价浮动上浄1�7�ticks
+    //// THOST_FTDC_OPT_AskPrice1PlusThreeTicks 'B' 卖一价浮动上浄1�7�ticks
+    //// THOST_FTDC_OPT_BidPrice1 'C' 买一仄1�7
+    //// THOST_FTDC_OPT_BidPrice1PlusOneTicks 'D' 买一价浮动上浄1�7�ticks
+    //// THOST_FTDC_OPT_BidPrice1PlusTwoTicks 'E' 买一价浮动上浄1�7�ticks
+    //// THOST_FTDC_OPT_BidPrice1PlusThreeTicks 'F' 买一价浮动上浄1�7�ticks
     string orderPrinceType = orderCfg["OrderPriceType"].get<string>();
     order.OrderPriceType = orderPrinceType[0];
     printf("OrderPriceType fill ok!\n");
 
-    ///组合弄1�7平标忄1�7 TThostFtdcCombOffsetFlagType char[5]
-    //// THOST_FTDC_OF_Open '0' 弄1�7仄1�7
+    ///组合弄1�7平标忄1�7 TThostFtdcCombOffsetFlagType char[5]
+    //// THOST_FTDC_OF_Open '0' 弄1�7仄1�7
     //// THOST_FTDC_OF_Close '1' 平仓
     //// THOST_FTDC_OF_ForceClose '2' 强平
     //// THOST_FTDC_OF_CloseToday '3' 平今
@@ -242,12 +302,12 @@ bool OrderManage::fillOrderByJsonFile()
     printf("CombHedgeFlag fill ok!\n");
 
 
-    ///有效期类垄1�7 TThostFtdcTimeConditionType char
-    //// THOST_FTDC_TC_IOC '1' 立即完成，否则撤锄1�7
+    ///有效期类垄1�7 TThostFtdcTimeConditionType char
+    //// THOST_FTDC_TC_IOC '1' 立即完成，否则撤锄1�7
     //// THOST_FTDC_TC_GFS '2' 本节有效
     //// THOST_FTDC_TC_GFD '3' 当日有效
-    //// THOST_FTDC_TC_GTD '4' 指定日期前有敄1�7
-    //// THOST_FTDC_TC_GTC '5' 撤销前有敄1�7
+    //// THOST_FTDC_TC_GTD '4' 指定日期前有敄1�7
+    //// THOST_FTDC_TC_GTC '5' 撤销前有敄1�7
     //// THOST_FTDC_TC_GFA '6' 集合竞价有效
     string timeCondition = orderCfg["TimeCondition"].get<string>();
     order.TimeCondition = timeCondition[0];
@@ -258,15 +318,15 @@ bool OrderManage::fillOrderByJsonFile()
     strcpy(order.GTDDate, gTDDate.c_str());
     printf("GTDDate fill ok!\n");
 
-    ///成交量类垄1�7 TThostFtdcVolumeConditionType char
+    ///成交量类垄1�7 TThostFtdcVolumeConditionType char
     //// THOST_FTDC_VC_AV '1' 任何数量
-    //// THOST_FTDC_VC_MV '2' 朄1�7小数釄1�7
+    //// THOST_FTDC_VC_MV '2' 朄1�7小数釄1�7
     //// THOST_FTDC_VC_CV '3' 全部数量
     string volumeCondition = orderCfg["VolumeCondition"].get<string>();
     order.VolumeCondition = volumeCondition[0];
     printf("VolumeCondition fill ok!\n");
 
-    ///朄1�7小成交量 TThostFtdcVolumeType int
+    ///朄1�7小成交量 TThostFtdcVolumeType int
     order.MinVolume = orderCfg["MinVolume"].get<int>();
     printf("MinVolume fill ok!\n");
 
@@ -274,11 +334,11 @@ bool OrderManage::fillOrderByJsonFile()
     //// THOST_FTDC_CC_Immediately '1' 立即
     //// THOST_FTDC_CC_Touch '2' 止损
     //// THOST_FTDC_CC_TouchProfit '3' 止赢
-    //// THOST_FTDC_CC_ParkedOrder '4' 预埋卄1�7
-    //// THOST_FTDC_CC_LastPriceGreaterThanStopPrice '5' 朄1�7新价大于条件仄1�7
-    //// THOST_FTDC_CC_LastPriceGreaterEqualStopPrice '6' 朄1�7新价大于等于条件仄1�7
-    //// THOST_FTDC_CC_LastPriceLesserThanStopPrice '7' 朄1�7新价小于条件仄1�7
-    //// THOST_FTDC_CC_LastPriceLesserEqualStopPrice '8' 朄1�7新价小于等于条件仄1�7
+    //// THOST_FTDC_CC_ParkedOrder '4' 预埋卄1�7
+    //// THOST_FTDC_CC_LastPriceGreaterThanStopPrice '5' 朄1�7新价大于条件仄1�7
+    //// THOST_FTDC_CC_LastPriceGreaterEqualStopPrice '6' 朄1�7新价大于等于条件仄1�7
+    //// THOST_FTDC_CC_LastPriceLesserThanStopPrice '7' 朄1�7新价小于条件仄1�7
+    //// THOST_FTDC_CC_LastPriceLesserEqualStopPrice '8' 朄1�7新价小于等于条件仄1�7
     //// THOST_FTDC_CC_AskPriceGreaterThanStopPrice '9' 卖一价大于条件价
     //// THOST_FTDC_CC_AskPriceGreaterEqualStopPrice 'A' 卖一价大于等于条件价
     //// THOST_FTDC_CC_AskPriceLesserThanStopPrice 'B' 卖一价小于条件价
@@ -291,19 +351,19 @@ bool OrderManage::fillOrderByJsonFile()
     order.ContingentCondition = contingentCondition[0];
     printf("ContingentCondition fill ok!\n");
 
-    ///止损仄1�7 TThostFtdcPriceType double
+    ///止损仄1�7 TThostFtdcPriceType double
     order.StopPrice = orderCfg["StopPrice"].get<double>();
     printf("StopPrice fill ok!\n");
 
     ///强平原因 TThostFtdcForceCloseReasonType char
-    //// THOST_FTDC_FCC_NotForceClose '0' 非强幄1�7
+    //// THOST_FTDC_FCC_NotForceClose '0' 非强幄1�7
     //// THOST_FTDC_FCC_LackDeposit '1' 资金不足
     //// THOST_FTDC_FCC_ClientOverPositionLimit '2' 客户超仓
     //// THOST_FTDC_FCC_MemberOverPositionLimit '3' 会员超仓
-    //// THOST_FTDC_FCC_NotMultiple '4' 持仓非整数�1�7�1�7
+    //// THOST_FTDC_FCC_NotMultiple '4' 持仓非整数�1�7�1�7
     //// THOST_FTDC_FCC_Violation '5' 违规
     //// THOST_FTDC_FCC_Other '6' 其它
-    //// THOST_FTDC_FCC_PersonDeliv '7' 自然人临近交剄1�7
+    //// THOST_FTDC_FCC_PersonDeliv '7' 自然人临近交剄1�7
     string forceCloseReason = orderCfg["ForceCloseReason"].get<string>();
     order.ForceCloseReason = forceCloseReason[0];
     printf("ForceCloseReason fill ok!\n");
@@ -325,7 +385,7 @@ bool OrderManage::fillOrderByJsonFile()
     order.UserForceClose = orderCfg["UserForceClose"].get<int>();
     printf("UserForceClose fill ok!\n");
 
-    ///互换单标忄1�7 TThostFtdcBoolType int
+    ///互换单标忄1�7 TThostFtdcBoolType int
     order.IsSwapOrder = orderCfg["IsSwapOrder"].get<int>();
     printf("IsSwapOrder fill ok!\n");
 
@@ -459,7 +519,7 @@ bool OrderManage::buildFirstOrder(const json& orderData, const char& direction)
     strcpy(order1.GTDDate, gTDDate.c_str());
 //    printf("GTDDate fill ok!\n");
 
-    ///成交量类垄1�7
+    ///成交量类垄1�7
     string volumeCondition = orderCfg["VolumeCondition"].get<string>();
     order1.VolumeCondition = volumeCondition[0];
 //    printf("VolumeCondition fill ok!\n");
@@ -472,7 +532,7 @@ bool OrderManage::buildFirstOrder(const json& orderData, const char& direction)
     order1.ContingentCondition = contingentCondition[0];
 //    printf("ContingentCondition fill ok!\n");
 
-    ///止损仄1�7 TThostFtdcPriceType double
+    ///止损仄1�7 TThostFtdcPriceType double
     order1.StopPrice = orderCfg["StopPrice"].get<double>();
 //    printf("StopPrice fill ok!\n");
 
@@ -498,7 +558,7 @@ bool OrderManage::buildFirstOrder(const json& orderData, const char& direction)
     order1.UserForceClose = orderCfg["UserForceClose"].get<int>();
 //    printf("UserForceClose fill ok!\n");
 
-    ///互换单标忄1�7 TThostFtdcBoolType int
+    ///互换单标忄1�7 TThostFtdcBoolType int
     order1.IsSwapOrder = orderCfg["IsSwapOrder"].get<int>();
 //    printf("IsSwapOrder fill ok!\n");
 
@@ -593,7 +653,7 @@ bool OrderManage::buildSecondOrder(const json& orderData, const char& direction)
     strcpy(order2.GTDDate, gTDDate.c_str());
 //    printf("GTDDate fill ok!\n");
 
-    ///成交量类垄1�7
+    ///成交量类垄1�7
     string volumeCondition = orderCfg["VolumeCondition"].get<string>();
     order2.VolumeCondition = volumeCondition[0];
 //    printf("VolumeCondition fill ok!\n");
@@ -606,7 +666,7 @@ bool OrderManage::buildSecondOrder(const json& orderData, const char& direction)
     order2.ContingentCondition = contingentCondition[0];
 //    printf("ContingentCondition fill ok!\n");
 
-    ///止损仄1�7 TThostFtdcPriceType double
+    ///止损仄1�7 TThostFtdcPriceType double
     order2.StopPrice = orderCfg["StopPrice"].get<double>();
 //    printf("StopPrice fill ok!\n");
 
@@ -632,7 +692,7 @@ bool OrderManage::buildSecondOrder(const json& orderData, const char& direction)
     order2.UserForceClose = orderCfg["UserForceClose"].get<int>();
 //    printf("UserForceClose fill ok!\n");
 
-    ///互换单标忄1�7 TThostFtdcBoolType int
+    ///互换单标忄1�7 TThostFtdcBoolType int
     order2.IsSwapOrder = orderCfg["IsSwapOrder"].get<int>();
 //    printf("IsSwapOrder fill ok!\n");
 
@@ -666,12 +726,12 @@ bool OrderManage::determineBuyAndSaleDirection(const json orderData, char* direc
         ERROR_LOG("Direction from strategy error!"); // @suppress("Invalid arguments")
         return false;
     }
-    if (Direction == BUY1_SELL2) {           //鍚堢宄1�7�帮紝鍚堢害2鍗�
+    if (Direction == BUY1_SELL2) {           //鍚堢宄1�7�帮紝鍚堢害2鍗�
     //  direction_flag = {'0','1'};
         direction_flag[0] = BUY_;
         direction_flag[1] = SELL_;
     }
-    else if (Direction == SELL1_BUY2) {  //鍚堢宄1�7�栵紝鍚堢害2涔�
+    else if (Direction == SELL1_BUY2) {  //鍚堢宄1�7�栵紝鍚堢害2涔�
    //    direction_flag = {'1','0'};
         direction_flag[0] = SELL_;
         direction_flag[1] = BUY_;

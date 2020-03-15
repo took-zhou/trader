@@ -5,7 +5,7 @@
 #include "dci/Role.h"
 #include "json.h"
 #include "trade_components/PrintCheck.h"
-
+#include <unordered_map>
 using json = nlohmann::json;
 
 
@@ -14,6 +14,7 @@ constexpr char SELL1_BUY2 = '1';
 
 constexpr char BUY_ = '0';
 constexpr char SELL_ = '1';
+
 
 struct OrderManage
 {

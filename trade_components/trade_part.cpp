@@ -10,7 +10,7 @@
 extern GlobalSem globalSem;
 extern FillFlag fillFlag;
 extern CThostFtdcInstrumentField InstrumentInfo;
-
+extern U8 rspSuccessSwitch;
 namespace
 {
     void msgHeadShow(const TradeMsgHead& msgHead)
@@ -205,6 +205,15 @@ bool TradePart::insertOrderByMsg(const json& msgBody)
 void TradePart::handleTradeMsg(const json& msgBody)
 {
     INFO_LOG("begin to handle trade Msg"); // @suppress("Invalid arguments")
+
+    if(rspSuccessSwitch)
+    {
+        INFO_LOG("rspSuccessSwitch is open!! return success");
+        sendResult(InsertResult::Success);
+        INFO_LOG("order pair insert success!"); // @suppress("Invalid arguments")
+        return;
+    }
+
     if (insertOrderByMsg(msgBody))
     {
         sendResult(InsertResult::Success);
