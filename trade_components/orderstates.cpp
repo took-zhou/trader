@@ -16,6 +16,7 @@ bool OrderStates::insertState(const std::string& key, const char& state)
     }
     orderKey2StateMap.at(key)->push_back(state);
     INFO_LOG("new order state [%c] add success",state);
+    showAllOrderStates();
     return true;
 }
 
