@@ -6,7 +6,7 @@
 #include <pthread.h>
 #include <thread>
 #include <semaphore.h>
-//#include "utils.h"
+#include "utils.h"
 #include "trade_components/query.h"
 #include<string.h>
 #include "log.h"
@@ -32,6 +32,7 @@ int main() {
 
 //    if( atoi(getConfig("trade","dbgSwitch").c_str()) == 0)
     std::string tradeLogPath = getConfig("trade","LogPath");
+    utils::creatFolder(tradeLogPath);
     LOG_INIT(tradeLogPath.c_str(), "tradelog", 6);
     INFO_LOG("TRADE LOG PATH is %s",tradeLogPath.c_str());
 

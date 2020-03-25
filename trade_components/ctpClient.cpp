@@ -1,5 +1,5 @@
 #include "ctpClient.h"
-
+#include "utils.h"
 //CtpClient::CtpClient()
 //{
 //    pUserApi = new CTraderApi;     //新建tradeAPI
@@ -18,6 +18,7 @@ void CtpClient::init()
 {
     pUserApi = new CTraderApi;     //新建tradeAPI
     std::string conPath = getConfig("trade", "ConPath");
+    utils::creatFolder(conPath);
     pUserApi->CreateFtdcTraderApi(conPath.c_str()); //设置.con的保存位置
 //        CSimpleHandler sh(pUserApi);     //初始化回调类
     sh = CSimpleHandler(pUserApi);

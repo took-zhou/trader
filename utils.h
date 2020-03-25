@@ -7,13 +7,13 @@
 
 #define BUY '0'
 #define SELL '1'
-#define  ARBITRAGEDIRECTION_BUY1_SELL2 '0'    //ºÏÔ¼1Âò£¬ºÏÔ¼2Âô 
-#define  ARBITRAGEDIRECTION_SELL1_BUY2 '1'    //ºÏÔ¼1Âô£¬ºÏÔ¼2Âò
+#define  ARBITRAGEDIRECTION_BUY1_SELL2 '0'    //ï¿½ï¿½Ô¼1ï¿½ò£¬ºï¿½Ô¼2ï¿½ï¿½
+#define  ARBITRAGEDIRECTION_SELL1_BUY2 '1'    //ï¿½ï¿½Ô¼1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼2ï¿½ï¿½
 
 // #define TRADE_STRATEGY_STRUCT_SIZE  600
 typedef char SOCKET_PORT_TYPE[10];
 typedef char SOCKET_IP_TYPE[20];
-typedef enum 
+typedef enum
 {
     OrderInsert = 1,
     OrderOperation
@@ -49,5 +49,15 @@ bool dealOrder_SA(int sock, CSimpleHandler& pTraderApi);
 void dealOrder_GDF(int sock, CTraderApi *pTraderApi);
 void ShowCommonInfor(CThostFtdcTraderApi *pTraderApi);
 void dealOrder_SA_TEST(CTraderApi *pTradeApi);
+
+
+#include<string>
+
+namespace utils
+{
+    void creatFolder(const std::string folderName);
+
+}
+
 
 #endif
