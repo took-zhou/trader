@@ -69,13 +69,23 @@ namespace {
         int hour_int = atoi(hour.c_str());
         int minute_int = atoi(minute.c_str());
 //        int sec_int = atoi(sec.c_str());
-        if(hour_int > 20
-           || (hour_int == 20 && minute_int >= 50)
-           ||  hour_int < 15
-           || (hour_int == 15 && minute_int < 50))
+//        if(hour_int > 20
+//           || (hour_int == 20 && minute_int >= 50)
+//           ||  hour_int < 15
+//           || (hour_int == 15 && minute_int < 50))
+//        {
+//            return true;
+//        }
+//        if(hour_int > 20
+//           || (hour_int == 20 && minute_int >= 50)
+//           ||  hour_int < 15
+//           || (hour_int == 15 && minute_int < 16))
+        if(hour_int >= 9  &&
+          ( hour_int < 15 ||(hour_int == 15 && minute_int < 16)))
         {
             return true;
         }
+
         return false;
     }
     unordered_map<string,int> logMode = {
