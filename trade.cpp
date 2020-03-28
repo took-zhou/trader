@@ -50,7 +50,7 @@ int main() {
     go [&] {
         SELF(trader, HandleSel).msgHandleSel();
     };
-    std::thread t([]{ co_sched.Start(0,10);});
+    std::thread t([]{ co_sched.Start(0,128);});
     //t.detach();
     t.join();
 

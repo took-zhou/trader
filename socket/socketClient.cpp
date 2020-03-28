@@ -8,6 +8,7 @@
 #include "getconfig.h"
 #include "define.h"
 #include "json.h"
+#include "timer.h"
 
 using json = nlohmann::json;
 
@@ -48,6 +49,7 @@ void SocketClient::init()
         ERROR_LOG("login route error!");
     }
     isRouterConnected = true;
+    startHeadBeatCheckTimer();
 }
 
 bool SocketClient::routeLogin()
@@ -174,3 +176,20 @@ bool SocketClient::routerReconnect()
      }
     isRouterConnected = true;
 }
+
+void SocketClient::startHeadBeatCheckTimer()
+{
+    auto& timerPool = TimeoutTimerPool::getInstance();
+
+
+    if (not timerPool.isTimerExist(ROUTE_HEADBEAT_TIMER))
+    {
+        auto timerOutFunc = [&]() {
+            this->isRouterConnected = false;
+            this->routerReconnect();
+        };
+        timerPool.addTimer(ROUTE_HEADBEAT_TIMER, timerOutFunc, HEADBEAT_TIME_OUT_LENGTH);
+    }
+    timerPool.getTimerByName(ROUTE_HEADBEAT_TIMER)->start();
+}
+

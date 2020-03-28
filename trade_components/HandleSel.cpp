@@ -8,7 +8,8 @@
 #include <string>
 #include <functional>
 #include <vector>
-
+#include "timer.h"
+#include "define.h"
 namespace
 {
     enum struct ClientType
@@ -75,6 +76,28 @@ void HandleSel::marketHandle(const json& msgBody, void* __this)
     _this->handleQueryMsg(msgBody);
 }
 
+void HandleSel::routeHandle(const json& msgBody, void* __this)
+{
+    if (msgBody.count("status") != 0 and msgBody["status"].get<std::string>() == std::string("alive"))
+    {
+        auto& timerPool = TimeoutTimerPool::getInstance();
+        
+        if (not timerPool.isTimerExist(ROUTE_HEADBEAT_TIMER))
+        {
+            SocketClient* socketPart = (SocketClient*)__this;
+            auto timerOutFunc = [&]() {
+                INFO_LOG("%s","route head beat time out!");
+                socketPart->isRouterConnected = false;
+                socketPart->routerReconnect();
+            };
+            timerPool.addTimer(ROUTE_HEADBEAT_TIMER, timerOutFunc, HEADBEAT_TIME_OUT_LENGTH);
+        }
+        timerPool.getTimerByName(ROUTE_HEADBEAT_TIMER)->stop();
+        timerPool.getTimerByName(ROUTE_HEADBEAT_TIMER)->restart();
+        return;
+    }
+}
+
 void HandleSel::msgHandleSel()
 {
     INFO_LOG("begin to handle MSG"); // @suppress("Invalid arguments")
@@ -89,7 +112,7 @@ void HandleSel::msgHandleSel()
                 break;
             }
         }
-        INFO_LOG("**********************wait for msghead ......**********************");
+        INFO_LOG("%s","**********************wait for msghead ......**********************");
         if(!parseMsgHead(sockfd, msgHead))
         {
             ERROR_LOG("parse head msg error!");
@@ -133,6 +156,14 @@ void HandleSel::msgHandleSel()
             }
             case ClientType::Route:
             {
+                INFO_LOG("create route thread by msg");
+                json msgBody;
+                if (!getMsgBody(msgBody, msgHead))
+                {
+                    break;
+                }
+                std::thread routeThread(routeHandle, msgBody, (void*)&ROLE(SocketClient)); // @suppress("Type cannot be resolved")
+                routeThread.detach();
                 break;
             }
             case ClientType::Market:

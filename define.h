@@ -74,6 +74,10 @@ enum struct ModuleName
     ROUTE_LODIN_STATUS_ID,
     MARKET_DEEP_DATA_ID
 };
+
+constexpr char ROUTE_HEADBEAT_TIMER[]   = "route_headbeat_check";
+constexpr U32  HEADBEAT_TIME_OUT_LENGTH = 80 * 1000;
+
 #endif
 
 

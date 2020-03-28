@@ -17,6 +17,7 @@ private:
     bool parseMsgHead(int sockfd, TradeMsgHead& msgHead);
     static void marketHandle(const json& msgBody, void* __this);
     static void tradeHandle(const json& msgBody, void* __this);
+    static void routeHandle(const json& msgBody, void* __this);
 public:
     USE_ROLE(SocketClient);
     USE_ROLE(PintCheck);

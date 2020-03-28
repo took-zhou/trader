@@ -25,6 +25,7 @@ struct SocketClient
     bool sendJsonMsg(const json& jsonMsg);
     bool recUselessMsgBody(const size_t length);
     bool routerReconnect();
+    void startHeadBeatCheckTimer();
 public:
     int newSocket;
     bool isRouterConnected{false};

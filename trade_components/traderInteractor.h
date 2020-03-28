@@ -26,6 +26,9 @@ using json = nlohmann::json;
 constexpr char FIFO_INTERACT_TRADE[]        = "/tmp/interact_to_trade";
 constexpr char FIFO_TRADE_INTERACT[]        = "/tmp/trade_to_interact";
 
+//constexpr char FIFO_INTERACT_TRADE[]        = "/tmp/interact_to_trade_test";
+//constexpr char FIFO_TRADE_INTERACT[]        = "/tmp/trade_to_interact_test";
+
 constexpr char INTERACTOR_RECEIVE[]         = "interactor";
 
 struct MsgHeader
