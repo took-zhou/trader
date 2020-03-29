@@ -66,7 +66,6 @@ TimeoutTimer::TimeoutTimer(std::string _name, std::function<void()> _func, U32 l
 void TimeoutTimer::start()
 {
     this->startTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     this->isValid = true;
 }
 void TimeoutTimer::stop()

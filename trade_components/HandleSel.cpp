@@ -62,7 +62,7 @@ namespace
 }
 
 
-void HandleSel::tradeHandle(const json& msgBody, void* __this)
+void HandleSel::strategyHandle(const json& msgBody, void* __this)
 {
 
     DEBUG_LOG("tradeHandle reach");
@@ -81,7 +81,6 @@ void HandleSel::routeHandle(const json& msgBody, void* __this)
     if (msgBody.count("status") != 0 and msgBody["status"].get<std::string>() == std::string("alive"))
     {
         auto& timerPool = TimeoutTimerPool::getInstance();
-        
         if (not timerPool.isTimerExist(ROUTE_HEADBEAT_TIMER))
         {
             SocketClient* socketPart = (SocketClient*)__this;
@@ -98,28 +97,48 @@ void HandleSel::routeHandle(const json& msgBody, void* __this)
     }
 }
 
+void HandleSel::tradeHandle(const json& msgBody, void* __this)
+{
+    if (msgBody.count("status") != 0 and msgBody["status"].get<std::string>() == std::string("alive"))
+    {
+        auto& timerPool = TimeoutTimerPool::getInstance();
+        if (not timerPool.isTimerExist(ROUTE_HEADBEAT_TIMER))
+        {
+            auto timerOutFunc = [__this]() {
+                SocketClient* socketPart = (SocketClient*)__this;
+                INFO_LOG("%s","route head beat time out!");
+                socketPart->isRouterConnected = false;
+                socketPart->routerReconnect();
+            };
+            timerPool.addTimer(ROUTE_HEADBEAT_TIMER, timerOutFunc, HEADBEAT_TIME_OUT_LENGTH);
+        }
+        timerPool.getTimerByName(ROUTE_HEADBEAT_TIMER)->stop();
+        timerPool.getTimerByName(ROUTE_HEADBEAT_TIMER)->restart();
+        return;
+    }
+}
+
 void HandleSel::msgHandleSel()
 {
     INFO_LOG("begin to handle MSG"); // @suppress("Invalid arguments")
-    int sockfd = ROLE(SocketClient).newSocket;
     TradeMsgHead msgHead{0};
     while(true)
     {
-        while(1)    // route must connected
+        if(!ROLE(SocketClient).isRouterConnected)
         {
-            if(ROLE(SocketClient).isRouterConnected)
-            {
-                break;
-            }
-        }
-        INFO_LOG("%s","**********************wait for msghead ......**********************");
-        if(!parseMsgHead(sockfd, msgHead))
-        {
-            ERROR_LOG("parse head msg error!");
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
             continue;
         }
-        INFO_LOG("msgHead parse ok! msgHead is:"); // @suppress("Invalid arguments");
+        INFO_LOG("%s","**********************........wait for msg ......**********************");
+        json msgBody;
+        if(!getMsg(ROLE(SocketClient).newSocket,msgHead,msgBody))
+        {
+            continue;
+        }
+        INFO_LOG("msgHead is:");
         ROLE(PintCheck).printMsgHead(msgHead);
+        INFO_LOG("msgBody is:");
+        JsonPrint(msgBody);
         if(! checkMsName(msgHead))
         {
             continue;
@@ -131,37 +150,26 @@ void HandleSel::msgHandleSel()
             continue;
         }
 
-        if(!ROLE(LogInPart).isLogIN)
-        {
-            ERROR_LOG("client does not logged in");
-            while(!ROLE(LogInPart).isLogIN){}
-            continue;
-        }
-
         switch (ClientTypeMap[msgHead.fromClientName])
         {
             case ClientType::Strategy:
             {
-                INFO_LOG("create stategy thread by msg");
-//                tradeThread = std::thread(tradeHandle,msgHead, (void*)&ROLE(TradePart)); // @suppress("Type cannot be resolved")
-                json msgBody;
-                if(!getMsgBody(msgBody, msgHead))
+
+                if(!ROLE(LogInPart).isLogIN)
                 {
+                    ERROR_LOG("%s","ctp not login, continue for next msg!");
                     break;
                 }
-                std::thread tradeThread(tradeHandle,msgBody, (void*)&ROLE(TradePart));
-                tradeThread.detach();
+                INFO_LOG("create stategy thread by msg");
+
+                std::thread strategyThread(strategyHandle,msgBody, (void*)&ROLE(TradePart));
+                strategyThread.detach();
 //                tradeThread.join();
                 break;
             }
             case ClientType::Route:
             {
                 INFO_LOG("create route thread by msg");
-                json msgBody;
-                if (!getMsgBody(msgBody, msgHead))
-                {
-                    break;
-                }
                 std::thread routeThread(routeHandle, msgBody, (void*)&ROLE(SocketClient)); // @suppress("Type cannot be resolved")
                 routeThread.detach();
                 break;
@@ -169,13 +177,15 @@ void HandleSel::msgHandleSel()
             case ClientType::Market:
             {
                 INFO_LOG("create Market thread by msg");
-                json msgBody;
-                if(!getMsgBody(msgBody, msgHead))
-                {
-                    break;
-                }
                 std::thread marketThread(marketHandle,msgBody,(void*)&ROLE(Query)); // @suppress("Type cannot be resolved")
                 marketThread.detach();
+                break;
+            }
+            case ClientType::Trade:
+            {
+                INFO_LOG("create route thread by msg");
+                std::thread tradeThread(tradeHandle, msgBody, (void*)&ROLE(SocketClient)); // @suppress("Type cannot be resolved")
+                tradeThread.detach();
                 break;
             }
             case ClientType::Gui:
@@ -185,7 +195,6 @@ void HandleSel::msgHandleSel()
             default:
             {
                 ERROR_LOG("the fromClientName  is unknow");
-                ROLE(SocketClient).recUselessMsgBody((size_t)msgHead.length);
                 break;
             }
         }
@@ -206,7 +215,6 @@ bool HandleSel::parseMsgHead(int sockfd, TradeMsgHead& msgHead)
     {
         ERROR_LOG("router is disconnected!!!!!");
         ROLE(SocketClient).isRouterConnected = false;
-        ROLE(SocketClient).routerReconnect();
         return false;
     }
 
@@ -229,11 +237,23 @@ bool HandleSel::getMsgBody(json& msgBody, TradeMsgHead& msgHead)
     {
         ERROR_LOG("router is disconnected!!!!!");
         ROLE(SocketClient).isRouterConnected = false;
-        ROLE(SocketClient).routerReconnect();
         return false;
     }
     msgBody = json::parse(string(bodyMsg));
     delete[] bodyMsg;
+    return true;
+}
+
+bool HandleSel::getMsg(int sockfd, TradeMsgHead& msgHead, json& msgBody)
+{
+    if(!parseMsgHead(sockfd,msgHead))
+    {
+        return false;
+    }
+    if(!getMsgBody(msgBody, msgHead))
+    {
+        return false;
+    }
     return true;
 }
 

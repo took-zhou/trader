@@ -176,7 +176,7 @@ bool TradePart::insertOrderByMsg(const json& msgBody)
         }
     };
     DEBUG_LOG("sched start");
-    // Æô¶¯0-10¸öÏß³ÌÖ´ÐÐÐÂ´´½¨µÄµ÷¶ÈÆ÷
+    // ï¿½ï¿½ï¿½ï¿½0-10ï¿½ï¿½ï¿½ß³ï¿½Ö´ï¿½ï¿½ï¿½Â´ï¿½ï¿½ï¿½ï¿½Äµï¿½ï¿½ï¿½ï¿½ï¿½
     std::thread insertThrad([&sched]{ sched->Start(0,10); });
     insertThrad.join();
     DEBUG_LOG("sched stop");
@@ -318,30 +318,6 @@ bool TradePart::handleMsgFromJsonFile()
     return true;
 }
 
-
-bool TradePart::parseMsgBody(int sockfd, char* msg, const unsigned short length)
-{
-    if(msg == nullptr)
-    {
-        ERROR_LOG("the pointer msg is nullptr!"); // @suppress("Invalid arguments")
-        return false;
-    }
-    int n;
-    n = recv(sockfd, msg, length, 0);
-    if(n < 0)
-    {
-        ERROR_LOG("read body msg from socket error!"); // @suppress("Invalid arguments")
-        return false;
-    }
-    if(n == 0)
-    {
-        ERROR_LOG("router is disconnected!!!!!");
-        ROLE(SocketClient).isRouterConnected = false;
-        ROLE(SocketClient).routerReconnect();
-        return false;
-    }
-    return true;
-}
 
 double TradePart::reqFoPriceUnitFromCtp(TThostFtdcInstrumentIDType instrumentId, TThostFtdcExchangeIDType exchangeId)
 {

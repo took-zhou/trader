@@ -8,7 +8,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include "json.h"
-
+#include "define.h"
 using json = nlohmann::json;
 using namespace std;
 
@@ -26,6 +26,9 @@ struct SocketClient
     bool recUselessMsgBody(const size_t length);
     bool routerReconnect();
     void startHeadBeatCheckTimer();
+    bool sendMsgHead(TradeMsgHead& msgHead);
+    void sendHeatBeatMsgToRoute();
+    void sendMsg(TradeMsgHead& msgHead, const json& msgBody);
 public:
     int newSocket;
     bool isRouterConnected{false};

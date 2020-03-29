@@ -6,7 +6,6 @@
 #include "socketClient.h"
 #include "log.h"
 #include "getconfig.h"
-#include "define.h"
 #include "json.h"
 #include "timer.h"
 
@@ -49,7 +48,20 @@ void SocketClient::init()
         ERROR_LOG("login route error!");
     }
     isRouterConnected = true;
-    startHeadBeatCheckTimer();
+
+    auto headBeatTriggerFunc = [this](){
+        while (true)
+        {
+            if(this->isRouterConnected)
+            {
+                sendHeatBeatMsgToRoute();
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(HEADBEAT_CHECK_PERIOD));
+        }
+    };
+    std::thread(headBeatTriggerFunc).detach();
+
+    //startHeadBeatCheckTimer();
 }
 
 bool SocketClient::routeLogin()
@@ -84,6 +96,42 @@ int SocketClient::getSocketFd()
 {
     return newSocket;
 }
+
+void SocketClient::sendHeatBeatMsgToRoute()
+{
+    json headBeatMsg;
+    headBeatMsg["status"] = "alive";
+
+    TradeMsgHead rspMsgHead{ 0 };
+    rspMsgHead.dataTypeId = (unsigned short)(ModuleName::ROUTE_LODIN_STATUS_ID);
+    strcpy(rspMsgHead.fromClientName, TRADENAME);
+    strcpy(rspMsgHead.toClientName, TRADENAME);
+
+    sendMsg(rspMsgHead, headBeatMsg);
+}
+void SocketClient::sendMsg(TradeMsgHead& msgHead, const json& msgBody)
+{
+    msgHead.length = (msgBody.dump() + '\0').length();
+    if (!sendMsgHead(msgHead))
+    {
+        return;
+    }
+
+    if (!sendJsonMsg(msgBody))
+    {
+        return;
+    }
+}
+bool SocketClient::sendMsgHead(TradeMsgHead& msgHead)
+{
+    if (write(newSocket, &msgHead, sizeof(TradeMsgHead)) < 0)
+    {
+        ERROR_LOG("send Msg head error!"); // @suppress("Invalid arguments")
+        return false;
+    }
+    return true;
+}
+
 
 bool SocketClient::sendStringMsg(const string msg)
 {
@@ -141,25 +189,26 @@ bool SocketClient::socketClose()
 
 bool SocketClient::routerReconnect()
 {
-    close(newSocket);
-    newSocket = socket(AF_INET, SOCK_STREAM, 0);
+    WARNING_LOG("%s","go into routerReconnect");
+    close(this->newSocket);
+    this->newSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (newSocket < 0)
     {
         ERROR_LOG("ERROR opening socket");
     }
 
-//    memset(&serv_addr, 0, sizeof(struct sockaddr_in));
-
-//    serv_addr.sin_family = PF_INET;
-//    socket_ip = getConfig("trade","RouteIp");
-//    serv_addr.sin_addr.s_addr = inet_addr(socket_ip.c_str());
-//    socket_port = (unsigned short int)stoi(getConfig("trade","RoutePort"));
-//    serv_addr.sin_port = htons(socket_port);
     WARNING_LOG("Re connecting .....");
+    memset(&serv_addr, 0, sizeof(struct sockaddr_in));
+
+    serv_addr.sin_family = PF_INET;
+    socket_ip = getConfig("trade","RouteIp");
+    serv_addr.sin_addr.s_addr = inet_addr(socket_ip.c_str());
+    socket_port = (unsigned short int)stoi(getConfig("trade","RoutePort"));
+    serv_addr.sin_port = htons(socket_port);
     size_t cnt{0};
     while(true)
     {
-        if (connect(newSocket, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+        if (connect(this->newSocket, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
         {
             WARNING_LOG("reconnect to route server %s:%u failed, try %zu",socket_ip.c_str(),socket_port,cnt++);
             sleep(5);
@@ -174,7 +223,8 @@ bool SocketClient::routerReconnect()
         }
 
      }
-    isRouterConnected = true;
+    INFO_LOG("%s","isRouterConnected again");
+    this->isRouterConnected = true;
 }
 
 void SocketClient::startHeadBeatCheckTimer()

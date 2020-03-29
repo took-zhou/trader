@@ -75,8 +75,9 @@ enum struct ModuleName
     MARKET_DEEP_DATA_ID
 };
 
-constexpr char ROUTE_HEADBEAT_TIMER[]   = "route_headbeat_check";
-constexpr U32  HEADBEAT_TIME_OUT_LENGTH = 80 * 1000;
+constexpr char ROUTE_HEADBEAT_TIMER[]    = "route_headbeat_check";
+constexpr U32  HEADBEAT_TIME_OUT_LENGTH  = 45 * 1000;
+constexpr U32  HEADBEAT_CHECK_PERIOD     = 15 * 1000;
 
 #endif
 

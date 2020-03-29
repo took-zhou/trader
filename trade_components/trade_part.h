@@ -29,7 +29,6 @@ struct TradePart
     bool sendResult(InsertResult result);
 
 private:
-    bool parseMsgBody(int sockfd, char* msg, const unsigned short length);
     bool sendMsgHead(TradeMsgHead& msgHead);
     bool sendMsgBody(const char* msgBody, size_t length);
     bool sendMsgBody(const json& msgBody);
