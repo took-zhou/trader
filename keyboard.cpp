@@ -66,6 +66,7 @@ void monitorKeyBoard()
     std::string command;
     while (true)
     {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         INFO_LOG("command read is ready......");
         command = "";
         std::cin.clear();  // 更改cin的状态标示符

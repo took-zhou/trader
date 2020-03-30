@@ -173,6 +173,7 @@ bool TradePart::insertOrderByMsg(const json& msgBody)
                 INFO_LOG("done == 2 sched->Stop ok");
                 return;
             }
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
     };
     DEBUG_LOG("sched start");

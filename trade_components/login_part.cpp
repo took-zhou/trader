@@ -176,6 +176,7 @@ bool LogInPart::logIn()
             break;
         }
         ERROR_LOG("SettlementConfirm confirm failed, try again!");
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
     return true;
 }
@@ -215,6 +216,7 @@ void LogInPart::loginAndLogoutControl(LogInPart* _this)
             if(!_this->logIn())
             {
                 ERROR_LOG("log in failed, try after 5s");
+                std::this_thread::sleep_for(std::chrono::milliseconds(5*1000));
                 continue;
             }
             break;
@@ -257,72 +259,80 @@ void LogInPart::loginAndLogoutControl(LogInPart* _this)
         if( !isDuringTradeTime() && !_this->isLogIN)
         {
             WARNING_LOG("not during trade  time! and will relogin when time is right... please wait!");
-            while(!isDuringTradeTime()){}
+            while(!isDuringTradeTime())
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            }
             WARNING_LOG("return to trade  time!");
             continue;
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 }
 
-void LogInPart::goLoginAndLogoutControl()
-{
-//    INFO_LOG("start login and logout control thread");
-
-    if(isDuringTradeTime() && ! isLogIN)
-    {
-        WARNING_LOG("during trade time, log in");
-        while(true)
-        {
-            if(!this->logIn())
-            {
-                ERROR_LOG("log in failed, try after 5s");
-                continue;
-            }
-            break;
-        }
-        INFO_LOG("log in success");
-    }
-    WARNING_LOG("begin while loop");
-    while(true)
-    {
-        WARNING_LOG("begin while loop");
-        if(isDuringTradeTime() && isLogIN)
-        {
-            sleep(2);
-            continue;
-        }
-
-        if(isDuringTradeTime() && !isLogIN)
-        {
-            WARNING_LOG("during trade time, need to log in");
-            while(true)
-            {
-                if(!this->logIn())
-                {
-                    ERROR_LOG("log in failed, try after 5s");
-                    sleep(5);
-                    continue;
-                }
-                break;
-            }
-            INFO_LOG("log in success during trade time!");
-        }
-
-        if(!isDuringTradeTime() && isLogIN)
-        {
-            INFO_LOG("trade time over, need to logout");
-            this->logOut();
-            continue;
-        }
-
-        if( !isDuringTradeTime() && !isLogIN)
-        {
-            WARNING_LOG("not during trade  time!");
-            while(!isDuringTradeTime()){}
-            WARNING_LOG("return to trade  time!");
-            continue;
-        }
-    }
-}
-
+//void LogInPart::goLoginAndLogoutControl()
+//{
+////    INFO_LOG("start login and logout control thread");
+//
+//    if(isDuringTradeTime() && ! isLogIN)
+//    {
+//        WARNING_LOG("during trade time, log in");
+//        while(true)
+//        {
+//            if(!this->logIn())
+//            {
+//                ERROR_LOG("log in failed, try after 5s");
+//                std::this_thread::sleep_for(std::chrono::milliseconds(HEADBEAT_CHECK_PERIOD));
+//                continue;
+//            }
+//            break;
+//        }
+//        INFO_LOG("log in success");
+//    }
+//    WARNING_LOG("begin while loop");
+//    while(true)
+//    {
+//        WARNING_LOG("begin while loop");
+//        if(isDuringTradeTime() && isLogIN)
+//        {
+//            sleep(2);
+//            continue;
+//        }
+//
+//        if(isDuringTradeTime() && !isLogIN)
+//        {
+//            WARNING_LOG("during trade time, need to log in");
+//            while(true)
+//            {
+//                if(!this->logIn())
+//                {
+//                    ERROR_LOG("log in failed, try after 5s");
+//                    sleep(5);
+//                    continue;
+//                }
+//                break;
+//            }
+//            INFO_LOG("log in success during trade time!");
+//        }
+//
+//        if(!isDuringTradeTime() && isLogIN)
+//        {
+//            INFO_LOG("trade time over, need to logout");
+//            this->logOut();
+//            continue;
+//        }
+//
+//        if( !isDuringTradeTime() && !isLogIN)
+//        {
+//            WARNING_LOG("not during trade  time!");
+//            while(!isDuringTradeTime()){
+//                std::this_thread::sleep_for(std::chrono::milliseconds(HEADBEAT_CHECK_PERIOD));
+//            }
+//            WARNING_LOG("return to trade  time!");
+//            continue;
+//        }
+//        std::this_thread::sleep_for(std::chrono::milliseconds(HEADBEAT_CHECK_PERIOD));
+//    }
+//}
+//
 

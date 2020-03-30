@@ -12,7 +12,7 @@ struct LogInPart
     bool logIn();
     bool logOut();
     static void loginAndLogoutControl(LogInPart* _this);
-    void goLoginAndLogoutControl();
+//    void goLoginAndLogoutControl();
     void startLoginOutControl();
 
 public:
