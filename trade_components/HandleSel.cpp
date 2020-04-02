@@ -58,7 +58,14 @@ namespace
         }
         return true;
     }
-
+    bool isHeadBeatHead(TradeMsgHead& msgHead)
+    {
+        if(msgHead.fromClientName == std::string("trade") and msgHead.toClientName == std::string("trade"))
+        {
+            return true;
+        }
+        return false;
+    }
 }
 
 
@@ -129,14 +136,15 @@ void HandleSel::msgHandleSel()
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             continue;
         }
-        INFO_LOG("%s","**********************........wait for msg ......**********************");
         json msgBody;
         if(!getMsg(ROLE(SocketClient).newSocket,msgHead,msgBody))
         {
             continue;
         }
-        INFO_LOG("msgHead is:");
-        ROLE(PintCheck).printMsgHead(msgHead);
+        if(not isHeadBeatHead(msgHead))
+        {
+            ROLE(PintCheck).printMsgHead(msgHead);
+        }
         INFO_LOG("msgBody is:");
         JsonPrint(msgBody);
         if(! checkMsName(msgHead))
@@ -160,8 +168,6 @@ void HandleSel::msgHandleSel()
                     ERROR_LOG("%s","ctp not login, continue for next msg!");
                     break;
                 }
-                INFO_LOG("create stategy thread by msg");
-
                 std::thread strategyThread(strategyHandle,msgBody, (void*)&ROLE(TradePart));
                 strategyThread.detach();
 //                tradeThread.join();
@@ -169,21 +175,18 @@ void HandleSel::msgHandleSel()
             }
             case ClientType::Route:
             {
-                INFO_LOG("create route thread by msg");
                 std::thread routeThread(routeHandle, msgBody, (void*)&ROLE(SocketClient)); // @suppress("Type cannot be resolved")
                 routeThread.detach();
                 break;
             }
             case ClientType::Market:
             {
-                INFO_LOG("create Market thread by msg");
                 std::thread marketThread(marketHandle,msgBody,(void*)&ROLE(Query)); // @suppress("Type cannot be resolved")
                 marketThread.detach();
                 break;
             }
             case ClientType::Trade:
             {
-                INFO_LOG("create route thread by msg");
                 std::thread tradeThread(tradeHandle, msgBody, (void*)&ROLE(SocketClient)); // @suppress("Type cannot be resolved")
                 tradeThread.detach();
                 break;

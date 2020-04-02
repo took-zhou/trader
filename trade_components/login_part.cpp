@@ -81,7 +81,7 @@ namespace {
 //           ||  hour_int < 15
 //           || (hour_int == 15 && minute_int < 16))
         if(hour_int >= 9  &&
-          ( hour_int < 15 ||(hour_int == 15 && minute_int < 16)))
+          ( hour_int < 15 ||(hour_int == 15 && minute_int < 50)))
         {
             return true;
         }
