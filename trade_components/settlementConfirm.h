@@ -7,9 +7,9 @@
 
 struct SettlementConfirm
 {
-    bool confirm();
-    bool confirmToday(CSimpleHandler& pTraderApi);
-    bool hasConfirmedToday();
+    bool confirm(const std::string tradingDay);
+    bool confirmToday(const std::string tradingDay, CSimpleHandler& pTraderApi);
+    bool hasConfirmedToday(const std::string tradingDay);
 
 private:
     size_t nRequestID{1};

@@ -168,9 +168,10 @@ bool LogInPart::logIn()
     INFO_LOG("鎺ュ彈鍒颁簡sem_login淇″彿, login ctp ok!"); // @suppress("Invalid arguments")
     INFO_LOG("trading day:%s",pUserApi->GetTradingDay()); // @suppress("Invalid arguments")
     isLogIN = true;
+    std::string tradingDay = pUserApi->GetTradingDay();
     while(true)
     {
-        if(ROLE(SettlementConfirm).confirm())
+        if(ROLE(SettlementConfirm).confirm(tradingDay))
         {
             INFO_LOG("SettlementConfirm confirm success!");
             break;

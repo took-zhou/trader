@@ -88,13 +88,13 @@ namespace
     }
 }
 
-bool SettlementConfirm::confirm()
+bool SettlementConfirm::confirm(const std::string tradingDay)
 {
     CSimpleHandler& pTraderApi = ROLE(CtpClient).sh;
-    if(!hasConfirmedToday())
+    if(!hasConfirmedToday(tradingDay))
     {
         INFO_LOG("begin to confirm settlement today");
-        if(confirmToday(pTraderApi))
+        if(confirmToday(tradingDay,pTraderApi))
         {
             INFO_LOG("confirmToday ok!");
             return true;
@@ -104,7 +104,7 @@ bool SettlementConfirm::confirm()
     return true;
 }
 
-bool SettlementConfirm::hasConfirmedToday()
+bool SettlementConfirm::hasConfirmedToday(const std::string tradingDay)
 {
     json record;
     string confirmRecord = "../../project/projroot/confirmRecord.json";
@@ -119,7 +119,7 @@ bool SettlementConfirm::hasConfirmedToday()
         istrm.close();
         JsonPrint(record);
 
-        if(record["date"].get<string>() == getDate()
+        if(record["date"].get<string>() == tradingDay
            && record["value"].get<int>() == 1)
         {
             INFO_LOG("settlement today has been confirmed before!");
@@ -130,7 +130,7 @@ bool SettlementConfirm::hasConfirmedToday()
     return false;
 }
 
-bool SettlementConfirm::confirmToday(CSimpleHandler& pTraderApi)
+bool SettlementConfirm::confirmToday(const std::string tradingDay, CSimpleHandler& pTraderApi)
 {
     json orderCfg;
     string cfgFileName = "../../project/projroot/commonorder.json";
@@ -150,7 +150,7 @@ bool SettlementConfirm::confirmToday(CSimpleHandler& pTraderApi)
     strcpy(requestMsg.InvestorID, investorId.c_str());
 
     json record;
-    record["date"] = getDate();
+    record["date"] = tradingDay;
     record["value"] = 0;
 
     string confirmRecord = "../../project/projroot/confirmRecord.json";
