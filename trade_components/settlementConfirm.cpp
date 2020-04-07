@@ -9,6 +9,7 @@
 #include<iostream>
 #include <iomanip>
 #include "semaphorePart.h"
+#include "getconfig.h"
 extern GlobalSem globalSem;
 
 using json = nlohmann::json;
@@ -132,22 +133,25 @@ bool SettlementConfirm::hasConfirmedToday(const std::string tradingDay)
 
 bool SettlementConfirm::confirmToday(const std::string tradingDay, CSimpleHandler& pTraderApi)
 {
-    json orderCfg;
-    string cfgFileName = "../../project/projroot/commonorder.json";
-    ifstream istrm(cfgFileName,ios::binary);
-    if (!istrm.is_open())
-    {
-        printf("failed to open %s",cfgFileName.c_str());
-    }
-    istrm >> orderCfg;
-    istrm.close();
+//    json orderCfg;
+//    string cfgFileName = "../../project/projroot/commonorder.json";
+//    ifstream istrm(cfgFileName,ios::binary);
+//    if (!istrm.is_open())
+//    {
+//        printf("failed to open %s",cfgFileName.c_str());
+//    }
+//    istrm >> orderCfg;
+//    istrm.close();
 
     CThostFtdcSettlementInfoConfirmField requestMsg{0};
-    string brokerId = orderCfg["BrokerID"].get<string>();
-    strcpy(requestMsg.BrokerID, brokerId.c_str());
+//    string brokerId = orderCfg["BrokerID"].get<string>();
+//    strcpy(requestMsg.BrokerID, brokerId.c_str());
+//
+//    string investorId = orderCfg["InvestorID"].get<string>();
+//    strcpy(requestMsg.InvestorID, investorId.c_str());
 
-    string investorId = orderCfg["InvestorID"].get<string>();
-    strcpy(requestMsg.InvestorID, investorId.c_str());
+    strcpy(requestMsg.BrokerID, getConfig("trade", "BrokerID").c_str());
+    strcpy(requestMsg.InvestorID, getConfig("trade", "InvestorID").c_str());
 
     json record;
     record["date"] = tradingDay;
