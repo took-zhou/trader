@@ -98,7 +98,7 @@ void getConfig_(string title, string cfgName,char* target)
 
 string getConfig(string title, string cfgName)
 {
-	const string INIFile = "../../project/projroot/config.ini";
+	const string INIFile = "/etc/chaodai/config.ini";
 	return getConfigFromFile(INIFile,title,cfgName);	
 }
 
@@ -164,7 +164,7 @@ string getConfigFromFile(const string configFile, string title, string cfgName)
 
 std::vector<std::string> getAllTitles()
 {
-    const string INIFile = "../../project/projroot/config.ini";
+    const string INIFile = "/etc/chaodai/config.ini";
     return getAllTitlesFromFile(INIFile);
 }
 
