@@ -226,7 +226,7 @@ namespace
 
 std::vector<std::pair<std::string,std::string>> getAllKeyValueOfTitle(std::string title)
 {
-    const string INIFile = "../../project/projroot/config.ini";
+    const string INIFile = "/etc/chaodai/config.ini";
     return getAllKeyValueOfTitleFromFile(INIFile,title);
 }
 std::vector<std::pair<std::string,std::string>> getAllKeyValueOfTitleFromFile(const std::string configFile, std::string title)
