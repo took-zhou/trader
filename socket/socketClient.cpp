@@ -103,7 +103,7 @@ void SocketClient::sendHeatBeatMsgToRoute()
     headBeatMsg["status"] = "alive";
 
     TradeMsgHead rspMsgHead{ 0 };
-    rspMsgHead.dataTypeId = (unsigned short)(ModuleName::ROUTE_LODIN_STATUS_ID);
+    rspMsgHead.dataTypeId = (unsigned short)(ModuleName::CLIENT_HEARTBEAT_ID);
     strcpy(rspMsgHead.fromClientName, TRADENAME);
     strcpy(rspMsgHead.toClientName, TRADENAME);
 
