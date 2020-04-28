@@ -68,18 +68,6 @@ namespace {
     {
         int hour_int = atoi(hour.c_str());
         int minute_int = atoi(minute.c_str());
-//        int sec_int = atoi(sec.c_str());
-//        if(hour_int > 20
-//           || (hour_int == 20 && minute_int >= 50)
-//           ||  hour_int < 15
-//           || (hour_int == 15 && minute_int < 50))
-//        {
-//            return true;
-//        }
-//        if(hour_int > 20
-//           || (hour_int == 20 && minute_int >= 50)
-//           ||  hour_int < 15
-//           || (hour_int == 15 && minute_int < 16))
         if(hour_int >= 9  &&
           ( hour_int < 15 ||(hour_int == 15 && minute_int < 50)))
         {
@@ -94,15 +82,12 @@ namespace {
     };
     bool isDuringTradeTime()
     {
-        string mode = getConfig("trade", "LoginMode");
+        std::string mode = getConfig("trade", "LoginMode");
         if(logMode.at(string(mode.c_str())) == 0)
         {
-//            INFO_LOG("%s","7x24 mode");
             return true;
         }
-//        INFO_LOG("%s","Normal mode");
         string local_time = getLogInSystemLocalTime();
-
         vector<string> splitedTimeStr = splitString(local_time, string(" "));
         string week ;
         string month;
@@ -145,43 +130,64 @@ namespace {
 bool LogInPart::logIn()
 {
     ROLE(CtpClient).init();
-    auto& traderHandle= ROLE(CtpClient).sh;
-    auto* pUserApi =  ROLE(CtpClient).pUserApi;
-    pUserApi->Init();    //杩炴帴浜ゆ槗鎵�1锟�7
-    sem_wait(&globalSem.sem_login);       //绛夊緟杩炴帴鎴愬姛 // @suppress("Function cannot be resolved")
-    WARNING_LOG("hai********init ok");
+    auto ctpLoginFunc = [this] {
+        this->isLogInThreadRunning = true;
+        auto& traderHandle = this->ROLE(CtpClient).sh;
+        auto* pUserApi = this->ROLE(CtpClient).pUserApi;
+        pUserApi->Init();    //connect to ctp
+        sem_wait(&globalSem.sem_login);
+        INFO_LOG("%s", "ctp init ok");
 
-    traderHandle.ReqAuthenticate();
-    sem_wait(&globalSem.sem_login); // @suppress("Function cannot be resolved")
-    WARNING_LOG("hai********ReqAuthenticate ok");
+        traderHandle.ReqAuthenticate();
+        sem_wait(&globalSem.sem_login);
+        WARNING_LOG("ReqAuthenticate ok");
 
-    CThostFtdcReqUserLoginField reqUserLogin{ 0 };
-    strcpy(reqUserLogin.BrokerID, getConfig("trade", "BrokerID").c_str());
-    strcpy(reqUserLogin.UserID, getConfig("trade", "UserID").c_str());
-    strcpy(reqUserLogin.Password, getConfig("trade", "Password").c_str());
-    auto& RequestID = ROLE(Trader_Info).RequestID;
-    traderHandle.ReqUserLogin(reqUserLogin, RequestID);
-    RequestID++;
-    sem_wait(&globalSem.sem_login); // @suppress("Function cannot be resolved")
-    WARNING_LOG("hai********ReqUserLogin ok");
-
-    INFO_LOG("鎺ュ彈鍒颁簡sem_login淇″彿, login ctp ok!"); // @suppress("Invalid arguments")
-    INFO_LOG("trading day:%s",pUserApi->GetTradingDay()); // @suppress("Invalid arguments")
-    isLogIN = true;
-    std::string tradingDay = pUserApi->GetTradingDay();
-    while(true)
-    {
-        if(ROLE(SettlementConfirm).confirm(tradingDay))
+        CThostFtdcReqUserLoginField reqUserLogin{ 0 };
+        strcpy(reqUserLogin.BrokerID, getConfig("trade", "BrokerID").c_str());
+        strcpy(reqUserLogin.UserID, getConfig("trade", "UserID").c_str());
+        strcpy(reqUserLogin.Password, getConfig("trade", "Password").c_str());
+        auto& RequestID = this->ROLE(Trader_Info).RequestID;
+        traderHandle.ReqUserLogin(reqUserLogin, RequestID);
+        RequestID++;
+        sem_wait(&globalSem.sem_login);
+        this->isLogIN = true;
+        INFO_LOG("login ctp ok!");
+        std::string tradingDay = pUserApi->GetTradingDay();
+        INFO_LOG("trading day:%s", tradingDay.c_str());
+        while (true)
         {
-            INFO_LOG("SettlementConfirm confirm success!");
-            break;
+            if (this->ROLE(SettlementConfirm).confirm(tradingDay))
+            {
+                INFO_LOG("SettlementConfirm confirm success!");
+                break;
+            }
+            ERROR_LOG("SettlementConfirm confirm failed, try again!");
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
-        ERROR_LOG("SettlementConfirm confirm failed, try again!");
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    }
+        this->isLogInThreadRunning = false;
+    };
+    std::thread(ctpLoginFunc).detach();
     return true;
 }
-
+CtpLogInState LogInPart::getCtpLogInState()
+{
+    if (!isLogInThreadRunning && !isLogIN)
+    {
+        return CtpLogInState::Prepare_State;
+    }
+    else if (isLogInThreadRunning && !isLogIN)
+    {
+        return CtpLogInState::InitFailed_State;
+    }
+    else if (!isLogInThreadRunning && isLogIN)
+    {
+        return CtpLogInState::Connected_State;
+    }
+    else
+    {   
+        return CtpLogInState::Invalid_State;
+    }
+}
 bool LogInPart::logOut()
 {
     auto& traderHandle= ROLE(CtpClient).sh;
@@ -193,7 +199,7 @@ bool LogInPart::logOut()
     RequestID++;
     sem_wait(&globalSem.sem_logout);
     ROLE(CtpClient).release();
-    INFO_LOG("鎺ュ彈鍒颁簡sem_logout淇″彿, log out ok!");
+    INFO_LOG("ctp log out ok!");
     isLogIN = false;
     return true;
 }
@@ -208,8 +214,9 @@ void LogInPart::startLoginOutControl()
 void LogInPart::loginAndLogoutControl(LogInPart* _this)
 {
     INFO_LOG("start login and logout control thread");
-
-    if(isDuringTradeTime() && !_this->isLogIN)
+    auto ctpLogInState = _this->getCtpLogInState();
+    if(isDuringTradeTime() && ((ctpLogInState == CtpLogInState::Connected_State)
+                                || (ctpLogInState == CtpLogInState::Invalid_State)))
     {
         WARNING_LOG("during trade time, log in......");
         while(true)
@@ -224,17 +231,23 @@ void LogInPart::loginAndLogoutControl(LogInPart* _this)
         }
         INFO_LOG("log in success!!!");
     }
+    std::this_thread::sleep_for(std::chrono::milliseconds(5 * 1000));
     WARNING_LOG("begin while loop");
     while(true)
     {
-
-        if(isDuringTradeTime() && _this->isLogIN)
+        ctpLogInState = _this->getCtpLogInState();
+        if (ctpLogInState == CtpLogInState::Invalid_State)
         {
-            sleep(2);
+            ERROR_LOG("Error CtpLogInState [Invalid_State],code has bug");
+        }
+        if(isDuringTradeTime() && ((ctpLogInState == CtpLogInState::Connected_State)
+                                      || (ctpLogInState == CtpLogInState::InitFailed_State)))
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
             continue;
         }
 
-        if(isDuringTradeTime() && !_this->isLogIN)
+        if(isDuringTradeTime() && (ctpLogInState == CtpLogInState::Prepare_State))
         {
             WARNING_LOG("during trade time, need to log in");
             while(true)
@@ -249,15 +262,15 @@ void LogInPart::loginAndLogoutControl(LogInPart* _this)
             }
             INFO_LOG("log in success during trade time!");
         }
-
-        if(!isDuringTradeTime() && _this->isLogIN)
+        if(!isDuringTradeTime() && (ctpLogInState == CtpLogInState::Connected_State 
+                                      || ctpLogInState == CtpLogInState::InitFailed_State))
         {
             INFO_LOG("trade time over, need to logout");
             _this->logOut();
             continue;
         }
 
-        if( !isDuringTradeTime() && !_this->isLogIN)
+        if( !isDuringTradeTime() && (ctpLogInState == CtpLogInState::Prepare_State))
         {
             WARNING_LOG("not during trade  time! and will relogin when time is right... please wait!");
             while(!isDuringTradeTime())
@@ -270,70 +283,3 @@ void LogInPart::loginAndLogoutControl(LogInPart* _this)
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 }
-
-//void LogInPart::goLoginAndLogoutControl()
-//{
-////    INFO_LOG("start login and logout control thread");
-//
-//    if(isDuringTradeTime() && ! isLogIN)
-//    {
-//        WARNING_LOG("during trade time, log in");
-//        while(true)
-//        {
-//            if(!this->logIn())
-//            {
-//                ERROR_LOG("log in failed, try after 5s");
-//                std::this_thread::sleep_for(std::chrono::milliseconds(HEADBEAT_CHECK_PERIOD));
-//                continue;
-//            }
-//            break;
-//        }
-//        INFO_LOG("log in success");
-//    }
-//    WARNING_LOG("begin while loop");
-//    while(true)
-//    {
-//        WARNING_LOG("begin while loop");
-//        if(isDuringTradeTime() && isLogIN)
-//        {
-//            sleep(2);
-//            continue;
-//        }
-//
-//        if(isDuringTradeTime() && !isLogIN)
-//        {
-//            WARNING_LOG("during trade time, need to log in");
-//            while(true)
-//            {
-//                if(!this->logIn())
-//                {
-//                    ERROR_LOG("log in failed, try after 5s");
-//                    sleep(5);
-//                    continue;
-//                }
-//                break;
-//            }
-//            INFO_LOG("log in success during trade time!");
-//        }
-//
-//        if(!isDuringTradeTime() && isLogIN)
-//        {
-//            INFO_LOG("trade time over, need to logout");
-//            this->logOut();
-//            continue;
-//        }
-//
-//        if( !isDuringTradeTime() && !isLogIN)
-//        {
-//            WARNING_LOG("not during trade  time!");
-//            while(!isDuringTradeTime()){
-//                std::this_thread::sleep_for(std::chrono::milliseconds(HEADBEAT_CHECK_PERIOD));
-//            }
-//            WARNING_LOG("return to trade  time!");
-//            continue;
-//        }
-//        std::this_thread::sleep_for(std::chrono::milliseconds(HEADBEAT_CHECK_PERIOD));
-//    }
-//}
-//
-

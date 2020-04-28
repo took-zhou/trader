@@ -452,7 +452,7 @@ bool OrderManage::buildFirstOrder(const json& orderData, const char& direction)
 {
     static size_t requestID;
     json orderCfg;
-    string cfgFileName = "../../project/projroot/commonorder.json";
+    string cfgFileName = getConfig("trade","OrderCommonPath");
     ifstream istrm(cfgFileName,ios::binary);
     if (!istrm.is_open())
     {
