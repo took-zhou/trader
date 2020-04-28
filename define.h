@@ -62,17 +62,19 @@ struct TradeMsgHead
 // body锟斤拷id锟斤拷
 enum struct ModuleName
 {
-    CLIENT_NAME_ID  =       1,
-    STRATEGY_ORDER_ID,
-    MARKET_REQ_INSTRUMENT_ID,
-    TRADE_INSTRUMENT_ID,
-    GUI_REQ_FILEZ_ID,
-    GUI_REQ_TICKZ_ID,
-    STRATEGY_FILEZ_ID,
-    STRATEGY_TICKZ_ID,
-    TRADE_ORDER_STATUS_ID,
-    ROUTE_LODIN_STATUS_ID,
-    MARKET_DEEP_DATA_ID
+    CLIENT_NAME_ID            = 1,
+    STRATEGY_ORDER_ID         = 2,
+    MARKET_REQ_INSTRUMENT_ID  = 3,
+    TRADE_INSTRUMENT_ID       = 4,
+    GUI_REQ_FILEZ_ID          = 5,
+    GUI_REQ_TICKZ_ID          = 6,
+    STRATEGY_FILEZ_ID         = 7,
+    STRATEGY_TICKZ_ID         = 8,
+    TRADE_ORDER_STATUS_ID     = 9,
+    ROUTE_LODIN_STATUS_ID     = 10,
+    MARKET_DEEP_DATA_ID       = 11,
+    CLIENT_HEARTBEAT_ID       = 12, /*客户端发送给路由端的心跳数据*/
+    ROUTE_RESPONDS_ID         = 13 /*路由端回应心跳数据给客户端*/
 };
 
 constexpr char ROUTE_HEADBEAT_TIMER[]    = "route_headbeat_check";

@@ -103,7 +103,7 @@ void SocketClient::sendHeatBeatMsgToRoute()
     headBeatMsg["status"] = "alive";
 
     TradeMsgHead rspMsgHead{ 0 };
-    rspMsgHead.dataTypeId = (unsigned short)(ModuleName::ROUTE_LODIN_STATUS_ID);
+    rspMsgHead.dataTypeId = (unsigned short)(ModuleName::CLIENT_HEARTBEAT_ID);
     strcpy(rspMsgHead.fromClientName, TRADENAME);
     strcpy(rspMsgHead.toClientName, TRADENAME);
 
@@ -154,7 +154,7 @@ bool SocketClient::sendJsonMsg(const json& jsonMsg)
         ERROR_LOG("ERROR writing to route");
         return false;
     }
-    return false;
+    return true;
 }
 
 bool SocketClient::recMsg(char* strMsg, const size_t length)
@@ -163,8 +163,9 @@ bool SocketClient::recMsg(char* strMsg, const size_t length)
     if (n < 0)
     {
       ERROR_LOG("ERROR writing to socket");
+      return false;
     }
-
+    return true;
 }
 
 bool SocketClient::recUselessMsgBody(const size_t length)

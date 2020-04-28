@@ -92,13 +92,19 @@ bool QueryActiveContracts::ReqQryInstrument()
 
 bool QueryActiveContracts::sendRspOnQryInstrument(const json& instrumentInfo)
 {
-    if(ROLE(SocketClient).sendJsonMsg(instrumentInfo))
-    {
-        INFO_LOG("send Instruments to market succ");
-        return true;
-    }
-    ERROR_LOG("send Instruments to market failed");
-    return false;
+    TradeMsgHead rspMsgHead{0};
+    rspMsgHead.dataTypeId = (unsigned short)(ModuleName::TRADE_INSTRUMENT_ID);
+    strcpy(rspMsgHead.fromClientName, TRADENAME);
+    strcpy(rspMsgHead.toClientName, MARKETNAME);
+
+    ROLE(SocketClient).sendMsg(rspMsgHead, instrumentInfo);
+//    if(ROLE(SocketClient).sendJsonMsg(instrumentInfo))
+//    {
+//        INFO_LOG("send Instruments to market succ");
+//        return true;
+//    }
+//    ERROR_LOG("send Instruments to market failed");
+    return true;
 }
 
 bool Query::parseMsgBody(int sockfd, char* msg, const unsigned short length)

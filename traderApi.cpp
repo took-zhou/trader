@@ -27,8 +27,7 @@ void CTraderApi::Release()
 
 void CTraderApi::Init()
 {
-
-	m_pApi->Init();
+    m_pApi->Init();
     INFO_LOG("Init trader");
 };
 

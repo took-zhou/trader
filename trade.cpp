@@ -27,7 +27,7 @@ std::mutex mtx;
 int main() {
     if(debugSwitch == 1)
     {
-        std::thread keyboardMonitor(monitorKeyBoard); // @suppress("Type cannot be resolved")
+        std::thread keyboardMonitor(monitorKeyBoard);
     }
 
 //    if( atoi(getConfig("trade","dbgSwitch").c_str()) == 0)
