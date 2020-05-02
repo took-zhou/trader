@@ -29,6 +29,7 @@ public:
 
     bool isLogIN {false};
     bool isLogInThreadRunning{false};
+    bool isForceExitThreadRuning{ false };
     USE_ROLE(CtpClient);
     USE_ROLE(Trader_Info);
     USE_ROLE(SettlementConfirm);
