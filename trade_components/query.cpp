@@ -16,36 +16,6 @@
 extern GlobalSem globalSem;
 using namespace std;
 
-//extern INSTRUMENTIDSCNT queryInstrumentIdCnt;
-
-/***************���׶˶�Market����Ӧ����***************/
-//void* ThreadInstrumentQueryResponseBySocket(void* args) {
-//
-//    INFO_LOG("open thead for query"); // @suppress("Invalid arguments")
-//    CSimpleHandler *sh = (CSimpleHandler*)args;
-//    REQ_STATUS requestType = { 0 };
-//    requestType.req_status = 9;
-//    //socket_client_init_m2t();
-//    IPCStream_init_t2m();
-//    while (true)
-//    {
-//        std::cout << "waiting for request signal from market server ......" << std::endl;
-//        IPCStream_Read_REQ_STATUS_t2m(&requestType);
-//        std::cout <<"requestType.req_status:"<< (int)requestType.req_status << std::endl;
-//        if (REQUESTINSTRUMENTID == (int)requestType.req_status)
-//        {
-//            memset(&queryInstrumentIdCnt, 0, sizeof(INSTRUMENTIDSCNT));
-//            sh->ReqQryInstrument();//������ѯ��Լ
-//            sem_wait(&sem2);
-//            std::cout << queryInstrumentIdCnt.queryInstrumentId.InstrumentID[0] << std::endl;
-//            std::cout << "total "<<queryInstrumentIdCnt.cnt<<" ids" << std::endl;
-//            IPCStream_Write_INSTRUMENTIDS_t2m(&(queryInstrumentIdCnt.queryInstrumentId));
-//            std::cout << "response of instrumentIds for market server ok!" << std::endl;
-//        }
-//
-//    }
-//}
-
 json AllInstruments;
 
 namespace{
@@ -98,12 +68,7 @@ bool QueryActiveContracts::sendRspOnQryInstrument(const json& instrumentInfo)
     strcpy(rspMsgHead.toClientName, MARKETNAME);
 
     ROLE(SocketClient).sendMsg(rspMsgHead, instrumentInfo);
-//    if(ROLE(SocketClient).sendJsonMsg(instrumentInfo))
-//    {
-//        INFO_LOG("send Instruments to market succ");
-//        return true;
-//    }
-//    ERROR_LOG("send Instruments to market failed");
+
     return true;
 }
 

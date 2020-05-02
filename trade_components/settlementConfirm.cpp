@@ -102,13 +102,13 @@ bool SettlementConfirm::confirm(const std::string tradingDay)
         }
         ERROR_LOG("confirm today error");
     }
-    return true;
+    return false;
 }
 
 bool SettlementConfirm::hasConfirmedToday(const std::string tradingDay)
 {
     json record;
-    string confirmRecord = "../../project/projroot/confirmRecord.json";
+    string confirmRecord = getConfig("trade", "ConfirmRecordPath");
     if(is_file_exists(confirmRecord))
     {
         ifstream istrm(confirmRecord,ios::binary);

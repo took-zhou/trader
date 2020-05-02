@@ -150,19 +150,26 @@ bool LogInPart::logIn()
         traderHandle.ReqUserLogin(reqUserLogin, RequestID);
         RequestID++;
         sem_wait(&globalSem.sem_login);
-        this->isLogIN = true;
-        INFO_LOG("login ctp ok!");
-        std::string tradingDay = pUserApi->GetTradingDay();
-        INFO_LOG("trading day:%s", tradingDay.c_str());
-        while (true)
+        if (this->isForceExitThreadRuning)
         {
-            if (this->ROLE(SettlementConfirm).confirm(tradingDay))
+            this->isForceExitThreadRuning = false;
+        }
+        else
+        {
+            this->isLogIN = true;
+            INFO_LOG("login ctp ok!");
+            std::string tradingDay = pUserApi->GetTradingDay();
+            INFO_LOG("trading day:%s", tradingDay.c_str());
+            while (true)
             {
-                INFO_LOG("SettlementConfirm confirm success!");
-                break;
+                if (this->ROLE(SettlementConfirm).confirm(tradingDay))
+                {
+                    INFO_LOG("SettlementConfirm confirm success!");
+                    break;
+                }
+                ERROR_LOG("SettlementConfirm confirm failed, try again!");
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
             }
-            ERROR_LOG("SettlementConfirm confirm failed, try again!");
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
         this->isLogInThreadRunning = false;
     };
@@ -262,14 +269,21 @@ void LogInPart::loginAndLogoutControl(LogInPart* _this)
             }
             INFO_LOG("log in success during trade time!");
         }
-        if(!isDuringTradeTime() && (ctpLogInState == CtpLogInState::Connected_State 
-                                      || ctpLogInState == CtpLogInState::InitFailed_State))
+        if(!isDuringTradeTime() && (ctpLogInState == CtpLogInState::Connected_State))
         {
             INFO_LOG("trade time over, need to logout");
             _this->logOut();
             continue;
         }
-
+        if (!isDuringTradeTime() && (ctpLogInState == CtpLogInState::InitFailed_State))
+        {
+            INFO_LOG("%s", "init failed and trading time over, need to logout");
+            _this->isForceExitThreadRuning = true;
+            sem_post(&globalSem.sem_login);
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            _this->logOut();
+            continue;
+        }
         if( !isDuringTradeTime() && (ctpLogInState == CtpLogInState::Prepare_State))
         {
             WARNING_LOG("not during trade  time! and will relogin when time is right... please wait!");
