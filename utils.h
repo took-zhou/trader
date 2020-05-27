@@ -56,6 +56,7 @@ void dealOrder_SA_TEST(CTraderApi *pTradeApi);
 namespace utils
 {
     void creatFolder(const std::string folderName);
+    void creatFile(const std::string fileName);
 
 }
 

@@ -413,7 +413,7 @@ void CSimpleHandler::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmF
 {
     CTraderSpi::OnRspSettlementInfoConfirm(pSettlementInfoConfirm, pRspInfo, nRequestID, bIsLast);
     //SetEvent(g_hEvent);
-    sem_post(&globalSem.sem);
+    sem_post(&globalSem.sem_settlement);
 }
 
 ///鐢ㄦ埛鍙ｄ护鏇存柊璇锋眰

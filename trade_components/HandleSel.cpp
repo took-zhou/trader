@@ -66,6 +66,28 @@ namespace
         }
         return false;
     }
+
+    void msgPrint(TradeMsgHead& msgHead, json& msgBody, HandleSel* __this)
+    {
+        if (not isHeadBeatHead(msgHead))
+        {
+            __this->ROLE(PintCheck).printMsgHead(msgHead);
+            INFO_LOG("msgBody is:");
+            JsonPrint(msgBody);
+        }
+        else
+        {
+            static int heartBeatCnt = 0;
+            if (heartBeatCnt >= 4)
+            {
+                INFO_LOG("msgBody is:");
+                JsonPrint(msgBody);
+                heartBeatCnt = 0;
+                return;
+            }
+            heartBeatCnt += 1;
+        }
+    }
 }
 
 
@@ -141,12 +163,7 @@ void HandleSel::msgHandleSel()
         {
             continue;
         }
-        if(not isHeadBeatHead(msgHead))
-        {
-            ROLE(PintCheck).printMsgHead(msgHead);
-        }
-        INFO_LOG("msgBody is:");
-        JsonPrint(msgBody);
+        msgPrint(msgHead, msgBody,this);
         if(! checkMsName(msgHead))
         {
             continue;
@@ -175,19 +192,19 @@ void HandleSel::msgHandleSel()
             }
             case ClientType::Route:
             {
-                std::thread routeThread(routeHandle, msgBody, (void*)&ROLE(SocketClient)); // @suppress("Type cannot be resolved")
+                std::thread routeThread(routeHandle, msgBody, (void*)&ROLE(SocketClient));
                 routeThread.detach();
                 break;
             }
             case ClientType::Market:
             {
-                std::thread marketThread(marketHandle,msgBody,(void*)&ROLE(Query)); // @suppress("Type cannot be resolved")
+                std::thread marketThread(marketHandle,msgBody,(void*)&ROLE(Query));
                 marketThread.detach();
                 break;
             }
             case ClientType::Trade:
             {
-                std::thread tradeThread(tradeHandle, msgBody, (void*)&ROLE(SocketClient)); // @suppress("Type cannot be resolved")
+                std::thread tradeThread(tradeHandle, msgBody, (void*)&ROLE(SocketClient));
                 tradeThread.detach();
                 break;
             }

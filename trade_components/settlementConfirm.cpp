@@ -10,6 +10,7 @@
 #include <iomanip>
 #include "semaphorePart.h"
 #include "getconfig.h"
+#include "utils.h"
 extern GlobalSem globalSem;
 
 using json = nlohmann::json;
@@ -101,21 +102,22 @@ bool SettlementConfirm::confirm(const std::string tradingDay)
             return true;
         }
         ERROR_LOG("confirm today error");
+        return false;
     }
-    return false;
+    return true;
 }
 
 bool SettlementConfirm::hasConfirmedToday(const std::string tradingDay)
 {
-    json record;
-    string confirmRecord = getConfig("trade", "ConfirmRecordPath");
-    if(is_file_exists(confirmRecord))
+    string confirmFile = getConfig("trade", "ConfirmRecordPath");
+    if(is_file_exists(confirmFile))
     {
-        ifstream istrm(confirmRecord,ios::binary);
+        ifstream istrm(confirmFile,ios::binary);
         if (!istrm.is_open())
         {
-            ERROR_LOG("failed to open %s",confirmRecord.c_str()); // @suppress("Invalid arguments")
+            ERROR_LOG("failed to open %s", confirmFile.c_str()); // @suppress("Invalid arguments")
         }
+        json record;
         istrm >> record;
         istrm.close();
         JsonPrint(record);
@@ -128,6 +130,7 @@ bool SettlementConfirm::hasConfirmedToday(const std::string tradingDay)
         }
         return false;
     }
+    utils::creatFile(confirmFile);
     return false;
 }
 
@@ -136,19 +139,18 @@ bool SettlementConfirm::confirmToday(const std::string tradingDay, CSimpleHandle
     CThostFtdcSettlementInfoConfirmField requestMsg{0};
     strcpy(requestMsg.BrokerID, getConfig("trade", "BrokerID").c_str());
     strcpy(requestMsg.InvestorID, getConfig("trade", "InvestorID").c_str());
-
     json record;
     record["date"] = tradingDay;
     record["value"] = 0;
-    string confirmRecord = getConfig("trade","ConfirmRecordPath");
-    ofstream ostrm(confirmRecord,ios::trunc);
+    string confirmFile = getConfig("trade", "ConfirmRecordPath");
+    ofstream ostrm(confirmFile,ios::trunc);
     ostrm << setw(4) << record << endl;
     ostrm.close();
     pTraderApi.ReqSettlementInfoConfirm(&requestMsg, nRequestID++);
-    sem_wait(&globalSem.sem);
+    sem_wait(&globalSem.sem_settlement);
 
     record["value"] = 1;
-    ofstream ostrm_set_1(confirmRecord,ios::trunc);
+    ofstream ostrm_set_1(confirmFile,ios::trunc);
     ostrm_set_1 << setw(4) << record << endl;
     ostrm_set_1.close();
 

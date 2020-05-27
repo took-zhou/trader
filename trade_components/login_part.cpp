@@ -46,9 +46,11 @@ namespace {
     }
 
     vector<string> tradeDay = {
-        "Mon","Monday","Tue","Tuesday","Wed","Wednesday","Thu","Thursday","Fri","Friday",
-        "Sat","Saturday","Sun","Sunday"
+        "Mon","Monday","Tue","Tuesday","Wed","Wednesday","Thu","Thursday","Fri","Friday"
     };
+    //vector<string> tradeDay2 = {
+    //"Mon","Monday","Tue","Tuesday","Wed","Wednesday","Thu","Thursday","Fri","Friday","Sat","Saturday","Sun","Sunday"
+    //};
 
     bool isTradeDuringWeek(const string& week)
     {
@@ -68,8 +70,44 @@ namespace {
     {
         int hour_int = atoi(hour.c_str());
         int minute_int = atoi(minute.c_str());
-        if(hour_int >= 9  &&
-          ( hour_int < 15 ||(hour_int == 15 && minute_int < 50)))
+        float curTime = static_cast<float>(hour_int) + static_cast<float>(minute_int / 60.0);
+        std::string dayLogIn = getConfig("trade", "DayLogInTime");
+        std::string dayLogOut = getConfig("trade", "DayLogOutTime");
+        auto isDuringDurationFunc = [&](std::string beginTime, std::string endTime)->bool {
+            auto vecBT = splitString(beginTime, ":");
+            if (vecBT.size() != 2)
+            {
+                ERROR_LOG("logIn time config is error,please check");
+                return false;
+            }
+            auto vecET = splitString(endTime, ":");
+            if (vecET.size() != 2)
+            {
+                ERROR_LOG("logOut time config is error,please check");
+                return false;
+            }
+            int btHour = atoi(vecBT[0].c_str());
+            int btMinute = atoi(vecBT[1].c_str());
+            float tLogIn = static_cast<float>(btHour) + static_cast<float>(btMinute / 60.0);
+
+            int etHour = atoi(vecET[0].c_str());
+            int etMinute = atoi(vecET[1].c_str());
+            float tLogOut = static_cast<float>(etHour) + static_cast<float>(etMinute / 60.0);
+
+            if (curTime > tLogIn && curTime < tLogOut)
+            {
+                return true;
+            }
+            return false;
+        };
+        if(isDuringDurationFunc(dayLogIn, dayLogOut))
+        {
+            return true;
+        }
+
+        std::string nightLogIn = getConfig("trade", "NightLogInTime");
+        std::string nightLogOut = getConfig("trade", "NightLogOutTime");
+        if (isDuringDurationFunc(nightLogIn, nightLogOut))
         {
             return true;
         }
