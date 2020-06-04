@@ -66,11 +66,12 @@ namespace {
 
     bool isTradeDuringHourMuiteSecond(const string& hour,
                                       const string& minute,
-                                      const string sec)
+                                      const string& sec)
     {
         int hour_int = atoi(hour.c_str());
         int minute_int = atoi(minute.c_str());
-        float curTime = static_cast<float>(hour_int) + static_cast<float>(minute_int / 60.0);
+        int sec_int = atoi(sec.c_str());
+        int curTime = hour_int*3600 + minute_int*60 + sec_int;
         std::string dayLogIn = getConfig("trade", "DayLogInTime");
         std::string dayLogOut = getConfig("trade", "DayLogOutTime");
         auto isDuringDurationFunc = [&](std::string beginTime, std::string endTime)->bool {
@@ -88,13 +89,13 @@ namespace {
             }
             int btHour = atoi(vecBT[0].c_str());
             int btMinute = atoi(vecBT[1].c_str());
-            float tLogIn = static_cast<float>(btHour) + static_cast<float>(btMinute / 60.0);
+            int tLogIn = btHour*3600 + btMinute*60;
 
             int etHour = atoi(vecET[0].c_str());
             int etMinute = atoi(vecET[1].c_str());
-            float tLogOut = static_cast<float>(etHour) + static_cast<float>(etMinute / 60.0);
+            int tLogOut = etHour*3600 + etMinute*60;
 
-            if (curTime > tLogIn && curTime < tLogOut)
+            if (curTime >= tLogIn && curTime <=tLogOut)
             {
                 return true;
             }
