@@ -78,7 +78,7 @@ namespace
         else
         {
             static int heartBeatCnt = 0;
-            if (heartBeatCnt >= 4)
+            if (heartBeatCnt >= 120)
             {
                 INFO_LOG("msgBody is:");
                 JsonPrint(msgBody);

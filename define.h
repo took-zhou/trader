@@ -77,9 +77,12 @@ enum struct ModuleName
     ROUTE_RESPONDS_ID         = 13 /*路由端回应心跳数据给客户端*/
 };
 
-constexpr char ROUTE_HEADBEAT_TIMER[]    = "route_headbeat_check";
+constexpr char ROUTE_HEADBEAT_TIMER[]     = "route_headbeat_check";
 constexpr U32  HEADBEAT_TIME_OUT_LENGTH  = 45 * 1000;
 constexpr U32  HEADBEAT_CHECK_PERIOD     = 15 * 1000;
+
+constexpr U32 FORCE_LOGOUT_TIME_OUT      = 10 * 1000;
+constexpr char FORCE_LOG_OUT_TIMER[]     = "forceLogOut";
 
 #endif
 

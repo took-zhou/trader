@@ -29,13 +29,11 @@ int main() {
     {
         std::thread keyboardMonitor(monitorKeyBoard);
     }
-
-//    if( atoi(getConfig("trade","dbgSwitch").c_str()) == 0)
     std::string tradeLogPath = getConfig("trade","LogPath");
     utils::creatFolder(tradeLogPath);
     LOG_INIT(tradeLogPath.c_str(), "tradelog", 6);
     INFO_LOG("TRADE LOG PATH is %s",tradeLogPath.c_str());
-
+    DEBUG_LOG("%s", "version debug 20200620:1939");
     Trader& trader = Trader::getInstance();
 
     go [&] {

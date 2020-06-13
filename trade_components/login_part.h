@@ -18,7 +18,8 @@ enum struct CtpLogInState
 struct LogInPart
 {
     bool logIn();
-    bool logOut();
+    void logOut();
+    void forceLogOut();
     static void loginAndLogoutControl(LogInPart* _this);
 //    void goLoginAndLogoutControl();
     void startLoginOutControl();

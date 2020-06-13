@@ -121,6 +121,7 @@ void TimeoutTimerPool::addTimer(std::string _name, std::function<void()> _func, 
     TimeoutTimer* newTimer = new TimeoutTimer(_name, _func, length);
     this->timers.push_back(newTimer);
     newTimer->start();
+    INFO_LOG("new timeout timer [%s] add success!", _name.c_str());
 }
 
 void TimeoutTimerPool::killTimerByName(std::string _name)
@@ -133,6 +134,7 @@ void TimeoutTimerPool::killTimerByName(std::string _name)
             this->timers.erase(this->timers.begin() + i);
             delete pTimer;
             pTimer = nullptr;
+            INFO_LOG("%s timer kill success!", _name.c_str());
             return;
         }
     }

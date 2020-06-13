@@ -307,7 +307,7 @@ void CSimpleHandler::ReqAuthenticate()
     strcpy(a.AuthCode, g_chAuthCode);
     strcpy(a.AppID, g_chAppID);
     int b = m_pUserApi->ReqAuthenticate(&a, 1);
-    INFO_LOG("\t瀹㈡埛绔璇�1锟�7 = [%d]\n", b);
+    INFO_LOG("ReqAuthenticate b = [%d]", b);
 }
 
 ///瀹㈡埛绔璇佸搷搴�1锟�7

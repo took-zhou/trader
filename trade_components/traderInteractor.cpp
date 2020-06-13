@@ -76,7 +76,9 @@ void TraderInteractor::start()
 bool TraderInteractor::buildShowTraderLoginStateRsp()
 {
     rspMsg["title"] = "login state";
-    rspMsg["ctp_state"] = ROLE(LogInPart).isLogIN;
+    rspMsg["ctp_state.isLogIN"] = ROLE(LogInPart).isLogIN;
+    rspMsg["ctp_state.isLogInThreadRunning"] = ROLE(LogInPart).isLogInThreadRunning;
+    rspMsg["ctp_state.isForceExitThreadRuning"] = ROLE(LogInPart).isForceExitThreadRuning;
     rspMsg["route_state"] = ROLE(SocketClient).isRouterConnected;
     return true;
 }

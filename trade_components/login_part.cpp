@@ -10,11 +10,12 @@
 #include <vector>
 #include <stdlib.h>
 #include <unordered_map>
-
+#include <array>
+#include "timer.h"
 extern GlobalSem globalSem;
 
 namespace {
-
+    using TimeDuration = std::array<U32, 2>;
     string getLogInSystemLocalTime()
     {
         //system time
@@ -63,6 +64,32 @@ namespace {
         }
         return false;
     }
+    std::vector<TimeDuration> getTimeDurations()
+    {
+        std::vector<TimeDuration> tmpDurationList;
+        std::string logInConfig = getConfig("trade", "LogInTimeList");
+        std::vector<std::string> timeDurationSplited = splitString(logInConfig, ";");
+        for(auto duration : timeDurationSplited)
+        {
+            std::vector<std::string> vecBST = splitString(duration,"-");
+            if(vecBST.size() != 2)
+            {
+                continue;
+            }
+            std::string beginT = vecBST[0];
+            std::string endT = vecBST[1];
+            std::vector<std::string> vecBThourMinute = splitString(beginT,":");
+            std::vector<std::string> vecEThourMinute = splitString(endT,":");
+
+            U32 beginTime_int = static_cast<U32>(atoi(vecBThourMinute[0].c_str()) * 3600 + atoi(vecBThourMinute[1].c_str()) * 60);
+            U32 endTime_int = static_cast<U32>(atoi(vecEThourMinute[0].c_str()) * 3600 + atoi(vecEThourMinute[1].c_str()) * 60);
+            TimeDuration tmpDuration;
+            tmpDuration[0] = beginTime_int;
+            tmpDuration[1] = endTime_int;
+            tmpDurationList.push_back(tmpDuration);
+        }
+        return tmpDurationList;
+    }
 
     bool isTradeDuringHourMuiteSecond(const string& hour,
                                       const string& minute,
@@ -71,44 +98,26 @@ namespace {
         int hour_int = atoi(hour.c_str());
         int minute_int = atoi(minute.c_str());
         int sec_int = atoi(sec.c_str());
-        int curTime = hour_int*3600 + minute_int*60 + sec_int;
-        std::string dayLogIn = getConfig("trade", "DayLogInTime");
-        std::string dayLogOut = getConfig("trade", "DayLogOutTime");
-        auto isDuringDurationFunc = [&](std::string beginTime, std::string endTime)->bool {
-            auto vecBT = splitString(beginTime, ":");
-            if (vecBT.size() != 2)
+        U32 curTime = (U32)(hour_int*3600 + minute_int*60 + sec_int);
+
+        auto isDuringDurationFunc = [&]()->bool {
+            auto timeDurationList = getTimeDurations();
+            if(timeDurationList.size() < 1)
             {
-                ERROR_LOG("logIn time config is error,please check");
                 return false;
             }
-            auto vecET = splitString(endTime, ":");
-            if (vecET.size() != 2)
-            {
-                ERROR_LOG("logOut time config is error,please check");
-                return false;
-            }
-            int btHour = atoi(vecBT[0].c_str());
-            int btMinute = atoi(vecBT[1].c_str());
-            int tLogIn = btHour*3600 + btMinute*60;
 
-            int etHour = atoi(vecET[0].c_str());
-            int etMinute = atoi(vecET[1].c_str());
-            int tLogOut = etHour*3600 + etMinute*60;
-
-            if (curTime >= tLogIn && curTime <=tLogOut)
+            for(auto timeDuration : timeDurationList)
             {
-                return true;
+                if(curTime >=timeDuration[0] && curTime <= timeDuration[1])
+                {
+                    return true;
+                }
             }
             return false;
         };
-        if(isDuringDurationFunc(dayLogIn, dayLogOut))
-        {
-            return true;
-        }
 
-        std::string nightLogIn = getConfig("trade", "NightLogInTime");
-        std::string nightLogOut = getConfig("trade", "NightLogOutTime");
-        if (isDuringDurationFunc(nightLogIn, nightLogOut))
+        if(isDuringDurationFunc())
         {
             return true;
         }
@@ -141,7 +150,7 @@ namespace {
             currentTime = splitedTimeStr.at(3);
             year = splitedTimeStr[4];
         }
-        else if(splitedTimeStr.size() == 6)
+        else if(splitedTimeStr.size() == 6) 
         {
             week = splitedTimeStr[0];
             month = splitedTimeStr[1];
@@ -159,11 +168,20 @@ namespace {
         string hour = splitedCurrentTime[0];
         string minute = splitedCurrentTime[1];
         string second = splitedCurrentTime[2];
-        if(isTradeDuringWeek(week) && isTradeDuringHourMuiteSecond(hour,minute,second))
+        if (isTradeDuringHourMuiteSecond(hour, minute, second))
         {
             return true;
         }
         return false;
+    }
+
+    void logOutReqTimeOutFunc()
+    {
+        INFO_LOG("begin loglout timeout func");
+        sem_post(&globalSem.sem_logout);
+        INFO_LOG("force sem_pose sem_logout exec ok");
+        auto& timerPool = TimeoutTimerPool::getInstance();
+        timerPool.delTimerByName(FORCE_LOG_OUT_TIMER);
     }
 }
 bool LogInPart::logIn()
@@ -175,11 +193,21 @@ bool LogInPart::logIn()
         auto* pUserApi = this->ROLE(CtpClient).pUserApi;
         pUserApi->Init();    //connect to ctp
         sem_wait(&globalSem.sem_login);
+        if (this->isForceExitThreadRuning)
+        {
+            INFO_LOG("%s", "login thread force exit");
+            this->isForceExitThreadRuning = false;
+            INFO_LOG("%s", "isForceExitThreadRuning set to false");
+            this->isLogInThreadRunning = false;
+            INFO_LOG("%s", "isLogInThreadRunning force set to false");
+
+            return;
+        }
         INFO_LOG("%s", "ctp init ok");
 
         traderHandle.ReqAuthenticate();
         sem_wait(&globalSem.sem_login);
-        WARNING_LOG("ReqAuthenticate ok");
+        INFO_LOG("ReqAuthenticate ok");
 
         CThostFtdcReqUserLoginField reqUserLogin{ 0 };
         strcpy(reqUserLogin.BrokerID, getConfig("trade", "BrokerID").c_str());
@@ -189,28 +217,23 @@ bool LogInPart::logIn()
         traderHandle.ReqUserLogin(reqUserLogin, RequestID);
         RequestID++;
         sem_wait(&globalSem.sem_login);
-        if (this->isForceExitThreadRuning)
+        INFO_LOG("login ctp ok!");
+        this->isLogIN = true;
+        std::string tradingDay = pUserApi->GetTradingDay();
+        INFO_LOG("trading day:%s", tradingDay.c_str());
+        while (true)
         {
-            this->isForceExitThreadRuning = false;
-        }
-        else
-        {
-            this->isLogIN = true;
-            INFO_LOG("login ctp ok!");
-            std::string tradingDay = pUserApi->GetTradingDay();
-            INFO_LOG("trading day:%s", tradingDay.c_str());
-            while (true)
+            if (this->ROLE(SettlementConfirm).confirm(tradingDay))
             {
-                if (this->ROLE(SettlementConfirm).confirm(tradingDay))
-                {
-                    INFO_LOG("SettlementConfirm confirm success!");
-                    break;
-                }
-                ERROR_LOG("SettlementConfirm confirm failed, try again!");
-                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                INFO_LOG("SettlementConfirm confirm success!");
+                break;
             }
+            ERROR_LOG("SettlementConfirm confirm failed, try again!");
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
+
         this->isLogInThreadRunning = false;
+        INFO_LOG("%s", "isLogInThreadRunning set to false normally");
     };
     std::thread(ctpLoginFunc).detach();
     return true;
@@ -234,7 +257,7 @@ CtpLogInState LogInPart::getCtpLogInState()
         return CtpLogInState::Invalid_State;
     }
 }
-bool LogInPart::logOut()
+void LogInPart::logOut()
 {
     auto& traderHandle= ROLE(CtpClient).sh;
     CThostFtdcUserLogoutField logOutField{0};
@@ -243,11 +266,31 @@ bool LogInPart::logOut()
     auto& RequestID = ROLE(Trader_Info).RequestID;
     traderHandle.ReqUserLogout(logOutField, RequestID);
     RequestID++;
+    auto& timerPool = TimeoutTimerPool::getInstance();
+    timerPool.addTimer(FORCE_LOG_OUT_TIMER, logOutReqTimeOutFunc,FORCE_LOGOUT_TIME_OUT);
     sem_wait(&globalSem.sem_logout);
+    timerPool.killTimerByName(FORCE_LOG_OUT_TIMER);
     ROLE(CtpClient).release();
     INFO_LOG("ctp log out ok!");
     isLogIN = false;
-    return true;
+}
+
+void LogInPart::forceLogOut()
+{
+    auto& traderHandle = ROLE(CtpClient).sh;
+    CThostFtdcUserLogoutField logOutField{ 0 };
+    strcpy(logOutField.BrokerID, getConfig("trade", "BrokerID").c_str());
+    strcpy(logOutField.UserID, getConfig("trade", "UserID").c_str());
+    auto& RequestID = ROLE(Trader_Info).RequestID;
+    traderHandle.ReqUserLogout(logOutField, RequestID);
+    RequestID++;
+    auto& timerPool = TimeoutTimerPool::getInstance();
+    timerPool.addTimer(FORCE_LOG_OUT_TIMER, logOutReqTimeOutFunc,FORCE_LOGOUT_TIME_OUT);
+    sem_wait(&globalSem.sem_logout);
+    timerPool.killTimerByName(FORCE_LOG_OUT_TIMER);
+    ROLE(CtpClient).release();
+    INFO_LOG("ctp force release ok!");
+    isLogIN = false;
 }
 
 void LogInPart::startLoginOutControl()
@@ -275,7 +318,6 @@ void LogInPart::loginAndLogoutControl(LogInPart* _this)
             }
             break;
         }
-        INFO_LOG("log in success!!!");
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(5 * 1000));
     WARNING_LOG("begin while loop");
@@ -284,7 +326,7 @@ void LogInPart::loginAndLogoutControl(LogInPart* _this)
         ctpLogInState = _this->getCtpLogInState();
         if (ctpLogInState == CtpLogInState::Invalid_State)
         {
-            ERROR_LOG("Error CtpLogInState [Invalid_State],code has bug");
+            ERROR_LOG("Error CtpLogInState [Invalid_State],code has bug or waiting SettlementConfirm response");
         }
         if(isDuringTradeTime() && ((ctpLogInState == CtpLogInState::Connected_State)
                                       || (ctpLogInState == CtpLogInState::InitFailed_State)))
@@ -306,7 +348,6 @@ void LogInPart::loginAndLogoutControl(LogInPart* _this)
                 }
                 break;
             }
-            INFO_LOG("log in success during trade time!");
         }
         if(!isDuringTradeTime() && (ctpLogInState == CtpLogInState::Connected_State))
         {
