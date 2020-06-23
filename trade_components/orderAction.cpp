@@ -586,7 +586,7 @@ bool OrderManage::buildSecondOrder(const json& orderData, const char& direction)
 {
     static size_t requestID2;
     json orderCfg;
-    string cfgFileName = "../../project/projroot/commonorder.json";
+    string cfgFileName = getConfig("trade","OrderCommonPath");
     ifstream istrm(cfgFileName,ios::binary);
     if (!istrm.is_open())
     {
