@@ -6,6 +6,7 @@
 #include "semaphorePart.h"
 #include "orderAction.h"
 #include "orderstates.h"
+#include "EmailAlerts.h"
 
 extern GlobalSem globalSem;
 extern FillFlag fillFlag;
@@ -110,7 +111,6 @@ bool TradePart::insertOrderByMsg(const json& msgBody)
                 INFO_LOG("new sem has been add to globalSem");
             }
             INFO_LOG("wait for order1 globalSem.sem  of %s post",orderRef.c_str());
-//            sem_wait(&globalSem.orderSems); // @suppress("Function cannot be resolved")
             globalSem.waitSemByOrderRef(orderRef);
             globalSem.delOrderSem(orderRef);
             INFO_LOG("got globalSem.semOrder1.sem post");
@@ -145,7 +145,6 @@ bool TradePart::insertOrderByMsg(const json& msgBody)
                 INFO_LOG("new sem has been add to globalSem");
             }
             INFO_LOG("wait for order2 globalSem.sem  of %s post",orderRef.c_str());;
-//            sem_wait(&globalSem.semOrder2.sem); // @suppress("Function cannot be resolved")
             globalSem.waitSemByOrderRef(orderRef);
             globalSem.delOrderSem(orderRef);
             INFO_LOG("got globalSem.semOrder2.sem post");
@@ -177,7 +176,6 @@ bool TradePart::insertOrderByMsg(const json& msgBody)
         }
     };
     DEBUG_LOG("sched start");
-    // ����0-10���߳�ִ���´����ĵ�����
     std::thread insertThrad([&sched]{ sched->Start(0,10); });
     insertThrad.join();
     DEBUG_LOG("sched stop");
@@ -186,6 +184,7 @@ bool TradePart::insertOrderByMsg(const json& msgBody)
     if(orderResultState2 && orderResultState1)
     {
         INFO_LOG("order1 and order2 insert ok!");
+        send_email_order_insert(ROLE(OrderManage).order1,ROLE(OrderManage).order2, true);
         return true;
     }
     else if(!orderResultState2 && orderResultState1)
@@ -200,6 +199,7 @@ bool TradePart::insertOrderByMsg(const json& msgBody)
     {
         INFO_LOG("order1 insert failed, order2 insert failed!");
     }
+    send_email_order_insert(ROLE(OrderManage).order1,ROLE(OrderManage).order2, false);
     return false;
 }
 

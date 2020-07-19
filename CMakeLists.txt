@@ -22,4 +22,5 @@ target_link_libraries(tradelib
     thosttraderapi_se_6.3.15
     convertlib
     libgo
+    CSmtplib
  )
