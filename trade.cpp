@@ -20,7 +20,7 @@
 #include <atomic>
 #include <unistd.h>
 #include "define.h"
-#include "trade_components/EmailAlerts.h"
+
 
 extern U8 debugSwitch;
 
@@ -35,11 +35,7 @@ int main() {
     LOG_INIT(tradeLogPath.c_str(), "tradelog", 6);
     INFO_LOG("TRADE LOG PATH is %s",tradeLogPath.c_str());
     DEBUG_LOG("%s", "version debug 20200620:1939");
-    while(! init_email())
-    {
-        ERROR_LOG("init_email failed!");
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    }
+
     Trader& trader = Trader::getInstance();
 
     go [&] {

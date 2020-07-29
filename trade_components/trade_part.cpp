@@ -184,8 +184,12 @@ bool TradePart::insertOrderByMsg(const json& msgBody)
     if(orderResultState2 && orderResultState1)
     {
         INFO_LOG("order1 and order2 insert ok!");
-        send_email_order_insert(ROLE(OrderManage).order1,ROLE(OrderManage).order2, true);
+        if(init_email())
+        {
+        	 send_email_order_insert(ROLE(OrderManage).order1,ROLE(OrderManage).order2, true);
+        }
         return true;
+
     }
     else if(!orderResultState2 && orderResultState1)
     {
@@ -199,7 +203,11 @@ bool TradePart::insertOrderByMsg(const json& msgBody)
     {
         INFO_LOG("order1 insert failed, order2 insert failed!");
     }
-    send_email_order_insert(ROLE(OrderManage).order1,ROLE(OrderManage).order2, false);
+    if(init_email())
+    {
+    	send_email_order_insert(ROLE(OrderManage).order1,ROLE(OrderManage).order2, false);
+    }
+
     return false;
 }
 
