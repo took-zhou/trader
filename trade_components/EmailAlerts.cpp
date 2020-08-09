@@ -85,7 +85,7 @@ bool send_email(const char* Text)
 //{
 //    json order;
 //
-//    //传输的数据赋值
+//    //浼犺緭鐨勬暟鎹祴鍊�
 //    order["VolumeTotalOriginal1"] = op->Vol1;
 //    order["VolumeTotalOriginal2"] = op->Vol2;
 //
@@ -175,6 +175,16 @@ bool send_email_order_insert(CThostFtdcInputOrderField& order1, CThostFtdcInputO
     {
         tmpJson["result"] = "success";
     }
-    string msgbody = tmpJson.dump() + '\0';
+    string msgbody = "";
+    msgbody += "trader orders insert:\n";
+    msgbody += "strategy name: huaxia\n";
+    msgbody += ("result:" + tmpJson["result"].get<std::string>() + "\n");
+    msgbody += ("order1:" + string(order1.InstrumentID) +" ExchangeID:"+string(order1.ExchangeID) +" direction:"+order1Json["Direction"].get<std::string>() + " VolumeTotalOriginal:"+order1Json["VolumeTotalOriginal"].get<std::string>()+"\n");
+    msgbody += ("order2:" + order2Json["InstrumentID"].get<std::string>() +" ExchangeID:"+order2Json["ExchangeID"].get<std::string>() +" direction:"+order2Json["Direction"].get<std::string>() + " VolumeTotalOriginal:"+order2Json["VolumeTotalOriginal"].get<std::string>()+"\n");
+//    msgbody += ("order2:" + order2Json["InstrumentID"] +" ExchangeID:"+order2Json["ExchangeID"] +" direction:"+order2Json["Direction"] + " VolumeTotalOriginal:"+order2Json["VolumeTotalOriginal"]+"\n");
+//    msgbody += ("order2:" + order2Json["InstrumentID"] + "\n");
+//    string msgbody = tmpJson.dump() + '\0';
+
+
     return send_email(msgbody.c_str());
 }

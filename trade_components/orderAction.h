@@ -6,6 +6,8 @@
 #include "json.h"
 #include "trade_components/PrintCheck.h"
 #include <unordered_map>
+#include <map>
+#include <string>
 using json = nlohmann::json;
 
 
@@ -18,23 +20,16 @@ constexpr char SELL_ = '1';
 
 struct OrderManage
 {
-    OrderManage()
-    {
-        std::memset(&order, 0, sizeof(CThostFtdcInputOrderField));
-        std::memset(&order1, 0, sizeof(CThostFtdcInputOrderField));
-        std::memset(&order2, 0, sizeof(CThostFtdcInputOrderField));
-    }
-    bool fillOrder();
-    bool fillOrderByJsonFile();
-    bool fillOrderByJsonString(const json& orderData);
-private:
+    OrderManage(){}
+    bool fillOrderByJsonString(const json& orderData, std::string orderRef1, std::string orderRef2);
+    bool addOrder(std::string orderKey);
+    void delOrder(std::string orderKey);
+    CThostFtdcInputOrderField* getOrder(const std::string orderKey);
     bool determineBuyAndSaleDirection(const json orderData, char* direction_flag);
-    bool buildFirstOrder(const json& orderData, const char& direction);
-    bool buildSecondOrder(const json& orderData, const char& direction);
+    bool buildFirstOrder(const json& orderData, const char& direction, const std::string orderRef);
+    bool buildSecondOrder(const json& orderData, const char& direction, const std::string orderRef);
 public:
-    CThostFtdcInputOrderField order;
-    CThostFtdcInputOrderField order1;
-    CThostFtdcInputOrderField order2;
+    std::map<std::string, CThostFtdcInputOrderField> orderMaps;
 public:
     USE_ROLE(PintCheck);
 };

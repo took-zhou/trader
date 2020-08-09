@@ -85,12 +85,14 @@ bool TradePart::adjustOrderPrice(CThostFtdcInputOrderField& order, const json& r
 }
 bool TradePart::insertOrderByMsg(const json& msgBody)
 {
-    if(!ROLE(OrderManage).fillOrderByJsonString(msgBody))
+    std::string orderRef1 = genOrderRef();
+    std::string orderRef2 = genOrderRef();
+    if(!ROLE(OrderManage).fillOrderByJsonString(msgBody, orderRef1, orderRef2))
     {
-        ERROR_LOG("fillOrderByJsonString failed!"); // @suppress("Invalid arguments")
+        ERROR_LOG("fillOrderByJsonString failed!");
         return false;
     }
-    INFO_LOG("parse body msg to json format ok!"); // @suppress("Invalid arguments")
+    INFO_LOG("parse body msg to json format ok!");
     auto& pTraderApi= ROLE(CtpClient).sh;
 
     co::Scheduler* sched = co::Scheduler::Create();
@@ -103,9 +105,10 @@ bool TradePart::insertOrderByMsg(const json& msgBody)
         {
             INFO_LOG("order1 insert begin");
             auto& RequestID = ROLE(Trader_Info).RequestID;
-            pTraderApi.ReqOrderInsert_Ordinary_hai(ROLE(OrderManage).order1,RequestID);
+            auto order1 = *(ROLE(OrderManage).getOrder(orderRef1));
+            pTraderApi.ReqOrderInsert_Ordinary_hai(order1,RequestID);
             RequestID++;
-            string orderRef = ROLE(OrderManage).order1.OrderRef;
+            string orderRef = order1.OrderRef;
             if(globalSem.addOrderSem(orderRef))
             {
                 INFO_LOG("new sem has been add to globalSem");
@@ -137,9 +140,10 @@ bool TradePart::insertOrderByMsg(const json& msgBody)
         {
             INFO_LOG("order2 insert begin");
             auto& RequestID = ROLE(Trader_Info).RequestID;
-            pTraderApi.ReqOrderInsert_Ordinary_hai(ROLE(OrderManage).order2,RequestID);
+            auto order2 = *(ROLE(OrderManage).getOrder(orderRef2));
+            pTraderApi.ReqOrderInsert_Ordinary_hai(order2,RequestID);
             RequestID++;
-            string orderRef = ROLE(OrderManage).order2.OrderRef;
+            string orderRef = order2.OrderRef;
             if(globalSem.addOrderSem(orderRef))
             {
                 INFO_LOG("new sem has been add to globalSem");
@@ -151,7 +155,7 @@ bool TradePart::insertOrderByMsg(const json& msgBody)
             if(isInsertOrderSuccess())
             {
                 orderResultState2 = true;
-                INFO_LOG("order2 insert success!"); // @suppress("Invalid arguments")
+                INFO_LOG("order2 insert success!");
                 done++;
                 return;
             }
@@ -186,8 +190,12 @@ bool TradePart::insertOrderByMsg(const json& msgBody)
         INFO_LOG("order1 and order2 insert ok!");
         if(init_email())
         {
-        	 send_email_order_insert(ROLE(OrderManage).order1,ROLE(OrderManage).order2, true);
+            auto order1 = *(ROLE(OrderManage).getOrder(orderRef1));
+            auto order2 = *(ROLE(OrderManage).getOrder(orderRef2));
+            send_email_order_insert(order1,order2, true);
         }
+        ROLE(OrderManage).delOrder(orderRef1);
+        ROLE(OrderManage).delOrder(orderRef2);
         return true;
 
     }
@@ -205,7 +213,11 @@ bool TradePart::insertOrderByMsg(const json& msgBody)
     }
     if(init_email())
     {
-    	send_email_order_insert(ROLE(OrderManage).order1,ROLE(OrderManage).order2, false);
+        auto order1 = *(ROLE(OrderManage).getOrder(orderRef1));
+        auto order2 = *(ROLE(OrderManage).getOrder(orderRef2));
+        send_email_order_insert(order1, order2, false);
+        ROLE(OrderManage).delOrder(orderRef1);
+        ROLE(OrderManage).delOrder(orderRef2);
     }
 
     return false;
@@ -213,25 +225,25 @@ bool TradePart::insertOrderByMsg(const json& msgBody)
 
 void TradePart::handleTradeMsg(const json& msgBody)
 {
-    INFO_LOG("begin to handle trade Msg"); // @suppress("Invalid arguments")
+    INFO_LOG("begin to handle trade Msg");
 
     if(rspSuccessSwitch)
     {
         INFO_LOG("rspSuccessSwitch is open!! return success");
         sendResult(InsertResult::Success);
-        INFO_LOG("order pair insert success!"); // @suppress("Invalid arguments")
+        INFO_LOG("order pair insert success!");
         return;
     }
 
     if (insertOrderByMsg(msgBody))
     {
         sendResult(InsertResult::Success);
-        INFO_LOG("order pair insert success!"); // @suppress("Invalid arguments")
+        INFO_LOG("order pair insert success!");
         return;
     }
 
     sendResult(InsertResult::Failed);
-    ERROR_LOG("order pair insert failed!"); // @suppress("Invalid arguments")
+    ERROR_LOG("order pair insert failed!");
     return;
 }
 
@@ -239,7 +251,7 @@ bool TradePart::sendMsgHead(TradeMsgHead& msgHead)
 {
     if(write(ROLE(SocketClient).newSocket, &msgHead, sizeof(TradeMsgHead)) < 0)
     {
-        ERROR_LOG("send Msg head error!"); // @suppress("Invalid arguments")
+        ERROR_LOG("send Msg head error!");
         return false;
     }
     return true;
@@ -248,7 +260,7 @@ bool TradePart::sendMsgBody(const char* msgBody, size_t length)
 {
     if(write(ROLE(SocketClient).newSocket, msgBody, length) < 0)
     {
-        ERROR_LOG("send Msg Body error!"); // @suppress("Invalid arguments")
+        ERROR_LOG("send Msg Body error!");
         return false;
     }
     return true;
@@ -260,7 +272,7 @@ bool TradePart::sendMsgBody(const json& msgBody)
     const char* msgBodyStr = msgBodyString.c_str();
     if(write(ROLE(SocketClient).newSocket, msgBodyStr,msgBodyString.length()) < 0)
     {
-        ERROR_LOG("send Msg Body error!"); // @suppress("Invalid arguments")
+        ERROR_LOG("send Msg Body error!");
         return false;
     }
     return true;
@@ -271,7 +283,7 @@ bool TradePart::sendMsgBody(const string& msgBody)
     const char* msgBodyStr = msgBody.c_str();
     if(write(ROLE(SocketClient).newSocket, msgBodyStr,msgBody.length()) < 0)
     {
-        ERROR_LOG("send Msg Body error!"); // @suppress("Invalid arguments")
+        ERROR_LOG("send Msg Body error!");
         return false;
     }
     return true;
@@ -311,21 +323,6 @@ bool TradePart::sendResult(InsertResult result)
     return true;
 }
 
-bool TradePart::handleMsgFromJsonFile()
-{
-    if (!ROLE(OrderManage).fillOrderByJsonFile())
-    {
-        printf("fill order error!\n");
-        return false;
-    }
-    printf("fill order success!\n");
-    auto& pTraderApi= ROLE(CtpClient).sh;
-    auto& RequestID = ROLE(Trader_Info).RequestID;
-    pTraderApi.ReqOrderInsert_Ordinary_hai(ROLE(OrderManage).order, RequestID);
-    sem_wait(&globalSem.sem); // @suppress("Function cannot be resolved")
-    RequestID++;
-    return true;
-}
 
 
 double TradePart::reqFoPriceUnitFromCtp(TThostFtdcInstrumentIDType instrumentId, TThostFtdcExchangeIDType exchangeId)

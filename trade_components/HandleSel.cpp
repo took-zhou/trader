@@ -90,11 +90,10 @@ namespace
     }
 }
 
-
 void HandleSel::strategyHandle(const json& msgBody, void* __this)
 {
 
-    DEBUG_LOG("tradeHandle reach");
+    DEBUG_LOG("strategyHandle reach");
     TradePart* _this = (TradePart*)__this;
     _this->handleTradeMsg(msgBody);
 }
@@ -183,11 +182,11 @@ void HandleSel::msgHandleSel()
                 if(!ROLE(LogInPart).isLogIN)
                 {
                     ERROR_LOG("%s","ctp not login, continue for next msg!");
+                    ROLE(TradePart).sendResult(InsertResult::Failed);
                     break;
                 }
                 std::thread strategyThread(strategyHandle,msgBody, (void*)&ROLE(TradePart));
                 strategyThread.detach();
-//                tradeThread.join();
                 break;
             }
             case ClientType::Route:
@@ -218,7 +217,6 @@ void HandleSel::msgHandleSel()
                 break;
             }
         }
-
     }
 }
 
@@ -237,7 +235,6 @@ bool HandleSel::parseMsgHead(int sockfd, TradeMsgHead& msgHead)
         ROLE(SocketClient).isRouterConnected = false;
         return false;
     }
-
     return true;
 }
 

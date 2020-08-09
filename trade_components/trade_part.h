@@ -24,7 +24,6 @@ struct TradePart
 //    TradePart();
     virtual void handleTradeMsg(const json& msgBody);
 
-    virtual bool handleMsgFromJsonFile();
     bool insertOrderByMsg(const json& msgBody);
     bool sendResult(InsertResult result);
 
