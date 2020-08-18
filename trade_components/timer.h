@@ -92,7 +92,6 @@ struct TimeoutTimerPool
     void clear();
 
     std::vector<TimeoutTimer*> timers;
-
 };
 
 #endif // TIMER_H

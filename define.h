@@ -33,14 +33,14 @@ struct TradeMsgHead
     unsigned short length;       // msg body length
 };
 
-// //锟酵伙拷锟剿碉拷锟斤拷锟斤拷
+// //閿熼叺浼欐嫹閿熷壙纰夋嫹閿熸枻鎷烽敓鏂ゆ嫹
 // #define STRATEGYNAME    "strategy"
 // #define MARKETNAME      "market"
 // #define TRADENAME       "trade"
 // #define ROUTENAME       "route"
 // #define REMOTENAME      "remote"
 //
-// //body锟斤拷id锟斤拷
+// //body閿熸枻鎷穒d閿熸枻鎷�
 // #define CLIENTNAMEID            0x0001
 // #define STRATEGYORDERID         0x0002
 // #define MARKETREQINSTRUMENTID   0x0003
@@ -51,7 +51,7 @@ struct TradeMsgHead
 // #define TRADEORDRESTATUSID      0x0008
 // #define ROUTELODINSTATUS        0x0009
 
-// 锟酵伙拷锟剿碉拷锟斤拷锟斤拷
+// 閿熼叺浼欐嫹閿熷壙纰夋嫹閿熸枻鎷烽敓鏂ゆ嫹
 #define STRATEGYNAME    "strategy"
 #define MARKETNAME      "market"
 #define TRADENAME       "trade"
@@ -59,7 +59,7 @@ struct TradeMsgHead
 #define GUINAME         "gui"
 
 
-// body锟斤拷id锟斤拷
+// body閿熸枻鎷穒d閿熸枻鎷�
 enum struct ModuleName
 {
     CLIENT_NAME_ID            = 1,
@@ -73,8 +73,9 @@ enum struct ModuleName
     TRADE_ORDER_STATUS_ID     = 9,
     ROUTE_LODIN_STATUS_ID     = 10,
     MARKET_DEEP_DATA_ID       = 11,
-    CLIENT_HEARTBEAT_ID       = 12, /*客户端发送给路由端的心跳数据*/
-    ROUTE_RESPONDS_ID         = 13 /*路由端回应心跳数据给客户端*/
+    CLIENT_HEARTBEAT_ID       = 12, /*瀹㈡埛绔彂閫佺粰璺敱绔殑蹇冭烦鏁版嵁*/
+    ROUTE_RESPONDS_ID         = 13, /*璺敱绔洖搴斿績璺虫暟鎹粰瀹㈡埛绔�*/
+    TRADE_MARKET_ID           = 14
 };
 
 constexpr char ROUTE_HEADBEAT_TIMER[]     = "route_headbeat_check";

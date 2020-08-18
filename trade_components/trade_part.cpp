@@ -223,26 +223,26 @@ bool TradePart::insertOrderByMsg(const json& msgBody)
     return false;
 }
 
-void TradePart::handleTradeMsg(const json& msgBody)
+void TradePart::handleTradeMsg(const json msgBody)
 {
     INFO_LOG("begin to handle trade Msg");
 
     if(rspSuccessSwitch)
     {
         INFO_LOG("rspSuccessSwitch is open!! return success");
-        sendResult(InsertResult::Success);
+        sendResult(InsertResult::Success, msgBody);
         INFO_LOG("order pair insert success!");
         return;
     }
 
     if (insertOrderByMsg(msgBody))
     {
-        sendResult(InsertResult::Success);
+        sendResult(InsertResult::Success,msgBody);
         INFO_LOG("order pair insert success!");
         return;
     }
 
-    sendResult(InsertResult::Failed);
+    sendResult(InsertResult::Failed,msgBody);
     ERROR_LOG("order pair insert failed!");
     return;
 }
@@ -305,11 +305,15 @@ bool TradePart::sendMsg(TradeMsgHead& msgHead, const json& msgBody)
     return true;
 }
 
-bool TradePart::sendResult(InsertResult result)
+bool TradePart::sendResult(InsertResult result, const json& msgBody)
 {
 
     json rspResult;
     rspResult["result"] = result;
+    if(msgBody.contains("identifyCode"))
+    {
+        rspResult["identifyCode"] = msgBody["identifyCode"].get<int>();
+    }
 
     TradeMsgHead rspMsgHead{0};
     rspMsgHead.dataTypeId = (unsigned short)(ModuleName::TRADE_ORDER_STATUS_ID);

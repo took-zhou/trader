@@ -194,7 +194,7 @@ public:
 	void ReqQryParkedOrderAction();
 	
 	//请求查询资金账户
-	void ReqQryTradingAccount();
+	void ReqQryTradingAccount(CThostFtdcQryTradingAccountField& qryTradingAccount);
 	
 
 	//请求查询投资者持仓

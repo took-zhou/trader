@@ -81,7 +81,7 @@ namespace
         string year = split_strings[size-1];
         if(!removeSpecialStrInTheEnd(year,'\n'))
         {
-            printf("orror in removeSpecialStrInTheEnd\n"); // @suppress("Invalid arguments")
+            printf("orror in removeSpecialStrInTheEnd\n");
         }
         string month = MonthMap[split_strings[1]];
         string day = split_strings[2];

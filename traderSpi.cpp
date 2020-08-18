@@ -1057,12 +1057,14 @@ void CTraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingA
         PURE_LOG("\tSpecProductExchangeMargin [%.8lf]", pTradingAccount->SpecProductExchangeMargin);
         PURE_LOG("\tFrozenSwap [%.8lf]", pTradingAccount->FrozenSwap);
         PURE_LOG("\tRemainSwap [%.8lf]", pTradingAccount->RemainSwap);
-	}
-	if (pRspInfo)
-	{
-        TThostFtdcErrorMsgType msg;gbk2utf8(pRspInfo->ErrorMsg, msg, sizeof(msg));PURE_LOG("\tErrorMsg [%s]", msg);
+    }
+    if (pRspInfo)
+    {
+        TThostFtdcErrorMsgType msg;
+        gbk2utf8(pRspInfo->ErrorMsg, msg, sizeof(msg));
+        PURE_LOG("\tErrorMsg [%s]", msg);
         PURE_LOG("\tErrorID [%d]", pRspInfo->ErrorID);
-	}
+    }
     PURE_LOG("\tnRequestID [%d]", nRequestID);
     PURE_LOG("\tbIsLast [%d]", bIsLast);
     PURE_LOG("</OnRspQryTradingAccount>");

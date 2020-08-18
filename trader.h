@@ -32,7 +32,7 @@ struct Trader :   OrderManage
                 , SettlementConfirm
                 , Trader_Info
                 , InfoShow
-                ,TraderInteractor
+                , TraderInteractor
 {
     Trader(){}
     Trader(const Trader&)=delete;

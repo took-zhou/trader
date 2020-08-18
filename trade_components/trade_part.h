@@ -22,10 +22,10 @@ enum InsertResult
 struct TradePart
 {
 //    TradePart();
-    virtual void handleTradeMsg(const json& msgBody);
+    virtual void handleTradeMsg(const json msgBody);
 
     bool insertOrderByMsg(const json& msgBody);
-    bool sendResult(InsertResult result);
+    bool sendResult(InsertResult result, const json& msgBody);
 
 private:
     bool sendMsgHead(TradeMsgHead& msgHead);

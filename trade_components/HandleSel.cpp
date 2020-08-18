@@ -182,7 +182,7 @@ void HandleSel::msgHandleSel()
                 if(!ROLE(LogInPart).isLogIN)
                 {
                     ERROR_LOG("%s","ctp not login, continue for next msg!");
-                    ROLE(TradePart).sendResult(InsertResult::Failed);
+                    ROLE(TradePart).sendResult(InsertResult::Failed,msgBody);
                     break;
                 }
                 std::thread strategyThread(strategyHandle,msgBody, (void*)&ROLE(TradePart));
