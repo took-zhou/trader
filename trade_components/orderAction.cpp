@@ -157,7 +157,7 @@ bool OrderManage::buildFirstOrder(const json& orderData, const char& direction,c
     {
         return false;
     }
-    auto order1 = *tmpOrder1;
+    auto& order1 = *tmpOrder1;
     INFO_LOG("begin to fill order");
 
     strcpy(order1.OrderRef, orderRef.c_str());
@@ -277,7 +277,7 @@ bool OrderManage::buildSecondOrder(const json& orderData, const char& direction,
     {
         return false;
     }
-    auto order2 = *tmpOrder1;
+    auto& order2 = *tmpOrder1;
     INFO_LOG("begin to fill order");
     strcpy(order2.OrderRef, orderRef.c_str());
     string brokerId = orderCfg["BrokerID"].get<string>();

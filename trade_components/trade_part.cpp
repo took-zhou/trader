@@ -310,6 +310,7 @@ bool TradePart::sendResult(InsertResult result, const json& msgBody)
 
     json rspResult;
     rspResult["result"] = result;
+
     if(msgBody.contains("identifyCode"))
     {
         rspResult["identifyCode"] = msgBody["identifyCode"].get<int>();
@@ -320,6 +321,7 @@ bool TradePart::sendResult(InsertResult result, const json& msgBody)
     strcpy(rspMsgHead.fromClientName , TRADENAME);
     strcpy(rspMsgHead.toClientName , STRATEGYNAME);
 
+    INFO_LOG("begin to send result to strategy terminal");
     if(! sendMsg(rspMsgHead, rspResult))
     {
         return false;
