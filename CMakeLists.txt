@@ -1,27 +1,19 @@
-aux_source_directory(. srcs_list)
 
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/socket")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/trade_components")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../include/log")
+include_directories(
+    "${workspace_dir}/"
+)
+file(GLOB_RECURSE  trader_source
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
+)
 
-aux_source_directory("${CMAKE_CURRENT_SOURCE_DIR}/socket" socket_list)
-#add_library(socketlib SHARED ${socket_list})
-
-aux_source_directory("${CMAKE_CURRENT_SOURCE_DIR}/trade_components" trade_components)
-aux_source_directory("${CMAKE_CURRENT_SOURCE_DIR}/ctp_event" ctp_event)
-#add_library(trade_components_libs SHARED ${trade_components})
-list(APPEND  srcs_list ${socket_list} ${trade_components} ${ctp_event})
-if(statement)
-  
-endif(statement)
-add_library(tradelib  ${srcs_list})
+add_library(tradelib  ${trader_source})
 target_link_libraries(tradelib 
     LinuxDataCollect_6.3.15
-
     thosttraderapi_se_6.3.15
     thosttraderapi_se_6.3.15
-    convertlib
+    pthread
+    commonlib
+    zmq
     libgo
-    CSmtplib
+    protobuf
  )
