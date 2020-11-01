@@ -10,6 +10,8 @@
 #include <map>
 #include <functional>
 #include <string>
+#include <vector>
+#include "common/extern/ctp/inc/ThostFtdcTraderApi.h"
 struct MsgStruct;
 struct MarketEvent
 {
@@ -17,6 +19,9 @@ struct MarketEvent
 
     void handle(MsgStruct& msg);
     void regMsgFun();
+
+    void QryInstrumentReqHandle(MsgStruct& msg);
+    void pubQryInstrumentRsq(std::vector<CThostFtdcInstrumentField>& instrumentFieldList, bool isFinish);
 
     std::map<std::string, std::function<void(MsgStruct& msg)>> msgFuncMap;
 };

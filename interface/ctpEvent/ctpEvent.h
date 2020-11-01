@@ -10,7 +10,10 @@
 #include <map>
 #include <functional>
 #include <string>
+#include <vector>
+#include "common/self/dci/Role.h"
 struct MsgStruct;
+struct MarketEvent;
 struct CtpEvent
 {
     bool init();
@@ -26,9 +29,12 @@ struct CtpEvent
     void OnRtnOrderHandle(MsgStruct& msg);
     void OnRtnTradeHandle(MsgStruct& msg);
     void OnRspQryTradingAccountHandle(MsgStruct& msg);
+    void OnRspQryInstrumentHandle(MsgStruct& msg);
+
+
 
     std::map<std::string, std::function<void(MsgStruct& msg)>> msgFuncMap;
-
+    USE_ROLE(MarketEvent);
 };
 
 

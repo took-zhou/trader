@@ -8,14 +8,16 @@
 #include "trader/interface/ctpEvent/ctpEvent.h"
 #include "common/extern/log/log.h"
 #include "trader/infra/define.h"
-#include "common/extern/ctp/inc/ThostFtdcTraderApi.h"
 #include "trader/domain/components/orderstates.h"
 #include "trader/domain/components/InsertResult.h"
 #include "trader/domain/traderService.h"
 #include "common/self/utils.h"
+#include "trader/interface/marketEvent/marketEvent.h"
 
 #include "common/self/semaphorePart.h"
 extern GlobalSem globalSem;
+
+constexpr U32 MAX_INSTRUMENT_STATUS_SIZE = 50;
 
 bool CtpEvent::init()
 {
@@ -36,6 +38,7 @@ void CtpEvent::regMsgFun()
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRtnOrder",   [this](MsgStruct& msg){OnRtnOrderHandle(msg);}));
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRtnTrade",   [this](MsgStruct& msg){OnRtnTradeHandle(msg);}));
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRspQryTradingAccount",   [this](MsgStruct& msg){OnRspQryTradingAccountHandle(msg);}));
+    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRspQryInstrument",   [this](MsgStruct& msg){OnRspQryInstrumentHandle(msg);}));
 
     int cnt = 1;
     for(auto iter : msgFuncMap)
@@ -59,7 +62,8 @@ void CtpEvent::handle(MsgStruct& msg)
 
 void CtpEvent::OnRspQryTradingAccountHandle(MsgStruct& msg)
 {
-    CThostFtdcTradingAccountField* pTradingAccount = (CThostFtdcTradingAccountField*)msg.ctpMsg;
+    CThostFtdcTradingAccountField tmp = *(CThostFtdcTradingAccountField*)msg.ctpMsg;
+    CThostFtdcTradingAccountField* pTradingAccount = &tmp;//(CThostFtdcTradingAccountField*)msg.ctpMsg;
    // 目前只支持全量响应, 精确响应需要设置临时变量，以后根据需要再做适配
 
     auto& traderSer = TraderSevice::getInstance();
@@ -241,3 +245,23 @@ void CtpEvent::OnErrRtnOrderInsertHandle(MsgStruct& msg)
     globalSem.postSemBySemName(semName);
     INFO_LOG("post sem of [%s]",semName.c_str());
 }
+
+void CtpEvent::OnRspQryInstrumentHandle(MsgStruct& msg)
+{
+    static std::vector<CThostFtdcInstrumentField> InstrumentStatusList;
+    CThostFtdcInstrumentField ctpRspField = *((CThostFtdcInstrumentField*)msg.ctpMsg);
+    if(strlen(ctpRspField.InstrumentID) > 6)
+    {
+        return;
+    }
+    InstrumentStatusList.push_back(ctpRspField);
+    delete (CThostFtdcInstrumentField*)msg.ctpMsg;
+    if(msg.bIsLast || InstrumentStatusList.size() >= MAX_INSTRUMENT_STATUS_SIZE)
+    {
+        ROLE(MarketEvent).pubQryInstrumentRsq(InstrumentStatusList, msg.bIsLast);
+        InstrumentStatusList.clear();
+        INFO_LOG("pub QryInstrumentRsq ok! bIsLast is [%s]", msg.bIsLast?"true":"false");
+    }
+}
+
+

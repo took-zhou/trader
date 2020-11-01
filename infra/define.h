@@ -27,6 +27,7 @@ struct MsgStruct
     std::string pbMsg{""};
     void* ctpMsg{nullptr};
     void* ctpMsgInfo{nullptr};
+    bool bIsLast{false};
     bool isValid()
     {
         return sessionName != std::string("") and msgName != std::string("");

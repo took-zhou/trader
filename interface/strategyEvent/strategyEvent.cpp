@@ -15,7 +15,6 @@
 #include "trader/domain/traderService.h"
 #include "trader/domain/components/InsertResult.h"
 
-
 #include "common/self/semaphorePart.h"
 extern GlobalSem globalSem;
 
@@ -48,6 +47,10 @@ void StrategyEvent::regMsgFun()
 
 void StrategyEvent::AccountStatusReqHandle(MsgStruct& msg)
 {
+    strategy_trader::message reqMsg;
+    reqMsg.ParseFromString(msg.pbMsg);
+    utils::printProtoMsg(reqMsg);
+
     auto& traderSer = TraderSevice::getInstance();
     auto* traderApi = traderSer.ROLE(Trader).ROLE(CtpTraderApi).traderApi;
     traderApi->ReqQryTradingAccount();
@@ -120,7 +123,7 @@ void StrategyEvent::pubAccountStatusRsq()
     std::string head = "strategy_trader.AccountStatusRsq";
     auto& recerSender = RecerSender::getInstance();
     bool sendRes = recerSender.ROLE(Sender).ROLE(ProxySender).send(head.c_str(), strRsp.c_str());
-    if(sendRes)
+    if(!sendRes)
     {
         ERROR_LOG("send OrderInsertRsp error");
         return;
@@ -130,7 +133,7 @@ void StrategyEvent::pubAccountStatusRsq()
 
 void StrategyEvent::OrderInsertReqHandle(MsgStruct& msg)
 {
-    static strategy_trader::message reqMsg;
+    strategy_trader::message reqMsg;
     reqMsg.ParseFromString(msg.pbMsg);
     utils::printProtoMsg(reqMsg);
 
@@ -191,7 +194,8 @@ void StrategyEvent::pubOrderInsertRsp(std::string identity, bool result)
     std::string head = "strategy_trader.OrderInsertRsp";
     auto& recerSender = RecerSender::getInstance();
     bool sendRes = recerSender.ROLE(Sender).ROLE(ProxySender).send(head.c_str(), strRsp.c_str());
-    if(sendRes)
+    utils::printProtoMsg(rsp);
+    if(!sendRes)
     {
         ERROR_LOG("send OrderInsertRsp error");
         return;

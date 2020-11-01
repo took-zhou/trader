@@ -499,3 +499,18 @@ void TraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAc
     msgStruct.ctpMsg = &staticTradingAccountField;
     ctpMsgChan << msgStruct;
 }
+
+void TraderSpi::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+{
+//    static CThostFtdcInstrumentField staticInstrumentField;
+    CThostFtdcInstrumentField* staticInstrumentField = new CThostFtdcInstrumentField();
+    *staticInstrumentField = *pInstrument;
+
+    MsgStruct msgStruct;
+    msgStruct.sessionName = "ctp";
+    msgStruct.msgName = "OnRspQryInstrument";
+    msgStruct.ctpMsg = staticInstrumentField;
+    msgStruct.bIsLast = bIsLast;
+    ctpMsgChan << msgStruct;
+
+}
