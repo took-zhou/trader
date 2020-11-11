@@ -13,12 +13,11 @@
 #include "trader/domain/traderService.h"
 #include "common/self/utils.h"
 #include "trader/interface/marketEvent/marketEvent.h"
-
+#include <algorithm>
+#include <mutex>
 #include "common/self/semaphorePart.h"
 extern GlobalSem globalSem;
-
-constexpr U32 MAX_INSTRUMENT_STATUS_SIZE = 50;
-
+std::mutex m;
 bool CtpEvent::init()
 {
     regMsgFun();
@@ -120,7 +119,6 @@ void CtpEvent::OnRspQryTradingAccountHandle(MsgStruct& msg)
     std::string semName = "trader_ReqQryTradingAccount";
     globalSem.postSemBySemName(semName);
     INFO_LOG("post sem of [%s]",semName.c_str());
-    globalSem.delOrderSem(semName);
 }
 void CtpEvent::OnRtnTradeHandle(MsgStruct& msg)
 {
@@ -132,7 +130,6 @@ void CtpEvent::OnRtnTradeHandle(MsgStruct& msg)
     std::string semName = "trader_ReqOrderInsert" + std::string(pTrade->OrderRef);
     globalSem.postSemBySemName(semName);
     INFO_LOG("post sem of [%s]",semName.c_str());
-    globalSem.delOrderSem(semName);
 }
 
 void CtpEvent::OnRtnOrderHandle(MsgStruct& msg)
@@ -248,20 +245,87 @@ void CtpEvent::OnErrRtnOrderInsertHandle(MsgStruct& msg)
 
 void CtpEvent::OnRspQryInstrumentHandle(MsgStruct& msg)
 {
-    static std::vector<CThostFtdcInstrumentField> InstrumentStatusList;
-    CThostFtdcInstrumentField ctpRspField = *((CThostFtdcInstrumentField*)msg.ctpMsg);
+    U32 key{U32_MAX};
+    bool result = getNotFullRspMap(key);
+    if(! result)
+    {
+        key = addNewRspsList();
+    }
+    auto& InstrumentStatusList = qryRspsMap.at(key);
+//    static std::vector<CThostFtdcInstrumentField> InstrumentStatusList;
+    CThostFtdcInstrumentField ctpRspField =msg.specialMsg.instrumentField;
+    WARNING_LOG("OnRspQryInstrumentHandle ctpRspField.InstrumentID [%s]",ctpRspField.InstrumentID);
     if(strlen(ctpRspField.InstrumentID) > 6)
     {
         return;
     }
-    InstrumentStatusList.push_back(ctpRspField);
-    delete (CThostFtdcInstrumentField*)msg.ctpMsg;
-    if(msg.bIsLast || InstrumentStatusList.size() >= MAX_INSTRUMENT_STATUS_SIZE)
+    m.lock();
+    InstrumentStatusList.partRspList.push_back(ctpRspField);
+    m.unlock();
+//    delete (CThostFtdcInstrumentField*)msg.ctpMsg;
+    if(msg.bIsLast)
     {
-        ROLE(MarketEvent).pubQryInstrumentRsq(InstrumentStatusList, msg.bIsLast);
-        InstrumentStatusList.clear();
-        INFO_LOG("pub QryInstrumentRsq ok! bIsLast is [%s]", msg.bIsLast?"true":"false");
+        INFO_LOG("msg.bIsLast [%s]",msg.bIsLast?"true":"false");
+        InstrumentStatusList.isOk = true;
+        ROLE(MarketEvent).pubQryInstrumentRsq(key, msg.bIsLast);
+        delRspsList(key);
+        INFO_LOG("pub QryInstrumentRsq ok! bIsLast is [%s],mapKey[%u]", msg.bIsLast?"true":"false",key);
     }
+}
+
+U32 CtpEvent::addNewRspsList()
+{
+    InstrumentQryTmp tmp;
+    U32 key = buildNewKey();
+    qryRspsMap.insert(std::pair<U32, InstrumentQryTmp>(key,tmp));
+    return key;
+}
+
+void CtpEvent::delRspsList(U32 key)
+{
+    auto iter = qryRspsMap.find(key);
+    if(iter == qryRspsMap.end())
+    {
+        return;
+    }
+    iter->second.partRspList.clear();
+    qryRspsMap.erase(key);
+}
+
+bool CtpEvent::getNotFullRspMap(U32& key)
+{
+    for(auto& iter : qryRspsMap)
+    {
+        if(iter.second.isOk == false)
+        {
+            key = iter.first;
+            return true;
+        }
+    }
+    return false;
+}
+
+U32 CtpEvent::buildNewKey()
+{
+    std::vector<U32> existKeys;
+    for(auto& iter : qryRspsMap)
+    {
+        existKeys.push_back(iter.first);
+    }
+    if(existKeys.size() == 0)
+    {
+        return 0;
+    }
+    auto maxKey = *(std::max_element(existKeys.begin(),existKeys.end()));
+    for(U32 i = 0; i < maxKey; i++)
+    {
+        if(qryRspsMap.find(i) != qryRspsMap.end())
+        {
+            continue;
+        }
+        return i;
+    }
+    return maxKey+1;
 }
 
 

@@ -12,11 +12,14 @@
 #include "trader/infra/define.h"
 #include "common/self/fileUtil.h"
 
+//#include <mutex>
 #include "common/self/semaphorePart.h"
 extern GlobalSem globalSem;
 
 
 extern co_chan<MsgStruct> ctpMsgChan;
+
+//std::mutex m;
 
 void TraderSpi::OnFrontConnected()
 {
@@ -503,14 +506,26 @@ void TraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAc
 void TraderSpi::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
 //    static CThostFtdcInstrumentField staticInstrumentField;
-    CThostFtdcInstrumentField* staticInstrumentField = new CThostFtdcInstrumentField();
-    *staticInstrumentField = *pInstrument;
-
+    if(pInstrument ==nullptr)
+    {
+        ERROR_LOG("pInstrument == nullptr");
+        return;
+    }
+//    WARNING_LOG("new CThostFtdcInstrumentField");
+//    CThostFtdcInstrumentField* staticInstrumentField = new CThostFtdcInstrumentField();
+//    if(staticInstrumentField ==nullptr)
+//    {
+//        ERROR_LOG("staticInstrumentField ==nullptr");
+//    }
+//    *staticInstrumentField = *pInstrument;
+//    CThostFtdcInstrumentField filed = *pInstrument;
     MsgStruct msgStruct;
     msgStruct.sessionName = "ctp";
     msgStruct.msgName = "OnRspQryInstrument";
-    msgStruct.ctpMsg = staticInstrumentField;
+    msgStruct.specialMsg.instrumentField =*pInstrument;
     msgStruct.bIsLast = bIsLast;
+//    m.lock();
     ctpMsgChan << msgStruct;
+//    m.unlock();
 
 }

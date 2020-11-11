@@ -42,6 +42,7 @@ bool ZmqBase::init()
 void ZmqBase::SubscribeTopic(const char* topicStr)
 {
     zmq_setsockopt(receiver, ZMQ_SUBSCRIBE, topicStr, 1);
+    INFO_LOG("sub topic [%s] ok",topicStr);
 }
 
 void ZmqBase::unSubscribeTopic(const char* topicStr)
@@ -53,7 +54,7 @@ int ZmqBase::publishMsg(const char* head, const char* msg)
 {
     std::stringstream  tmpStr;
     tmpStr << head << " " << msg;
-    WARNING_LOG("tmpStr is %s", tmpStr.str().c_str());
+//    WARNING_LOG("tmpStr is %s", tmpStr.str().c_str());
 
     int ret = s_send(publisher,  tmpStr.str().c_str());
     if(ret == -1)

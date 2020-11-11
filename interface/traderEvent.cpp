@@ -55,7 +55,7 @@ bool TraderEvent::run()
             INFO_LOG("handle new msg, session is[%s],msgName is[%s]",msg.sessionName.c_str(), msg.msgName.c_str());
             if(! msg.isValid())
             {
-                ERROR_LOG(" invalid msg, session is [%s], msgName is [%s]",msg.sessionName.c_str(), msg.msgName.c_str());
+                // ERROR_LOG(" invalid msg, session is [%s], msgName is [%s]",msg.sessionName.c_str(), msg.msgName.c_str());
                 continue;
             }
             auto eventFunc = [this, msg]{

@@ -42,7 +42,8 @@ void StrategyEvent::regMsgFun()
     msgFuncMap.clear();
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OrderInsertReq",   [this](MsgStruct& msg){OrderInsertReqHandle(msg);}));
 
-    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("AccountStatusReq",   [this](MsgStruct& msg){AccountStatusReqHandle(msg);}));return;
+    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("AccountStatusReq",   [this](MsgStruct& msg){AccountStatusReqHandle(msg);}));
+    return;
 }
 
 void StrategyEvent::AccountStatusReqHandle(MsgStruct& msg)
@@ -123,6 +124,7 @@ void StrategyEvent::pubAccountStatusRsq()
     std::string head = "strategy_trader.AccountStatusRsq";
     auto& recerSender = RecerSender::getInstance();
     bool sendRes = recerSender.ROLE(Sender).ROLE(ProxySender).send(head.c_str(), strRsp.c_str());
+    utils::printProtoMsg(rsp);
     if(!sendRes)
     {
         ERROR_LOG("send OrderInsertRsp error");
@@ -198,7 +200,6 @@ void StrategyEvent::pubOrderInsertRsp(std::string identity, bool result)
     if(!sendRes)
     {
         ERROR_LOG("send OrderInsertRsp error");
-        return;
     }
     return;
 }

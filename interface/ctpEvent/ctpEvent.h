@@ -12,8 +12,17 @@
 #include <string>
 #include <vector>
 #include "common/self/dci/Role.h"
+#include "common/self/basetype.h"
+#include "common/extern/ctp/inc/ThostFtdcTraderApi.h"
 struct MsgStruct;
 struct MarketEvent;
+
+struct InstrumentQryTmp
+{
+    bool isOk{false};
+    std::vector<CThostFtdcInstrumentField> partRspList;
+};
+
 struct CtpEvent
 {
     bool init();
@@ -34,7 +43,14 @@ struct CtpEvent
 
 
     std::map<std::string, std::function<void(MsgStruct& msg)>> msgFuncMap;
+
     USE_ROLE(MarketEvent);
+    std::map<U32,InstrumentQryTmp> qryRspsMap;
+private:
+    U32 buildNewKey();
+    bool getNotFullRspMap(U32& key);
+    U32 addNewRspsList();
+    void delRspsList(U32 key);
 };
 
 

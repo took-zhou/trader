@@ -16,13 +16,22 @@ extern std::map<std::string, EventType> TitleToEvent;
 void ProxyRecer::init()
 {
     INFO_LOG("begin ProxyRecer::init");
-    auto& zmqBase = ZmqBase::getInstance();
+    topicList.clear();
     //strategy_trader
-    zmqBase.SubscribeTopic("strategy_trader.OrderInsertReq ");
-    zmqBase.SubscribeTopic("strategy_trader.AccountStatusReq");
+    topicList.push_back("strategy_trader.OrderInsertReq");
+    topicList.push_back("strategy_trader.AccountStatusReq");
 
     //trader_trader
-    zmqBase.SubscribeTopic("trader_trader.HeartBeat");
+    topicList.push_back("trader_trader.HeartBeat");
+
+    //market_trader
+    topicList.push_back("market_trader.QryInstrumentReq");
+
+    auto& zmqBase = ZmqBase::getInstance();
+    for(auto& topic : topicList)
+    {
+        zmqBase.SubscribeTopic(topic.c_str());
+    }
 
     INFO_LOG("sub topics ok");
 }
@@ -31,6 +40,18 @@ void ProxyRecer::init()
 bool ProxyRecer::checkSessionAndTitle(std::vector<std::string>& sessionAndTitle)
 {
     return true;
+}
+
+bool ProxyRecer::isTopicInSubTopics(std::string title)
+{
+    for(auto& topic : topicList)
+    {
+        if(topic == title)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 MsgStruct ProxyRecer::receMsg()
@@ -49,6 +70,10 @@ MsgStruct ProxyRecer::receMsg()
     auto spacePos = content.find_first_of(" ");
     auto title = content.substr(0, spacePos);
     auto pbMsg = content.substr(spacePos+1);
+    if(! isTopicInSubTopics(title))
+    {
+        return NilMsgStruct;
+    }
     INFO_LOG("recv msg, topic is[%s]",title.c_str());
     std::string tmpEventName = std::string(title);
     std::vector<std::string> sessionAndTitle = utils::splitString(tmpEventName, std::string("."));

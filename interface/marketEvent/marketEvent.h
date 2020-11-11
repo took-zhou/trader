@@ -11,8 +11,11 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include "common/self/dci/Role.h"
+#include "common/self/basetype.h"
 #include "common/extern/ctp/inc/ThostFtdcTraderApi.h"
 struct MsgStruct;
+struct CtpEvent;
 struct MarketEvent
 {
     bool init();
@@ -21,9 +24,11 @@ struct MarketEvent
     void regMsgFun();
 
     void QryInstrumentReqHandle(MsgStruct& msg);
-    void pubQryInstrumentRsq(std::vector<CThostFtdcInstrumentField>& instrumentFieldList, bool isFinish);
+    void pubQryInstrumentRsq(U32 key, bool isFinish);
 
     std::map<std::string, std::function<void(MsgStruct& msg)>> msgFuncMap;
+
+    USE_ROLE(CtpEvent);
 };
 
 

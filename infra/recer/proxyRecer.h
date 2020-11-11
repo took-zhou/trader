@@ -17,9 +17,9 @@ struct ProxyRecer
     void init();
     MsgStruct receMsg();
     bool checkSessionAndTitle(std::vector<std::string>& sessionAndTitle);
-
+    bool isTopicInSubTopics(std::string);
 //    ZmqBase* zmq{nullptr};
-
+    std::vector<std::string> topicList;
 };
 
 

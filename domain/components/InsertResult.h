@@ -13,9 +13,11 @@
 
 enum struct InsertRspResult
 {
-    Success = 0,
-    Failed  = 1,
-    UnKnow  = 2
+    Success        = 0,
+    Failed         = 1,
+    Order_Canceled = 2,
+    UnKnow         = 3
+
 };
 
 using RspResultMap = std::map<std::string, InsertRspResult>;
