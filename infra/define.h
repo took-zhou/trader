@@ -10,6 +10,13 @@
 
 #include <string>
 #include "common/extern/ctp/inc/ThostFtdcTraderApi.h"
+
+constexpr char LIMIT_LIMIT_SUBTITLE[] = "limit_limit";
+constexpr char LIMIT_FAK_SUBTITLE[]   = "limit_fak";
+constexpr char ORDER_BUILD_ERROR[]    = "order_build_error";
+constexpr char ORDER_FILL_ERROR[]     = "order_fill_error";
+constexpr char ORDER_CANCEL[]         = "order_cancel";
+
 enum struct EventType
 {
     Ctp_Event           = 0,

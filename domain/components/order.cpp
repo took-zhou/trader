@@ -12,6 +12,7 @@
 #include "common/self/basetype.h"
 #include "common/self/utils.h"
 #include "trader/interface/traderEvent.h"
+#include "trader/infra/define.h"
 //#include <string.h>
 //using namespace nlohmann;
 using json = nlohmann::json;
@@ -163,47 +164,56 @@ bool OrderManage::buildOrder(const std::string orderKey, const strategy_trader::
 
     /*****************************************************************************/
     auto orderType = orderIndication.order_type();
-    if(orderType != strategy_trader::OrderType::Common)
+    std::string orderTypeSubTitle = "";
+    if(orderType == strategy_trader::OrderType::limit_LIMIT)
     {
-        ERROR_LOG("just support type [common]; error order_type [%d]",(int)orderType);
+        orderTypeSubTitle = LIMIT_LIMIT_SUBTITLE;
+    }
+    else if(orderType == strategy_trader::OrderType::Limit_FAK)
+    {
+        orderTypeSubTitle = LIMIT_FAK_SUBTITLE;
+    }
+    if(orderTypeSubTitle == std::string(""))
+    {
+        ERROR_LOG("error OrderType");
         return false;
     }
 
-    std::string orderPrinceType = jsonCfg.getConfig("order_type","common")["OrderPriceType"].get<std::string>();
+    std::string orderPrinceType = jsonCfg.getConfig("order_type",orderTypeSubTitle)["OrderPriceType"].get<std::string>();
     order.OrderPriceType = orderPrinceType[0];
 
-    std::string combHedgeFlag = jsonCfg.getConfig("order_type","common")["CombHedgeFlag"].get<std::string>();
+    std::string combHedgeFlag = jsonCfg.getConfig("order_type",orderTypeSubTitle)["CombHedgeFlag"].get<std::string>();
     strcpy(order.CombHedgeFlag, combHedgeFlag.c_str());
 
-    std::string timeCondition = jsonCfg.getConfig("order_type","common")["TimeCondition"].get<std::string>();
+    std::string timeCondition = jsonCfg.getConfig("order_type",orderTypeSubTitle)["TimeCondition"].get<std::string>();
     order.TimeCondition = timeCondition[0];
 
-    std::string gTDDate = jsonCfg.getConfig("order_type","common")["GTDDate"].get<std::string>();
+    std::string gTDDate = jsonCfg.getConfig("order_type",orderTypeSubTitle)["GTDDate"].get<std::string>();
     strcpy(order.GTDDate, gTDDate.c_str());
 
-    std::string volumeCondition = jsonCfg.getConfig("order_type","common")["VolumeCondition"].get<std::string>();
+    std::string volumeCondition = jsonCfg.getConfig("order_type",orderTypeSubTitle)["VolumeCondition"].get<std::string>();
     order.VolumeCondition = volumeCondition[0];
 
-    order.MinVolume = jsonCfg.getConfig("order_type","common")["MinVolume"].get<int>();
+    order.MinVolume = jsonCfg.getConfig("order_type",orderTypeSubTitle)["MinVolume"].get<int>();
 
-    std::string contingentCondition = jsonCfg.getConfig("order_type","common")["ContingentCondition"].get<std::string>();
+    std::string contingentCondition = jsonCfg.getConfig("order_type",orderTypeSubTitle)["ContingentCondition"].get<std::string>();
     order.ContingentCondition = contingentCondition[0];
 
 
-    order.StopPrice = jsonCfg.getConfig("order_type","common")["StopPrice"].get<double>();
+    order.StopPrice = jsonCfg.getConfig("order_type",orderTypeSubTitle)["StopPrice"].get<double>();
 
-    std::string forceCloseReason = jsonCfg.getConfig("order_type","common")["ForceCloseReason"].get<std::string>();
+    std::string forceCloseReason = jsonCfg.getConfig("order_type",orderTypeSubTitle)["ForceCloseReason"].get<std::string>();
     order.ForceCloseReason = forceCloseReason[0];
 
-    order.IsAutoSuspend = jsonCfg.getConfig("order_type","common")["IsAutoSuspend"].get<int>();
+    order.IsAutoSuspend = jsonCfg.getConfig("order_type",orderTypeSubTitle)["IsAutoSuspend"].get<int>();
 
-    std::string businessUnit = jsonCfg.getConfig("order_type","common")["BusinessUnit"].get<std::string>();
+    std::string businessUnit = jsonCfg.getConfig("order_type",orderTypeSubTitle)["BusinessUnit"].get<std::string>();
     strcpy(order.BusinessUnit, businessUnit.c_str());
 
     order.RequestID = requestIdBuildAlg();
 
-    order.UserForceClose = jsonCfg.getConfig("order_type","common")["UserForceClose"].get<int>();
-    order.IsSwapOrder = jsonCfg.getConfig("order_type","common")["IsSwapOrder"].get<int>();
+    order.UserForceClose = jsonCfg.getConfig("order_type",orderTypeSubTitle)["UserForceClose"].get<int>();
+    order.IsSwapOrder = jsonCfg.getConfig("order_type",orderTypeSubTitle)["IsSwapOrder"].get<int>();
 
     string mac;
     if(!utils::get_local_mac(mac))

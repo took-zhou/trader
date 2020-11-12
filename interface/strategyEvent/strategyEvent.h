@@ -18,7 +18,7 @@ struct StrategyEvent
     void handle(MsgStruct& msg);
     void regMsgFun();
     void OrderInsertReqHandle(MsgStruct& msg);
-    void pubOrderInsertRsp(std::string identity, bool result);
+    void pubOrderInsertRsp(std::string identity, bool result, std::string reason);
 
     void AccountStatusReqHandle(MsgStruct& msg);
     void pubAccountStatusRsq();

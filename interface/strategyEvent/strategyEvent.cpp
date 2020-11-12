@@ -40,7 +40,7 @@ void StrategyEvent::handle(MsgStruct& msg)
 void StrategyEvent::regMsgFun()
 {
     msgFuncMap.clear();
-    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OrderInsertReq",   [this](MsgStruct& msg){OrderInsertReqHandle(msg);}));
+    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OrderInsertReq",     [this](MsgStruct& msg){OrderInsertReqHandle(msg);}));
 
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("AccountStatusReq",   [this](MsgStruct& msg){AccountStatusReqHandle(msg);}));
     return;
@@ -149,13 +149,13 @@ void StrategyEvent::OrderInsertReqHandle(MsgStruct& msg)
     if(! orderManage.addOrder(newOrderRef))
     {
         ERROR_LOG("add order [%s] to OrderManage error", newOrderRef.c_str());
-        pubOrderInsertRsp(identity,false);
+        pubOrderInsertRsp(identity,false, ORDER_BUILD_ERROR);
         return;
     }
     if( ! orderManage.buildOrder(newOrderRef, orderInsertReq))
     {
         ERROR_LOG("build order failed, the orderRef is [%s]",newOrderRef.c_str());
-        pubOrderInsertRsp(identity,false);
+        pubOrderInsertRsp(identity,false,ORDER_BUILD_ERROR);
         return;
     }
 
@@ -176,22 +176,41 @@ void StrategyEvent::OrderInsertReqHandle(MsgStruct& msg)
     if(insertRes != InsertRspResult::Success)
     {
         ERROR_LOG("insert order failed");
-        pubOrderInsertRsp(identity,false);
+        std::string reason = insertRes == InsertRspResult::Failed ? ORDER_FILL_ERROR
+                                                                  : ORDER_CANCEL;
+        pubOrderInsertRsp(identity,false, reason);
         return;
     }
 
     INFO_LOG("insert order success");
-    pubOrderInsertRsp(identity,true);
+    pubOrderInsertRsp(identity,true,"success");
     return;
 }
 
-void StrategyEvent::pubOrderInsertRsp(std::string identity, bool result)
+void StrategyEvent::pubOrderInsertRsp(std::string identity, bool result, std::string reason)
 {
     strategy_trader::message rsp;
     auto* insertRsp = rsp.mutable_order_insert_rsp();
     insertRsp->set_identity(identity);
     auto rspResult = result ? strategy_trader::Result::success : strategy_trader::Result::failed;
     insertRsp->set_result(rspResult);
+
+    if(result)
+    {
+        if(reason == std::string(ORDER_BUILD_ERROR))
+        {
+            insertRsp->set_reason(strategy_trader::FailedReason::Strategy_Ind_Error);
+        }
+        if(reason == std::string(ORDER_FILL_ERROR))
+        {
+            insertRsp->set_reason(strategy_trader::FailedReason::Order_Fill_Error);
+        }
+        if(reason == std::string(ORDER_CANCEL))
+        {
+            insertRsp->set_reason(strategy_trader::FailedReason::Order_Cancel);
+        }
+    }
+
     std::string strRsp = rsp.SerializeAsString();
     std::string head = "strategy_trader.OrderInsertRsp";
     auto& recerSender = RecerSender::getInstance();
