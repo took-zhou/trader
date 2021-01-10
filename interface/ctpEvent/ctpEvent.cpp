@@ -255,13 +255,12 @@ void CtpEvent::OnRspQryInstrumentHandle(MsgStruct& msg)
 //    static std::vector<CThostFtdcInstrumentField> InstrumentStatusList;
     CThostFtdcInstrumentField ctpRspField =msg.specialMsg.instrumentField;
     WARNING_LOG("OnRspQryInstrumentHandle ctpRspField.InstrumentID [%s]",ctpRspField.InstrumentID);
-    if(strlen(ctpRspField.InstrumentID) > 6)
+    if(strlen(ctpRspField.InstrumentID) <= 6)
     {
-        return;
+        m.lock();
+        InstrumentStatusList.partRspList.push_back(ctpRspField);
+        m.unlock();
     }
-    m.lock();
-    InstrumentStatusList.partRspList.push_back(ctpRspField);
-    m.unlock();
 //    delete (CThostFtdcInstrumentField*)msg.ctpMsg;
     if(msg.bIsLast)
     {

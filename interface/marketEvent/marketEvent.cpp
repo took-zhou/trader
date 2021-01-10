@@ -17,6 +17,7 @@
 #include "common/self/basetype.h"
 
 constexpr U32 MAX_INSTRUMENT_STATUS_SIZE = 5;
+constexpr U32 WAITTIME_FOR_MARKET_HANDLE = 10000;
 bool MarketEvent::init()
 {
     regMsgFun();
@@ -139,6 +140,7 @@ void MarketEvent::pubQryInstrumentRsq(U32 mapKey, bool isFinish)
             pubFunc(strRsp);
             utils::printProtoMsg(rsp);
         }
+        usleep(WAITTIME_FOR_MARKET_HANDLE);
     }
     return;
 }
