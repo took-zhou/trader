@@ -75,9 +75,9 @@ bool TraderEvent::run()
         MsgStruct msg;
         while(1)
         {
-            INFO_LOG("ctpRecRun while");
+            //INFO_LOG("ctpRecRun while");
             ctpMsgChan >> msg;
-            INFO_LOG("hai*************msg name[%s]",msg.msgName.c_str());
+            //INFO_LOG("hai*************msg name[%s]",msg.msgName.c_str());
             if(! msg.isValid())
             {
                 ERROR_LOG(" invalid msg, session is [%s], msgName is [%s]",msg.sessionName.c_str(), msg.msgName.c_str());

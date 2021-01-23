@@ -252,16 +252,16 @@ void CtpEvent::OnRspQryInstrumentHandle(MsgStruct& msg)
         key = addNewRspsList();
     }
     auto& InstrumentStatusList = qryRspsMap.at(key);
-//    static std::vector<CThostFtdcInstrumentField> InstrumentStatusList;
+    //static std::vector<CThostFtdcInstrumentField> InstrumentStatusList;
     CThostFtdcInstrumentField ctpRspField =msg.specialMsg.instrumentField;
-    WARNING_LOG("OnRspQryInstrumentHandle ctpRspField.InstrumentID [%s]",ctpRspField.InstrumentID);
+    //WARNING_LOG("OnRspQryInstrumentHandle ctpRspField.InstrumentID [%s]",ctpRspField.InstrumentID);
     if(strlen(ctpRspField.InstrumentID) <= 6)
     {
         m.lock();
         InstrumentStatusList.partRspList.push_back(ctpRspField);
         m.unlock();
     }
-//    delete (CThostFtdcInstrumentField*)msg.ctpMsg;
+    //delete (CThostFtdcInstrumentField*)msg.ctpMsg;
     if(msg.bIsLast)
     {
         INFO_LOG("msg.bIsLast [%s]",msg.bIsLast?"true":"false");

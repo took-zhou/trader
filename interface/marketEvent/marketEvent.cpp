@@ -129,16 +129,16 @@ void MarketEvent::pubQryInstrumentRsq(U32 mapKey, bool isFinish)
             qryInstruments->set_finish_flag(isFinishFlag);
             std::string strRsp = rsp.SerializeAsString();
             pubFunc(strRsp);
-            utils::printProtoMsg(rsp);
+            //utils::printProtoMsg(rsp);
             cnt = 0;
         }
-        if(idx == listSize-1)
+        else if(idx == listSize-1)
         {
             qryInstruments->set_result(market_trader::Result::success);
             qryInstruments->set_finish_flag(true);
             std::string strRsp = rsp.SerializeAsString();
             pubFunc(strRsp);
-            utils::printProtoMsg(rsp);
+            //utils::printProtoMsg(rsp);
         }
         usleep(WAITTIME_FOR_MARKET_HANDLE);
     }
