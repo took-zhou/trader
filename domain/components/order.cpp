@@ -1,7 +1,6 @@
 /*
  * order.cpp
  *
- *  Created on: 2020��8��30��
  *      Author: Administrator
  */
 
@@ -13,6 +12,9 @@
 #include "common/self/utils.h"
 #include "trader/interface/traderEvent.h"
 #include "trader/infra/define.h"
+#include <fstream>
+#include <iomanip>
+#include<iostream>
 //#include <string.h>
 //using namespace nlohmann;
 using json = nlohmann::json;
@@ -76,11 +78,12 @@ bool OrderManage::addOrder(std::string orderKey)
     {
         return false;
     }
-    CThostFtdcInputOrderField tmpOrder{0};
+    OrderContent tmpOrder;
     orderMaps.insert(std::pair<std::string, CThostFtdcInputOrderField>(orderKey,tmpOrder));
     INFO_LOG("add new order[%s] ok", orderKey.c_str());
     return true;
 }
+
 void OrderManage::delOrder(std::string orderKey)
 {
     auto it = orderMaps.find(orderKey);
@@ -98,6 +101,27 @@ CThostFtdcInputOrderField* OrderManage::getOrder(const std::string orderKey)
     }
     INFO_LOG("can not find order by orkerKey[%s]",orderKey.c_str());
     return nullptr;
+}
+
+OrderContent& OrderManage::getOrderContent(const std::string orderKey)
+{
+    auto* ctpOrder = getOrder(orderKey);
+    return *(static_cast<OrderContent*>(ctpOrder));
+}
+
+OrderContent& OrderManage::getOrderCOntentByIdentityId(std::string& identityKey)
+{
+    for(auto& orderMap : orderMaps)
+    {
+        auto& orderContent = *static_cast<OrderContent*>(&orderMap.second);
+        if(orderContent.identityId == identityKey)
+        {
+            return orderContent;
+        }
+    }
+    static OrderContent staticOrderContent = OrderContent();
+    ERROR_LOG("can not find ordercontent by identity[%s]",identityKey.c_str());
+    return staticOrderContent;
 }
 
 void OrderManage::printOrderInfo(const CThostFtdcInputOrderField& order, const std::string& orderName)
@@ -232,5 +256,178 @@ bool OrderManage::buildOrder(const std::string orderKey, const strategy_trader::
     INFO_LOG("fill order over! order is:");
     printOrderInfo(order,"order");
 
+    return true;
+}
+
+bool OrderSave::saveSuccCancelOrder(OrderContent& order, std::string reason)
+{
+    auto& jsonCfg = utils::JsonConfig::getInstance();
+    std::string filePath = jsonCfg.getConfig("trader","AllOrderActionsFilePath").get<std::string>();
+    if(!utils::isFileExist(filePath))
+    {
+        utils::creatFile(filePath);
+        std::string titles = "idectityId,frontId,sessionId,orderRef,instrumentId,price,time,direction,volumn,reason\n";
+        ofstream outfile(filePath, std::ofstream::app);
+        if(!outfile.is_open())
+        {
+            ERROR_LOG("open file[%s] failed",titles.c_str());
+            return false;
+        }
+        outfile << titles;
+        outfile.close();
+    }
+    std::string saveContent = "";
+    ofstream outfile(filePath, ios::app);
+    if(!outfile.is_open())
+    {
+        ERROR_LOG("open file[%s] failed",filePath.c_str());
+        return false;
+    }
+    saveContent += order.identityId+",";
+    saveContent += utils::intToString(order.frontId)+",";
+    saveContent += utils::intToString(order.sessionId)+",";
+    saveContent += order.orderRef+",";
+    saveContent += order.instrumentID+",";
+    saveContent += utils::doubleToStringConvert(order.tradedOrder.price)+",";
+    saveContent += order.tradedOrder.time+",";
+    saveContent += order.tradedOrder.direction+",";
+    saveContent += utils::intToString(order.tradedOrder.volume)+",";
+    saveContent += reason + "\n";
+    outfile << saveContent;
+    outfile.close();
+    return true;
+}
+
+bool OrderSave::saveSuccessOrderInsert(OrderContent& order)
+{
+    auto& jsonCfg = utils::JsonConfig::getInstance();
+    std::string filePath = jsonCfg.getConfig("trader","TraderSuccOrderFilePath").get<std::string>();
+    if(!utils::isFileExist(filePath))
+    {
+        utils::creatFile(filePath);
+        std::string titles = "idectityId,frontId,sessionId,orderRef,instrumentId,price,time,direction,volumn\n";
+        ofstream outfile(filePath, ios::app);
+        if(!outfile.is_open())
+        {
+            ERROR_LOG("open file[%s] failed",titles.c_str());
+            return false;
+        }
+        outfile << titles;
+        outfile.close();
+    }
+    std::string saveContent = "";
+    ofstream outfile(filePath, ios::app);
+    if(!outfile.is_open())
+    {
+        ERROR_LOG("open file[%s] failed",filePath.c_str());
+        return false;
+    }
+    saveContent += order.identityId+",";
+    saveContent += utils::intToString(order.frontId)+",";
+    saveContent += utils::intToString(order.sessionId)+",";
+    saveContent += order.orderRef+",";
+    saveContent += order.instrumentID+",";
+    saveContent += utils::doubleToStringConvert(order.tradedOrder.price)+",";
+    saveContent += order.tradedOrder.time+",";
+    saveContent += order.tradedOrder.direction+",";
+    saveContent += utils::intToString(order.tradedOrder.volume)+"\n";
+    outfile << saveContent;
+    outfile.close();
+    return true;
+}
+
+bool OrderSave::delOneRecordByOnRtnOrder(const OrderContent& orderContent)
+{
+    INFO_LOG("begin delOneRecordByOnRtnOrder, identity is[%s], orderRef is[%s], state[%s]",
+            orderContent.identityId.c_str(),orderContent.orderRef.c_str(),orderContent.currentStateStr.c_str());
+    auto& jsonCfg = utils::JsonConfig::getInstance();
+    std::string filePath = jsonCfg.getConfig("trader","DynmicSaveOrderFilePath").get<std::string>();
+    if(!utils::isFileExist(filePath))
+    {
+        ERROR_LOG("not find file[%s]",filePath.c_str());
+        return false;
+    }
+
+    std::ifstream istrm(filePath,std::ios::binary);
+    if (!istrm.is_open())
+    {
+        ERROR_LOG("failed to open %s",filePath.c_str());
+        return false;
+    }
+    json saveContent;
+    istrm >> saveContent;
+    istrm.close();
+    JsonPrint(saveContent);
+    if(!saveContent.contains(orderContent.identityId))
+    {
+        ERROR_LOG("not find identity[%s] in record file[%s]",orderContent.identityId.c_str(),filePath.c_str());
+        return false;
+    }
+    saveContent.erase(orderContent.identityId);
+    ofstream saveStream(filePath,ios::trunc);
+    saveStream << setw(4) << saveContent << endl;
+    JsonPrint(saveContent);
+    saveStream.close();
+    return true;
+}
+
+bool OrderSave::saveOnRtnOrderOrderState(const OrderContent& orderContent)
+{
+    INFO_LOG("begin saveOnRtnOrderOrderState, identity is[%s], orderRef is[%s], state[%s]",
+            orderContent.identityId.c_str(),orderContent.orderRef.c_str(),orderContent.currentStateStr.c_str());
+    auto& jsonCfg = utils::JsonConfig::getInstance();
+    std::string filePath = jsonCfg.getConfig("trader","DynmicSaveOrderFilePath").get<std::string>();
+    if(!utils::isFileExist(filePath))
+    {
+        utils::creatFile(filePath);
+        json saveContent;
+        json tmp;
+        tmp["identityId"] = orderContent.identityId;
+        tmp["orderRef"] = orderContent.orderRef;
+        tmp["frontId"] = orderContent.frontId;
+        tmp["sessionId"] = orderContent.sessionId;
+        tmp["investorId"] = orderContent.investorId;
+        tmp["userId"] = orderContent.userId;
+        tmp["instrumentID"] = orderContent.instrumentID;
+        tmp["currentStateStr"] = orderContent.currentStateStr;
+        tmp["currentStateChar"] = utils::charToString(orderContent.currentStateChar);
+        saveContent[orderContent.identityId] = tmp;
+    }
+    else
+    {
+        std::ifstream istrm(filePath,std::ios::binary);
+        if (!istrm.is_open())
+        {
+            ERROR_LOG("failed to open %s",filePath.c_str());
+            return false;
+        }
+        json saveContent;
+        istrm >> saveContent;
+        istrm.close();
+        if(saveContent.contains(orderContent.identityId))
+        {
+            auto& tmp = saveContent[orderContent.identityId];
+            tmp["currentStateStr"] = orderContent.currentStateStr;
+            tmp["currentStateChar"] = utils::charToString(orderContent.currentStateChar);
+        }
+        else
+        {
+            json tmp;
+            tmp["identityId"] = orderContent.identityId;
+            tmp["orderRef"] = orderContent.orderRef;
+            tmp["frontId"] = orderContent.frontId;
+            tmp["sessionId"] = orderContent.sessionId;
+            tmp["investorId"] = orderContent.investorId;
+            tmp["userId"] = orderContent.userId;
+            tmp["instrumentID"] = orderContent.instrumentID;
+            tmp["currentStateStr"] = orderContent.currentStateStr;
+            tmp["currentStateChar"] = utils::charToString(orderContent.currentStateChar);
+            saveContent[orderContent.identityId] = tmp;
+        }
+        ofstream saveStream(filePath,ios::trunc);
+        saveStream << setw(4) << saveContent << endl;
+        saveStream.close();
+    }
+    INFO_LOG("new state save ok, identity is[%s], orderRef is[%s]",orderContent.identityId.c_str(),orderContent.orderRef.c_str());
     return true;
 }

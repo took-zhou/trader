@@ -11,6 +11,7 @@
 #include "common/extern/ctp/inc/ThostFtdcTraderApi.h"
 #include "common/self/dci/Role.h"
 
+struct OrderContent;
 struct SettlementConfirm;
 
 class CtpTraderBaseApi : public CThostFtdcTraderApi
@@ -144,6 +145,7 @@ public:
     int ReqParkedOrderAction(CThostFtdcParkedOrderActionField *pParkedOrderAction, int nRequestID){};
 
     ///报单操作请求
+    int ReqOrderAction(OrderContent& orderContent,char actionFlag=THOST_FTDC_AF_Delete);
     int ReqOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, int nRequestID){};
 
     ///查询最大报单数量请求

@@ -44,7 +44,7 @@ int main(int argc, char* agrv[])
     }
 
     INFO_LOG("begin init traderSer");
-    //初始化ctpmarket
+    //初始化ctpTrader
     auto& traderSer = TraderSevice::getInstance();
     while(not traderSer.init())
     {

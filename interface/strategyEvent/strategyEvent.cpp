@@ -43,6 +43,53 @@ void StrategyEvent::regMsgFun()
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OrderInsertReq",     [this](MsgStruct& msg){OrderInsertReqHandle(msg);}));
 
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("AccountStatusReq",   [this](MsgStruct& msg){AccountStatusReqHandle(msg);}));
+    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OrderCancelReq",     [this](MsgStruct& msg){OrderCancelReqHandle(msg);}));
+    return;
+}
+
+void StrategyEvent::OrderCancelReqHandle(MsgStruct& msg)
+{
+    strategy_trader::message reqMsg;
+    reqMsg.ParseFromString(msg.pbMsg);
+    utils::printProtoMsg(reqMsg);
+
+    auto& orderCancelReq = reqMsg.order_cancel_req();
+    std::string identity = orderCancelReq.identity();
+
+    auto& traderSer = TraderSevice::getInstance();
+    auto& orderManage = traderSer.ROLE(OrderManage);
+    auto& orderContent = orderManage.getOrderCOntentByIdentityId(identity);
+    if(!orderContent.isValid())
+    {
+        std::string reason = "invalidOrderIdentityId";
+        pubOrderCancelRsp(identity, false, reason);
+        return;
+    }
+    orderContent.activeCancleIndication = true;
+    auto* traderApi = traderSer.ROLE(Trader).ROLE(CtpTraderApi).traderApi;
+    CThostFtdcInputOrderActionField orderActionReq;
+
+    traderApi->ReqOrderAction(orderContent);
+}
+
+void StrategyEvent::pubOrderCancelRsp(std::string identityId, bool result, std::string reason)
+{
+    strategy_trader::message rspMsg;
+    auto* orderCancelRsp  = rspMsg.mutable_order_cancel_rsp();
+    orderCancelRsp->set_identity(identityId);
+    orderCancelRsp->set_result(result? strategy_trader::Result::success:strategy_trader::Result::failed);
+    orderCancelRsp->set_failedreason(reason);
+
+    std::string strRsp = rspMsg.SerializeAsString();
+    std::string head = "strategy_trader.OrderCancelRsp";
+    auto& recerSender = RecerSender::getInstance();
+    bool sendRes = recerSender.ROLE(Sender).ROLE(ProxySender).send(head.c_str(), strRsp.c_str());
+    utils::printProtoMsg(rspMsg);
+    if(!sendRes)
+    {
+        ERROR_LOG("send OrderCancelRsp error");
+        return;
+    }
     return;
 }
 
@@ -152,19 +199,27 @@ void StrategyEvent::OrderInsertReqHandle(MsgStruct& msg)
         pubOrderInsertRsp(identity,false, ORDER_BUILD_ERROR);
         return;
     }
+
+
     if( ! orderManage.buildOrder(newOrderRef, orderInsertReq))
     {
         ERROR_LOG("build order failed, the orderRef is [%s]",newOrderRef.c_str());
         pubOrderInsertRsp(identity,false,ORDER_BUILD_ERROR);
         return;
     }
+//    auto* newOrder = orderManage.getOrder(newOrderRef);
+    auto& orderContent = orderManage.getOrderContent(newOrderRef);
 
+    orderContent.orderRef = newOrderRef;
+    orderContent.identityId = identity;
+    orderContent.instrumentID = orderContent.ROLE(CThostFtdcInputOrderField).InstrumentID;
+    orderContent.investorId  = orderContent.ROLE(CThostFtdcInputOrderField).InvestorID;
+    orderContent.userId = orderContent.ROLE(CThostFtdcInputOrderField).UserID;
     auto* traderApi = traderSer.ROLE(Trader).ROLE(CtpTraderApi).traderApi;
-    auto* newOrder = orderManage.getOrder(newOrderRef);
-
     auto& ctpRspResultMonitor = InsertResult::getInstance();
     ctpRspResultMonitor.addResultMonitor(newOrderRef);
 
+    auto* newOrder = &orderContent.ROLE(CThostFtdcInputOrderField);
     int insertResult = traderApi->ReqOrderInsert(newOrder);
 
     std::string semName = "trader_ReqOrderInsert" + std::string(newOrder->OrderRef);;

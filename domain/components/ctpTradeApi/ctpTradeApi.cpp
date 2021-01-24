@@ -17,7 +17,7 @@
 #include <thread>
 #include <array>
 #include "trader/domain/components/settlementConfirm.h"
-
+#include "trader/domain/components/order.h"
 #include "common/self/semaphorePart.h"
 extern GlobalSem globalSem;
 
@@ -91,6 +91,21 @@ void CtpTraderBaseApi::RegisterSpi(CThostFtdcTraderSpi *pSpi)
 
     m_pApi->RegisterSpi(pSpi);
     INFO_LOG("RegisterSpi ok");
+}
+
+int CtpTraderBaseApi::ReqOrderAction(OrderContent& orderContent, char actionFlag)
+{
+    CThostFtdcInputOrderActionField orderActionReq{0};
+    strcpy(orderActionReq.OrderRef, orderContent.orderRef.c_str());
+    orderActionReq.FrontID=orderContent.frontId;
+    orderActionReq.SessionID = orderContent.sessionId;
+    strcpy(orderActionReq.InstrumentID, orderContent.instrumentID.c_str());
+    strcpy(orderActionReq.InvestorID, orderContent.investorId.c_str());
+    strcpy(orderActionReq.UserID, orderContent.userId.c_str());
+    orderActionReq.ActionFlag = actionFlag;
+    int result = m_pApi->ReqOrderAction(&orderActionReq, requestIdBuildAlg());
+    INFO_LOG("ReqOrderAction send result is [%d]",result);
+    return result;
 }
 
 int CtpTraderBaseApi::ReqSettlementInfoConfirm()
@@ -197,6 +212,7 @@ void CtpTraderBaseApi::Init()
 bool CtpTraderApi::init()
 {
     INFO_LOG("begin CtpTraderApi init");
+
     traderApi = new CtpTraderBaseApi;     //新建tradeAPI
     auto& jsonCfg = utils::JsonConfig::getInstance();
     const std::string conPath = jsonCfg.getConfig("trader","ConPath").get<std::string>();
@@ -393,6 +409,7 @@ namespace {
 
 void CtpTraderApi::release()
 {
+    traderApi->RegisterSpi(nullptr);
     traderApi->Release();
     delete traderApi;
     traderApi = nullptr;
@@ -455,7 +472,6 @@ bool CtpTraderApi::logIn()
 
 void CtpTraderApi::logOut()
 {
-    CThostFtdcUserLogoutField logOutField{0};
     traderApi->ReqUserLogout();
     auto& timerPool = TimeoutTimerPool::getInstance();
     timerPool.addTimer(FORCE_LOG_OUT_TIMER, logOutReqTimeOutFunc,FORCE_LOGOUT_TIME_OUT);
@@ -470,8 +486,8 @@ void CtpTraderApi::logOut()
 
 CtpTraderApi::CtpTraderApi()
 {
-    static CtpTraderBaseApi ctpTraderBaseApi;
-    traderApi = &ctpTraderBaseApi;
+    // static CtpTraderBaseApi ctpTraderBaseApi;
+    // traderApi = &ctpTraderBaseApi;
 }
 
 CtpLogInState CtpTraderApi::getCtpLogInState()

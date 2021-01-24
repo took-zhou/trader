@@ -22,6 +22,9 @@ struct StrategyEvent
 
     void AccountStatusReqHandle(MsgStruct& msg);
     void pubAccountStatusRsq();
+
+    void OrderCancelReqHandle(MsgStruct& msg);
+    void pubOrderCancelRsp(std::string identity, bool result, std::string reason);
     std::map<std::string, std::function<void(MsgStruct& msg)>> msgFuncMap;
 };
 

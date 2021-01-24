@@ -529,3 +529,127 @@ void TraderSpi::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CThos
 //    m.unlock();
 
 }
+
+void TraderSpi::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+{
+    if(pInputOrderAction ==nullptr)
+    {
+        ERROR_LOG("pInputOrderAction == nullptr");
+        return;
+    }
+    if(pRspInfo ==nullptr)
+    {
+        ERROR_LOG("pRspInfo == nullptr");
+        return;
+    }
+
+    PURE_LOG("<OnRspOrderAction>");
+    if (pInputOrderAction)
+    {
+        PURE_LOG("\tBrokerID [%s]", pInputOrderAction->BrokerID);
+
+        PURE_LOG("\tInvestorID [%s]", pInputOrderAction->InvestorID);
+
+        PURE_LOG("\tOrderRef [%s]", pInputOrderAction->OrderRef);
+        PURE_LOG("\tExchangeID [%s]", pInputOrderAction->ExchangeID);
+
+        PURE_LOG("\tOrderSysID [%s]", pInputOrderAction->OrderSysID);
+
+        PURE_LOG("\tUserID [%s]", pInputOrderAction->UserID);
+
+        PURE_LOG("\tInstrumentID [%s]", pInputOrderAction->InstrumentID);
+
+        PURE_LOG("\tInvestUnitID [%s]", pInputOrderAction->InvestUnitID);
+        PURE_LOG("\tIPAddress [%s]", pInputOrderAction->IPAddress);
+        PURE_LOG("\tMacAddress [%s]", pInputOrderAction->MacAddress);
+        PURE_LOG("\tOrderActionRef [%d]", pInputOrderAction->OrderActionRef);
+        PURE_LOG("\tRequestID [%d]", pInputOrderAction->RequestID);
+        PURE_LOG("\tFrontID [%d]", pInputOrderAction->FrontID);
+        PURE_LOG("\tSessionID [%d]", pInputOrderAction->SessionID);
+
+        PURE_LOG("\tVolumeChange [%d]", pInputOrderAction->VolumeChange);
+        PURE_LOG("\tActionFlag [%c]", pInputOrderAction->ActionFlag);
+
+        PURE_LOG("\tLimitPrice [%.8lf]", pInputOrderAction->LimitPrice);
+    }
+    if (pRspInfo)
+    {
+        TThostFtdcErrorMsgType msg;
+        utils::gbk2utf8(pRspInfo->ErrorMsg,msg,sizeof(msg));
+        PURE_LOG("\tErrorMsg [%s]", msg);
+        PURE_LOG("\tErrorID [%d]", pRspInfo->ErrorID);
+    }
+    PURE_LOG("\tnRequestID [%d]", nRequestID);
+    PURE_LOG("\tbIsLast [%d]", bIsLast);
+    PURE_LOG("</OnRspOrderAction>");
+
+    CThostFtdcInputOrderActionField* orderActionField  = new CThostFtdcInputOrderActionField;
+    *orderActionField = *pInputOrderAction;
+    CThostFtdcRspInfoField* msgInfo = new CThostFtdcRspInfoField;
+    *msgInfo = *pRspInfo;
+    MsgStruct msgStruct;
+    msgStruct.sessionName = "ctp";
+    msgStruct.msgName = "OnRspOrderAction";
+    msgStruct.ctpMsg = static_cast<void*>(orderActionField);
+    msgStruct.ctpMsgInfo = static_cast<void*>(msgInfo);
+    msgStruct.bIsLast = bIsLast;
+    ctpMsgChan << msgStruct;
+}
+
+void TraderSpi::OnErrRtnOrderAction(CThostFtdcOrderActionField *pOrderAction, CThostFtdcRspInfoField *pRspInfo)
+{
+    PURE_LOG("<OnErrRtnOrderAction>");
+    if (pOrderAction)
+    {
+        PURE_LOG("\tBrokerID [%s]", pOrderAction->BrokerID);
+        PURE_LOG("\tInvestorID [%s]", pOrderAction->InvestorID);
+        PURE_LOG("\tOrderRef [%s]", pOrderAction->OrderRef);
+        PURE_LOG("\tExchangeID [%s]", pOrderAction->ExchangeID);
+        PURE_LOG("\tOrderSysID [%s]", pOrderAction->OrderSysID);
+        PURE_LOG("\tActionDate [%s]", pOrderAction->ActionDate);
+        PURE_LOG("\tActionTime [%s]", pOrderAction->ActionTime);
+        PURE_LOG("\tTraderID [%s]", pOrderAction->TraderID);
+        PURE_LOG("\tOrderLocalID [%s]", pOrderAction->OrderLocalID);
+        PURE_LOG("\tActionLocalID [%s]", pOrderAction->ActionLocalID);
+        PURE_LOG("\tParticipantID [%s]", pOrderAction->ParticipantID);
+        PURE_LOG("\tClientID [%s]", pOrderAction->ClientID);
+        PURE_LOG("\tBusinessUnit [%s]", pOrderAction->BusinessUnit);
+        PURE_LOG("\tUserID [%s]", pOrderAction->UserID);
+        PURE_LOG("\tStatusMsg [%s]", pOrderAction->StatusMsg);
+        PURE_LOG("\tInstrumentID [%s]", pOrderAction->InstrumentID);
+        PURE_LOG("\tBranchID [%s]", pOrderAction->BranchID);
+        PURE_LOG("\tInvestUnitID [%s]", pOrderAction->InvestUnitID);
+        PURE_LOG("\tIPAddress [%s]", pOrderAction->IPAddress);
+        PURE_LOG("\tMacAddress [%s]", pOrderAction->MacAddress);
+        PURE_LOG("\tOrderActionRef [%d]", pOrderAction->OrderActionRef);
+        PURE_LOG("\tRequestID [%d]", pOrderAction->RequestID);
+        PURE_LOG("\tFrontID [%d]", pOrderAction->FrontID);
+        PURE_LOG("\tSessionID [%d]", pOrderAction->SessionID);
+        PURE_LOG("\tVolumeChange [%d]", pOrderAction->VolumeChange);
+        PURE_LOG("\tInstallID [%d]", pOrderAction->InstallID);
+        PURE_LOG("\tActionFlag [%c]", pOrderAction->ActionFlag);
+        PURE_LOG("\tOrderActionStatus [%c]", pOrderAction->OrderActionStatus);
+        PURE_LOG("\tLimitPrice [%.8lf]", pOrderAction->LimitPrice);
+    }
+    if (pRspInfo)
+    {
+        TThostFtdcErrorMsgType msg;
+        utils::gbk2utf8(pRspInfo->ErrorMsg, msg, sizeof(msg));
+        PURE_LOG("\tErrorMsg [%s]", msg);
+        PURE_LOG("\tErrorID [%d]", pRspInfo->ErrorID);
+    }
+    PURE_LOG("</OnErrRtnOrderAction>");
+
+    CThostFtdcOrderActionField* orderActionField  = new CThostFtdcOrderActionField;
+    *orderActionField = *pOrderAction;
+    CThostFtdcRspInfoField* msgInfo = new CThostFtdcRspInfoField;
+    *msgInfo = *pRspInfo;
+    MsgStruct msgStruct;
+    msgStruct.sessionName = "ctp";
+    msgStruct.msgName = "OnErrRtnOrderAction";
+    msgStruct.ctpMsg = orderActionField;
+    msgStruct.ctpMsgInfo = msgInfo;
+    ctpMsgChan << msgStruct;
+};
+
+

@@ -16,6 +16,8 @@
 #include <algorithm>
 #include <mutex>
 #include "common/self/semaphorePart.h"
+#include "trader/interface/strategyEvent/strategyEvent.h"
+#include "trader/domain/components/order.h"
 extern GlobalSem globalSem;
 std::mutex m;
 bool CtpEvent::init()
@@ -30,14 +32,16 @@ void CtpEvent::regMsgFun()
 {
     msgFuncMap.clear();
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRspSettlementInfoConfirm",   [this](MsgStruct& msg){OnRspSettlementInfoConfirmHandle(msg);}));
-    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRspUserLogin",   [this](MsgStruct& msg){OnRspUserLoginHandle(msg);}));
-    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRspAuthenticate",   [this](MsgStruct& msg){OnRspAuthenticateHandle(msg);}));
-    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnErrRtnOrderInsert",   [this](MsgStruct& msg){OnErrRtnOrderInsertHandle(msg);}));
-    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRspOrderInsert",   [this](MsgStruct& msg){OnRspOrderInsertHandle(msg);}));
-    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRtnOrder",   [this](MsgStruct& msg){OnRtnOrderHandle(msg);}));
-    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRtnTrade",   [this](MsgStruct& msg){OnRtnTradeHandle(msg);}));
-    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRspQryTradingAccount",   [this](MsgStruct& msg){OnRspQryTradingAccountHandle(msg);}));
-    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRspQryInstrument",   [this](MsgStruct& msg){OnRspQryInstrumentHandle(msg);}));
+    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRspUserLogin",               [this](MsgStruct& msg){OnRspUserLoginHandle(msg);}));
+    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRspAuthenticate",            [this](MsgStruct& msg){OnRspAuthenticateHandle(msg);}));
+    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnErrRtnOrderInsert",          [this](MsgStruct& msg){OnErrRtnOrderInsertHandle(msg);}));
+    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRspOrderInsert",             [this](MsgStruct& msg){OnRspOrderInsertHandle(msg);}));
+    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRtnOrder",                   [this](MsgStruct& msg){OnRtnOrderHandle(msg);}));
+    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRtnTrade",                   [this](MsgStruct& msg){OnRtnTradeHandle(msg);}));
+    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRspQryTradingAccount",       [this](MsgStruct& msg){OnRspQryTradingAccountHandle(msg);}));
+    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRspQryInstrument",           [this](MsgStruct& msg){OnRspQryInstrumentHandle(msg);}));
+    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRspOrderAction",             [this](MsgStruct& msg){OnRspOrderActionHandle(msg);}));
+    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnErrRtnOrderAction",          [this](MsgStruct& msg){OnErrRtnOrderActionHandle(msg);}));
 
     int cnt = 1;
     for(auto iter : msgFuncMap)
@@ -58,6 +62,53 @@ void CtpEvent::handle(MsgStruct& msg)
     return;
 }
 
+void CtpEvent::OnErrRtnOrderActionHandle(MsgStruct& msg)
+{
+    CThostFtdcOrderActionField orderActionRsp = *(CThostFtdcOrderActionField*)msg.ctpMsg;
+    delete (CThostFtdcOrderActionField*)msg.ctpMsg;
+    CThostFtdcRspInfoField msgInfo = *static_cast<CThostFtdcRspInfoField*>(msg.ctpMsgInfo);
+    delete static_cast<CThostFtdcRspInfoField*>(msg.ctpMsgInfo);
+
+    std::string orderRef = std::string(orderActionRsp.OrderRef);
+    auto& traderSer = TraderSevice::getInstance();
+    auto& orderManage = traderSer.ROLE(OrderManage);
+    auto& orderContent = orderManage.getOrderContent(orderRef);
+
+    auto identityId = orderContent.identityId;
+    strategy_trader::message rspMsg;
+    auto* orderCancelRsp  = rspMsg.mutable_order_cancel_rsp();
+    orderCancelRsp->set_identity(identityId);
+    orderCancelRsp->set_result(strategy_trader::Result::failed);
+    TThostFtdcErrorMsgType errmsg;
+    utils::gbk2utf8(msgInfo.ErrorMsg,errmsg,sizeof(errmsg));
+    std::string reason = std::string("OnErrRtnOrderAction_")+utils::intToString(msgInfo.ErrorID)+"_"+std::string(errmsg);
+    orderCancelRsp->set_failedreason(reason);
+    ROLE(StrategyEvent).pubOrderCancelRsp(identityId, false,  reason);
+}
+
+
+void CtpEvent::OnRspOrderActionHandle(MsgStruct& msg)
+{
+    CThostFtdcInputOrderActionField orderActionRsp = *(CThostFtdcInputOrderActionField*)msg.ctpMsg;
+    delete (CThostFtdcInputOrderActionField*)msg.ctpMsg;
+    CThostFtdcRspInfoField msgInfo = *static_cast<CThostFtdcRspInfoField*>(msg.ctpMsgInfo);
+    delete static_cast<CThostFtdcRspInfoField*>(msg.ctpMsgInfo);
+
+    std::string orderRef = std::string(orderActionRsp.OrderRef);
+    auto& traderSer = TraderSevice::getInstance();
+    auto& orderManage = traderSer.ROLE(OrderManage);
+    auto& orderContent = orderManage.getOrderContent(orderRef);
+    auto identityId = orderContent.identityId;
+    strategy_trader::message rspMsg;
+    auto* orderCancelRsp  = rspMsg.mutable_order_cancel_rsp();
+    orderCancelRsp->set_identity(identityId);
+    orderCancelRsp->set_result(strategy_trader::Result::failed);
+    TThostFtdcErrorMsgType errmsg;
+    utils::gbk2utf8(msgInfo.ErrorMsg,errmsg,sizeof(errmsg));
+    std::string reason = std::string("OnRspOrderAction_")+utils::intToString(msgInfo.ErrorID)+"_"+std::string(errmsg);
+    orderCancelRsp->set_failedreason(reason);
+    ROLE(StrategyEvent).pubOrderCancelRsp(identityId, false,  reason);
+}
 
 void CtpEvent::OnRspQryTradingAccountHandle(MsgStruct& msg)
 {
@@ -127,11 +178,38 @@ void CtpEvent::OnRtnTradeHandle(MsgStruct& msg)
     auto& ctpRspResultMonitor = InsertResult::getInstance();
     ctpRspResultMonitor.setResultState(orderKey, InsertRspResult::Success);
 
+    auto& traderSer = TraderSevice::getInstance();
+    auto& orderManage = traderSer.ROLE(OrderManage);
+    auto& orderContent = orderManage.getOrderContent(orderKey);
+    orderContent.tradedOrder.price = pTrade->Price;
+    orderContent.tradedOrder.volume = pTrade ->Volume;
+    orderContent.tradedOrder.direction = utils::charToString(pTrade->Direction);
+    orderContent.tradedOrder.date = pTrade->TradeDate;
+    orderContent.tradedOrder.time = pTrade->TradeTime;
     std::string semName = "trader_ReqOrderInsert" + std::string(pTrade->OrderRef);
     globalSem.postSemBySemName(semName);
+    OrderSave::saveSuccessOrderInsert(orderContent);
+    OrderSave::saveSuccCancelOrder(orderContent,"deal");
+    OrderSave::delOneRecordByOnRtnOrder(orderContent);
     INFO_LOG("post sem of [%s]",semName.c_str());
+
 }
 
+
+namespace
+{
+    std::map<char, std::string> statusMap = {
+            {THOST_FTDC_OST_AllTraded,              "AllTrade"},
+            {THOST_FTDC_OST_PartTradedQueueing,     "PartTradedQueueing"},
+            {THOST_FTDC_OST_PartTradedNotQueueing,  "PartTradedNotQueueing"},
+            {THOST_FTDC_OST_NoTradeQueueing,        "NoTradeQueueing"},
+            {THOST_FTDC_OST_NoTradeNotQueueing,     "NoTradeNotQueueing"},
+            {THOST_FTDC_OST_Canceled,               "Canceled"},
+            {THOST_FTDC_OST_Unknown,                "Unknown"},
+            {THOST_FTDC_OST_NotTouched,             "NotTouched"},
+            {THOST_FTDC_OST_Touched,                "Touched"}
+    };
+}
 void CtpEvent::OnRtnOrderHandle(MsgStruct& msg)
 {
     CThostFtdcOrderField* pOrder = (CThostFtdcOrderField*) msg.ctpMsg;
@@ -141,7 +219,14 @@ void CtpEvent::OnRtnOrderHandle(MsgStruct& msg)
     {
         ERROR_LOG("insertState ERROR!");
     }
-
+    auto& traderSer = TraderSevice::getInstance();
+    auto& orderManage = traderSer.ROLE(OrderManage);
+    auto& orderContent = orderManage.getOrderContent(orderKey);
+    orderContent.frontId = pOrder->FrontID;
+    orderContent.sessionId = pOrder->SessionID;
+    orderContent.currentStateStr = statusMap.at(pOrder->OrderStatus);
+    orderContent.currentStateChar = pOrder->OrderStatus;
+    OrderSave::saveOnRtnOrderOrderState(orderContent);
     if (pOrder->OrderStatus == THOST_FTDC_OST_AllTraded)///全部成交
     {
         INFO_LOG("It's all done");
@@ -165,10 +250,24 @@ void CtpEvent::OnRtnOrderHandle(MsgStruct& msg)
     }
     if (pOrder->OrderStatus == THOST_FTDC_OST_Canceled)///撤单
     {
+        if(orderContent.activeCancleIndication)
+        {
+            auto identityId = orderContent.identityId;
+            strategy_trader::message rspMsg;
+            auto* orderCancelRsp  = rspMsg.mutable_order_cancel_rsp();
+            orderCancelRsp->set_identity(identityId);
+            orderCancelRsp->set_result(strategy_trader::Result::failed);
+            TThostFtdcErrorMsgType errmsg;
+            std::string reason = std::string("INVALID");
+            orderCancelRsp->set_failedreason(reason);
+            ROLE(StrategyEvent).pubOrderCancelRsp(identityId, true,  reason);
+        }
         auto& ctpRspResultMonitor = InsertResult::getInstance();
         ctpRspResultMonitor.setResultState(orderKey, InsertRspResult::Failed);
         std::string semName = "trader_ReqOrderInsert" + std::string(pOrder->OrderRef);
         globalSem.postSemBySemName(semName);
+        OrderSave::saveSuccCancelOrder(orderContent,"cancel");
+        OrderSave::delOneRecordByOnRtnOrder(orderContent);
         INFO_LOG("cancel the order");
     }
     if (pOrder->OrderStatus == THOST_FTDC_OST_Unknown)///未知

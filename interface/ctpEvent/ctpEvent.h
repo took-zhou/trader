@@ -16,7 +16,7 @@
 #include "common/extern/ctp/inc/ThostFtdcTraderApi.h"
 struct MsgStruct;
 struct MarketEvent;
-
+struct StrategyEvent;
 struct InstrumentQryTmp
 {
     bool isOk{false};
@@ -40,11 +40,12 @@ struct CtpEvent
     void OnRspQryTradingAccountHandle(MsgStruct& msg);
     void OnRspQryInstrumentHandle(MsgStruct& msg);
 
-
-
+    void OnRspOrderActionHandle(MsgStruct& msg);
+    void OnErrRtnOrderActionHandle(MsgStruct& msg);
     std::map<std::string, std::function<void(MsgStruct& msg)>> msgFuncMap;
 
     USE_ROLE(MarketEvent);
+    USE_ROLE(StrategyEvent);
     std::map<U32,InstrumentQryTmp> qryRspsMap;
 private:
     U32 buildNewKey();
