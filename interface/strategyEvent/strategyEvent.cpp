@@ -39,11 +39,18 @@ void StrategyEvent::handle(MsgStruct& msg)
 
 void StrategyEvent::regMsgFun()
 {
+    int cnt = 0;
     msgFuncMap.clear();
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OrderInsertReq",     [this](MsgStruct& msg){OrderInsertReqHandle(msg);}));
 
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("AccountStatusReq",   [this](MsgStruct& msg){AccountStatusReqHandle(msg);}));
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OrderCancelReq",     [this](MsgStruct& msg){OrderCancelReqHandle(msg);}));
+
+    for(auto iter : msgFuncMap)
+    {
+        INFO_LOG("sessionFuncMap[%d] key is [%s]",cnt, iter.first.c_str());
+        cnt++;
+    }
     return;
 }
 

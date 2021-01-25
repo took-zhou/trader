@@ -1,7 +1,7 @@
 /*
  * marketEvent.cpp
  *
- *  Created on: 2020��8��30��
+ *  Created on: 2020年10月23日
  *      Author: Administrator
  */
 
@@ -28,8 +28,15 @@ bool MarketEvent::init()
 
 void MarketEvent::regMsgFun()
 {
+    int cnt = 0;
     msgFuncMap.clear();
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("QryInstrumentReq",   [this](MsgStruct& msg){QryInstrumentReqHandle(msg);}));
+
+    for(auto iter : msgFuncMap)
+    {
+        INFO_LOG("msgFuncMap[%d] key is [%s]",cnt, iter.first.c_str());
+        cnt++;
+    }
 }
 
 void MarketEvent::handle(MsgStruct& msg)

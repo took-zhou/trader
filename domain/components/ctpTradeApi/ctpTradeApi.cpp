@@ -1,7 +1,7 @@
 /*
  * ctpTradeApi.cpp
  *
- *  Created on: 2020��8��30��
+ *  Created on: 2020年10月23日
  *      Author: Administrator
  */
 
@@ -250,14 +250,12 @@ namespace {
         vector<string> res;
         if(str == "")
             return res;
-        //鍦ㄥ瓧绗︿覆鏈熬涔熷姞鍏ュ垎闅旂锛屾柟渚挎埅鍙栨渶鍚庝竴娈�1锟�7锟�1锟�7
         string strs = str + pattern;
         size_t pos = strs.find(pattern);
         while(pos != strs.npos)
         {
             string temp = strs.substr(0, pos);
             res.push_back(temp);
-            //鍘绘帀宸插垎鍓茬殑瀛楃涓�1锟�7锟�1锟�7鍦ㄥ墿涓嬬殑瀛楃涓蹭腑杩涜鍒嗗壊
             strs = strs.substr(pos+1, strs.size());
             pos = strs.find(pattern);
         }

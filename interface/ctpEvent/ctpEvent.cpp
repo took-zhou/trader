@@ -1,7 +1,7 @@
 /*
  * ctpEvent.cpp
  *
- *  Created on: 2020��8��30��
+ *  Created on: 2020年10月23日
  *      Author: Administrator
  */
 
@@ -30,6 +30,7 @@ bool CtpEvent::init()
 
 void CtpEvent::regMsgFun()
 {
+    int cnt = 0;
     msgFuncMap.clear();
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRspSettlementInfoConfirm",   [this](MsgStruct& msg){OnRspSettlementInfoConfirmHandle(msg);}));
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRspUserLogin",               [this](MsgStruct& msg){OnRspUserLoginHandle(msg);}));
@@ -43,10 +44,10 @@ void CtpEvent::regMsgFun()
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRspOrderAction",             [this](MsgStruct& msg){OnRspOrderActionHandle(msg);}));
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnErrRtnOrderAction",          [this](MsgStruct& msg){OnErrRtnOrderActionHandle(msg);}));
 
-    int cnt = 1;
     for(auto iter : msgFuncMap)
     {
         INFO_LOG("msgFuncMap[%d] key is [%s]",cnt, iter.first.c_str());
+        cnt++;
     }
 }
 

@@ -1,7 +1,7 @@
 /*
  * selfEvent.cpp
  *
- *  Created on: 2020��8��30��
+ *  Created on: 2020年10月23日
  *      Author: Administrator
  */
 
@@ -33,12 +33,14 @@ void SelfEvent::handle(MsgStruct& msg)
 
 void SelfEvent::regMsgFun()
 {
+    int cnt = 0;
     msgFuncMap.clear();
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("HeartBeat",   [this](MsgStruct& msg){HeartBeatHandle(msg);}));
-    int cnt = 1;
+
     for(auto iter : msgFuncMap)
     {
         INFO_LOG("msgFuncMap[%d] key is [%s]",cnt, iter.first.c_str());
+        cnt++;
     }
     return;
 }

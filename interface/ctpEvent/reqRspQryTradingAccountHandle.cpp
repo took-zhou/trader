@@ -1,7 +1,7 @@
 /*
  * onRspQryTradingAccountHandle.cpp
  *
- *  Created on: 2020Äê8ÔÂ8ÈÕ
+ *  Created on: 2020å¹´10æœˆ23æ—¥
  *      Author: Administrator
  */
 #include "trader/interface/ctpEvent/reqRspQryTradingAccountHandle.h"
@@ -23,105 +23,3 @@ void ReqRspQryTradingAccountHandle::onRspQryTradingAccountHandle(CThostFtdcTradi
 
 
 }
-
-//struct CThostFtdcTradingAccountField_tmp
-//{
-//    ///¾­¼Í¹«Ë¾´úÂë
-//    TThostFtdcBrokerIDType BrokerID;
-//    ///Í¶×ÊÕßÕÊºÅ
-//    TThostFtdcAccountIDType AccountID;
-//    ///ÉÏ´ÎÖÊÑº½ğ¶î
-//    TThostFtdcMoneyType PreMortgage;
-//    ///ÉÏ´ÎĞÅÓÃ¶î¶È
-//    TThostFtdcMoneyType PreCredit;
-//    ///ÉÏ´Î´æ¿î¶î
-//    TThostFtdcMoneyType PreDeposit;
-//    ///ÉÏ´Î½áËã×¼±¸½ğ
-//    TThostFtdcMoneyType PreBalance;
-//    ///ÉÏ´ÎÕ¼ÓÃµÄ±£Ö¤½ğ
-//    TThostFtdcMoneyType PreMargin;
-//    ///ÀûÏ¢»ùÊı
-//    TThostFtdcMoneyType InterestBase;
-//    ///ÀûÏ¢ÊÕÈë
-//    TThostFtdcMoneyType Interest;
-//    ///Èë½ğ½ğ¶î
-//    TThostFtdcMoneyType Deposit;
-//    ///³ö½ğ½ğ¶î
-//    TThostFtdcMoneyType Withdraw;
-//    ///¶³½áµÄ±£Ö¤½ğ
-//    TThostFtdcMoneyType FrozenMargin;
-//    ///¶³½áµÄ×Ê½ğ
-//    TThostFtdcMoneyType FrozenCash;
-//    ///¶³½áµÄÊÖĞø·Ñ
-//    TThostFtdcMoneyType FrozenCommission;
-//    ///µ±Ç°±£Ö¤½ğ×Ü¶î
-//    TThostFtdcMoneyType CurrMargin;
-//    ///×Ê½ğ²î¶î
-//    TThostFtdcMoneyType CashIn;
-//    ///ÊÖĞø·Ñ
-//    TThostFtdcMoneyType Commission;
-//    ///Æ½²ÖÓ¯¿÷
-//    TThostFtdcMoneyType CloseProfit;
-//    ///³Ö²ÖÓ¯¿÷
-//    TThostFtdcMoneyType PositionProfit;
-//    ///ÆÚ»õ½áËã×¼±¸½ğ
-//    TThostFtdcMoneyType Balance;
-//    ///¿ÉÓÃ×Ê½ğ
-//    TThostFtdcMoneyType Available;
-//    ///¿ÉÈ¡×Ê½ğ
-//    TThostFtdcMoneyType WithdrawQuota;
-//    ///»ù±¾×¼±¸½ğ
-//    TThostFtdcMoneyType Reserve;
-//    ///½»Ò×ÈÕ
-//    TThostFtdcDateType TradingDay;
-//    ///½áËã±àºÅ
-//    TThostFtdcSettlementIDType SettlementID;
-//    ///ĞÅÓÃ¶î¶È
-//    TThostFtdcMoneyType Credit;
-//    ///ÖÊÑº½ğ¶î
-//    TThostFtdcMoneyType Mortgage;
-//    ///½»Ò×Ëù±£Ö¤½ğ
-//    TThostFtdcMoneyType ExchangeMargin;
-//    ///Í¶×ÊÕß½»¸î±£Ö¤½ğ
-//    TThostFtdcMoneyType DeliveryMargin;
-//    ///½»Ò×Ëù½»¸î±£Ö¤½ğ
-//    TThostFtdcMoneyType ExchangeDeliveryMargin;
-//    ///±£µ×ÆÚ»õ½áËã×¼±¸½ğ
-//    TThostFtdcMoneyType ReserveBalance;
-//    ///±ÒÖÖ´úÂë
-//    TThostFtdcCurrencyIDType CurrencyID;
-//    ///ÉÏ´Î»õ±ÒÖÊÈë½ğ¶î
-//    TThostFtdcMoneyType PreFundMortgageIn;
-//    ///ÉÏ´Î»õ±ÒÖÊ³ö½ğ¶î
-//    TThostFtdcMoneyType PreFundMortgageOut;
-//    ///»õ±ÒÖÊÈë½ğ¶î
-//    TThostFtdcMoneyType FundMortgageIn;
-//    ///»õ±ÒÖÊ³ö½ğ¶î
-//    TThostFtdcMoneyType FundMortgageOut;
-//    ///»õ±ÒÖÊÑºÓà¶î
-//    TThostFtdcMoneyType FundMortgageAvailable;
-//    ///¿ÉÖÊÑº»õ±Ò½ğ¶î
-//    TThostFtdcMoneyType MortgageableFund;
-//    ///ÌØÊâ²úÆ·Õ¼ÓÃ±£Ö¤½ğ
-//    TThostFtdcMoneyType SpecProductMargin;
-//    ///ÌØÊâ²úÆ·¶³½á±£Ö¤½ğ
-//    TThostFtdcMoneyType SpecProductFrozenMargin;
-//    ///ÌØÊâ²úÆ·ÊÖĞø·Ñ
-//    TThostFtdcMoneyType SpecProductCommission;
-//    ///ÌØÊâ²úÆ·¶³½áÊÖĞø·Ñ
-//    TThostFtdcMoneyType SpecProductFrozenCommission;
-//    ///ÌØÊâ²úÆ·³Ö²ÖÓ¯¿÷
-//    TThostFtdcMoneyType SpecProductPositionProfit;
-//    ///ÌØÊâ²úÆ·Æ½²ÖÓ¯¿÷
-//    TThostFtdcMoneyType SpecProductCloseProfit;
-//    ///¸ù¾İ³Ö²ÖÓ¯¿÷Ëã·¨¼ÆËãµÄÌØÊâ²úÆ·³Ö²ÖÓ¯¿÷
-//    TThostFtdcMoneyType SpecProductPositionProfitByAlg;
-//    ///ÌØÊâ²úÆ·½»Ò×Ëù±£Ö¤½ğ
-//    TThostFtdcMoneyType SpecProductExchangeMargin;
-//    ///ÒµÎñÀàĞÍ
-//    TThostFtdcBizTypeType BizType;
-//    ///ÑÓÊ±»»»ã¶³½á½ğ¶î
-//    TThostFtdcMoneyType FrozenSwap;
-//    ///Ê£Óà»»»ã¶î¶È
-//    TThostFtdcMoneyType RemainSwap;
-//};

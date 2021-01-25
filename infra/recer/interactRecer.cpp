@@ -1,7 +1,7 @@
 /*
  * interactRecer.cpp
  *
- *  Created on: 2020Äê8ÔÂ30ÈÕ
+ *  Created on: 2020å¹´10æœˆ23æ—¥
  *      Author: Administrator
  */
 #include "trader/infra/recer/interactRecer.h"

@@ -1,7 +1,7 @@
 /*
  * ctpEvent.h
  *
- *  Created on: 2020��8��28��
+ *  Created on: 2020年10月23日
  *      Author: Administrator
  */
 

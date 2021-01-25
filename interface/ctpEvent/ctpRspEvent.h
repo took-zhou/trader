@@ -1,7 +1,7 @@
 /*
  * ctpRspEvent.h
  *
- *  Created on: 2020��8��8��
+ *  Created on: 2020年10月23日
  *      Author: Administrator
  */
 #ifndef WORKSPACE_TRADE_CTP_EVENT_CTPRSPEVENT_H_
