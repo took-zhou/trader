@@ -83,12 +83,6 @@ void CtpTraderBaseApi::SubscribePublicTopic(THOST_TE_RESUME_TYPE nResumeType)
 
 void CtpTraderBaseApi::RegisterSpi(CThostFtdcTraderSpi *pSpi)
 {
-    if (pSpi == nullptr)
-    {
-        ERROR_LOG("pSpi is nullptr");
-        return;
-    }
-
     m_pApi->RegisterSpi(pSpi);
     INFO_LOG("RegisterSpi ok");
 }

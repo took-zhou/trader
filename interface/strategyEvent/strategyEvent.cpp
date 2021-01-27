@@ -65,6 +65,7 @@ void StrategyEvent::OrderCancelReqHandle(MsgStruct& msg)
         pubOrderCancelRsp(identity, false, reason);
         return;
     }
+
     orderContent.activeCancleIndication = true;
     auto* traderApi = traderSer.ROLE(Trader).ROLE(CtpTraderApi).traderApi;
     CThostFtdcInputOrderActionField orderActionReq;
