@@ -21,10 +21,10 @@ struct StrategyEvent
     void pubOrderInsertRsp(std::string identity, bool result, std::string reason);
 
     void AccountStatusReqHandle(MsgStruct& msg);
-    void pubAccountStatusRsq();
+    void pubAccountStatusRsq(bool result, const std::string& reason = "success");
 
     void OrderCancelReqHandle(MsgStruct& msg);
-    void pubOrderCancelRsp(std::string identity, bool result, std::string reason);
+    void pubOrderCancelRsp(std::string identity, bool result, const std::string& reason);
     std::map<std::string, std::function<void(MsgStruct& msg)>> msgFuncMap;
 };
 

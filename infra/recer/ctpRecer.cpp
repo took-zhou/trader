@@ -374,7 +374,7 @@ void TraderSpi::OnRtnOrder(CThostFtdcOrderField *pOrder)
     staticOrderField = *pOrder;
     MsgStruct msgStruct;
     msgStruct.sessionName = "ctp";
-    msgStruct.msgName = "OnRspOrderInsert";
+    msgStruct.msgName = "OnRtnOrder";
     msgStruct.ctpMsg = &staticOrderField;
     ctpMsgChan << msgStruct;
 }

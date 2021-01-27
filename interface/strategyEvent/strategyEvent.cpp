@@ -55,8 +55,13 @@ void StrategyEvent::OrderCancelReqHandle(MsgStruct& msg)
 
     auto& orderCancelReq = reqMsg.order_cancel_req();
     std::string identity = orderCancelReq.identity();
-
     auto& traderSer = TraderSevice::getInstance();
+    if(!traderSer.ROLE(Trader).ROLE(CtpTraderApi).isLogIN)
+    {
+        ERROR_LOG("ctp not login!");
+        pubOrderCancelRsp(identity, false, "ctp_logout");
+        return;
+    }
     auto& orderManage = traderSer.ROLE(OrderManage);
     auto& orderContent = orderManage.getOrderCOntentByIdentityId(identity);
     if(!orderContent.isValid())
@@ -73,7 +78,7 @@ void StrategyEvent::OrderCancelReqHandle(MsgStruct& msg)
     traderApi->ReqOrderAction(orderContent);
 }
 
-void StrategyEvent::pubOrderCancelRsp(std::string identityId, bool result, std::string reason)
+void StrategyEvent::pubOrderCancelRsp(std::string identityId, bool result, const std::string& reason)
 {
     strategy_trader::message rspMsg;
     auto* orderCancelRsp  = rspMsg.mutable_order_cancel_rsp();
@@ -101,21 +106,28 @@ void StrategyEvent::AccountStatusReqHandle(MsgStruct& msg)
     utils::printProtoMsg(reqMsg);
 
     auto& traderSer = TraderSevice::getInstance();
+    if(!traderSer.ROLE(Trader).ROLE(CtpTraderApi).isLogIN)
+    {
+        ERROR_LOG("ctp not login!");
+        pubAccountStatusRsq(false,"ctp_logout");
+        return;
+    }
     auto* traderApi = traderSer.ROLE(Trader).ROLE(CtpTraderApi).traderApi;
     traderApi->ReqQryTradingAccount();
     std::string semName = "trader_ReqQryTradingAccount";
     globalSem.waitSemBySemName(semName);
     INFO_LOG("waitSemBySemName [%s] ok",semName.c_str());
     globalSem.delOrderSem(semName);
-    pubAccountStatusRsq();
+    pubAccountStatusRsq(true);
 }
 
-void StrategyEvent::pubAccountStatusRsq()
+void StrategyEvent::pubAccountStatusRsq(bool result, const std::string& reason)
 {
     strategy_trader::message rsp;
     auto* accountRsp = rsp.mutable_account_status_rsq();
     auto& traderSer = TraderSevice::getInstance();
-
+    accountRsp->set_result(result?strategy_trader::Result::success:strategy_trader::Result::failed);
+    accountRsp->set_failedreason(reason);
     accountRsp->set_level(strategy_trader::Level::ALL);
     auto& tmpAccountInfo = traderSer.ROLE(Trader).ROLE(TmpStore).accountInfo;
     auto* filedContent = accountRsp->mutable_filed_content();
@@ -189,9 +201,15 @@ void StrategyEvent::OrderInsertReqHandle(MsgStruct& msg)
 
     const auto& orderInsertReq = reqMsg.order_insert_req();
     std::string identity = orderInsertReq.identity();
+    auto& traderSer = TraderSevice::getInstance();
+    if(!traderSer.ROLE(Trader).ROLE(CtpTraderApi).isLogIN)
+    {
+        ERROR_LOG("ctp not login!");
+        pubOrderInsertRsp(identity,false, ORDER_BUILD_ERROR);
+        return;
+    }
     auto& orderIndication = orderInsertReq.order();
 
-    auto& traderSer = TraderSevice::getInstance();
     auto& orderManage = traderSer.ROLE(OrderManage);
     std::string newOrderRef = utils::genOrderRef();
     if(! orderManage.addOrder(newOrderRef))
@@ -251,7 +269,7 @@ void StrategyEvent::pubOrderInsertRsp(std::string identity, bool result, std::st
     auto rspResult = result ? strategy_trader::Result::success : strategy_trader::Result::failed;
     insertRsp->set_result(rspResult);
 
-    if(result)
+    if(!result)
     {
         if(reason == std::string(ORDER_BUILD_ERROR))
         {

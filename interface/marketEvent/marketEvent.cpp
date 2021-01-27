@@ -50,26 +50,27 @@ void MarketEvent::QryInstrumentReqHandle(MsgStruct& msg)
     market_trader::message reqMsg;
     reqMsg.ParseFromString(msg.pbMsg);
     utils::printProtoMsg(reqMsg);
-
+    auto& traderSer = TraderSevice::getInstance();
+    if(!traderSer.ROLE(Trader).ROLE(CtpTraderApi).isLogIN)
+    {
+        ERROR_LOG("ctp not login!");
+        pubQryInstrumentRsq(INVALID_U32, true, false);
+        return;
+    }
     auto& req = reqMsg.qry_instrument_req();
     if(req.identity() != std::string("all"))
     {
         ERROR_LOG("qry_instrument_req identity[%s] is not [all]",req.identity().c_str());
         return;
     }
-
-    auto& traderSer = TraderSevice::getInstance();
     auto* traderApi = traderSer.ROLE(Trader).ROLE(CtpTraderApi).traderApi;
     traderApi->ReqQryInstrument();
 }
 
-void MarketEvent::pubQryInstrumentRsq(U32 mapKey, bool isFinish)
+void MarketEvent::pubQryInstrumentRsq(U32 mapKey, bool isFinish, bool result)
 {
-    auto instrumentFieldList = ROLE(CtpEvent).qryRspsMap.at(mapKey);
     market_trader::message rsp;
     auto* qryInstruments = rsp.mutable_qry_instrument_rsp();
-    U32 cnt{0};
-    U32 listSize = instrumentFieldList.partRspList.size();
     auto pubFunc = [](std::string strRsp){
         std::string head = "market_trader.QryInstrumentRsq";
         auto& recerSender = RecerSender::getInstance();
@@ -81,6 +82,17 @@ void MarketEvent::pubQryInstrumentRsq(U32 mapKey, bool isFinish)
         }
         return;
     };
+    if(!result)
+    {
+        qryInstruments->set_result(market_trader::Result::failed);
+        qryInstruments->set_finish_flag(true);
+        std::string strRsp = rsp.SerializeAsString();
+        pubFunc(strRsp);
+        return;
+    }
+    auto instrumentFieldList = ROLE(CtpEvent).qryRspsMap.at(mapKey);
+    U32 cnt{0};
+    U32 listSize = instrumentFieldList.partRspList.size();
     for(U32 idx = 0; idx < listSize; idx++)
     {
         if(cnt == 0)
