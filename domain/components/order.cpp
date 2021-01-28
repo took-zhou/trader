@@ -30,6 +30,7 @@ namespace
         orderPriceType.push_back(order.OrderPriceType);
         std::string timeCondition;
         timeCondition.push_back(order.TimeCondition);
+
         json jorder ={
                 {orderName.c_str(),{
                         {"BrokerID",    order.BrokerID},
@@ -39,32 +40,32 @@ namespace
                         {"ClientID",    order.ClientID},
                         {"GTDDate",     order.GTDDate},
                         {"UserID",      order.UserID},
-                        {"RequestID",   order.RequestID},
-                        {"InvestUnitID",order.InvestUnitID},
-                        {"BusinessUnit",order.BusinessUnit},
-                        {"ClientID",    order.ClientID},
+//                        {"RequestID",   order.RequestID},
+//                        {"InvestUnitID",order.InvestUnitID},
+//                        {"BusinessUnit",order.BusinessUnit},
+//                        {"ClientID",    order.ClientID},
                         {"OrderRef",    order.OrderRef},
-                        {"IPAddress",   order.IPAddress},
-                        {"MacAddress",  order.MacAddress},
-
-                        {"InstrumentID",    order.InstrumentID},
-                        {"Direction",       direction},
-                        {"CombOffsetFlag",  order.CombOffsetFlag},
+//                        {"IPAddress",   order.IPAddress},
+//                        {"MacAddress",  order.MacAddress},
+//
+//                        {"InstrumentID",    order.InstrumentID},
+//                        {"Direction",       direction},
+//                        {"CombOffsetFlag",  order.CombOffsetFlag},
                         {"LimitPrice",      order.LimitPrice},
-                        {"OrderPriceType",  orderPriceType},
-                        {"TimeCondition",   timeCondition},
-                        {"ContingentCondition",order.ContingentCondition},
-                        {"MinVolume",           order.MinVolume},
-                        {"StopPrice",           order.StopPrice},
-                        {"VolumeTotalOriginal", order.VolumeTotalOriginal},
-                        {"VolumeCondition",     order.VolumeCondition},
-                        {"CombHedgeFlag",       order.CombHedgeFlag},
-
-                        {"CurrencyID",      order.CurrencyID},
-                        {"UserForceClose",  order.UserForceClose},
-                        {"ForceCloseReason",forceCloseReason},
-                        {"IsAutoSuspend",   order.IsAutoSuspend},
-                        {"IsSwapOrder",     order.IsSwapOrder},
+//                        {"OrderPriceType",  orderPriceType},
+//                        {"TimeCondition",   timeCondition},
+//                        {"ContingentCondition",order.ContingentCondition},
+//                        {"MinVolume",           order.MinVolume},
+//                        {"StopPrice",           order.StopPrice},
+//                        {"VolumeTotalOriginal", order.VolumeTotalOriginal},
+//                        {"VolumeCondition",     order.VolumeCondition},
+//                        {"CombHedgeFlag",       order.CombHedgeFlag},
+//
+//                        {"CurrencyID",      order.CurrencyID},
+//                        {"UserForceClose",  order.UserForceClose},
+//                        {"ForceCloseReason",forceCloseReason},
+//                        {"IsAutoSuspend",   order.IsAutoSuspend},
+//                        {"IsSwapOrder",     order.IsSwapOrder},
                         }
                 }
         };
@@ -78,8 +79,9 @@ bool OrderManage::addOrder(std::string orderKey)
     {
         return false;
     }
-    OrderContent tmpOrder;
-    orderMaps.insert(std::pair<std::string, CThostFtdcInputOrderField>(orderKey,tmpOrder));
+    OrderContent* tmpOrder = new OrderContent();
+
+    orderMaps.insert(std::pair<std::string, CThostFtdcInputOrderField*>(orderKey,tmpOrder));
     INFO_LOG("add new order[%s] ok", orderKey.c_str());
     return true;
 }
@@ -89,6 +91,8 @@ void OrderManage::delOrder(std::string orderKey)
     auto it = orderMaps.find(orderKey);
     if(it != orderMaps.end())
     {
+        delete it->second;
+        it->second = nullptr;
         orderMaps.erase(it);
         INFO_LOG("del order[%s] ok",orderKey.c_str());
     }
@@ -97,7 +101,7 @@ CThostFtdcInputOrderField* OrderManage::getOrder(const std::string orderKey)
 {
     if(orderMaps.find(orderKey) != orderMaps.end())
     {
-        return &orderMaps.at(orderKey);
+        return orderMaps.at(orderKey);
     }
     INFO_LOG("can not find order by orkerKey[%s]",orderKey.c_str());
     return nullptr;
@@ -106,6 +110,7 @@ CThostFtdcInputOrderField* OrderManage::getOrder(const std::string orderKey)
 OrderContent& OrderManage::getOrderContent(const std::string orderKey)
 {
     auto* ctpOrder = getOrder(orderKey);
+
     return *(static_cast<OrderContent*>(ctpOrder));
 }
 
@@ -113,7 +118,7 @@ OrderContent& OrderManage::getOrderCOntentByIdentityId(std::string& identityKey)
 {
     for(auto& orderMap : orderMaps)
     {
-        auto& orderContent = *static_cast<OrderContent*>(&orderMap.second);
+        auto& orderContent = *static_cast<OrderContent*>(orderMap.second);
         if(orderContent.identityId == identityKey)
         {
             return orderContent;

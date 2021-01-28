@@ -1,7 +1,7 @@
 /*
  * order.h
  *
- *  Created on: 2020��8��29��
+ *  Created on: 2020年10月23日
  *      Author: Administrator
  */
 
@@ -58,7 +58,7 @@ struct OrderManage
     bool buildOrder(const std::string orderKey, const strategy_trader::OrderInsertReq& orderInsertReq);
     int requestIdBuildAlg();
 public:
-    std::map<std::string, CThostFtdcInputOrderField> orderMaps;
+    std::map<std::string, CThostFtdcInputOrderField*> orderMaps;
     int requestID{0};
 };
 
