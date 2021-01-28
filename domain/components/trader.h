@@ -1,12 +1,14 @@
 /*
  * trade.h
  *
- *  Created on: 2020��8��28��
+ *  Created on: 2020年10月23日
  *      Author: Administrator
  */
 
 #ifndef WORKSPACE_TRADER_DOMAIN_TRADE_H_
 #define WORKSPACE_TRADER_DOMAIN_TRADE_H_
+
+#include <thread>
 
 #include "trader/domain/components/ctpTradeApi/ctpTradeApi.h"
 #include "trader/domain/components/settlementConfirm.h"
@@ -21,6 +23,14 @@ struct Trader : CtpTraderApi
 {
     bool init()
     {
+        auto ctpMarketLogInOutFuc = [&](){
+            INFO_LOG("ctpMarketLogInOutFuc ok");
+            ROLE(CtpTraderApi).runLogInAndLogOutAlg();
+        };
+
+        INFO_LOG("ctpMarketLogInOutFuc prepare ok");
+        std::thread(ctpMarketLogInOutFuc).detach();
+
         return true;
     }
     IMPL_ROLE(CtpTraderApi);
