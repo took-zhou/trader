@@ -96,7 +96,7 @@ bool TraderEvent::run()
         }
     };
     INFO_LOG("ctpRecRun prepare ok");
-
+    std::thread(ctpRecRun).detach();
 
     while (1)
     {
