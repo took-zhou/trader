@@ -245,7 +245,8 @@ void StrategyEvent::OrderInsertReqHandle(MsgStruct& msg)
     auto& ctpRspResultMonitor = InsertResult::getInstance();
     ctpRspResultMonitor.addResultMonitor(newOrderRef);
 
-    auto* newOrder = &orderContent.ROLE(CThostFtdcInputOrderField);
+    auto* newOrder = orderManage.getOrder(newOrderRef);
+
     int insertResult = traderApi->ReqOrderInsert(newOrder);
 
     std::string semName = "trader_ReqOrderInsert" + std::string(newOrder->OrderRef);;

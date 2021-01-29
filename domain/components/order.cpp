@@ -40,32 +40,32 @@ namespace
                         {"ClientID",    order.ClientID},
                         {"GTDDate",     order.GTDDate},
                         {"UserID",      order.UserID},
-//                        {"RequestID",   order.RequestID},
-//                        {"InvestUnitID",order.InvestUnitID},
-//                        {"BusinessUnit",order.BusinessUnit},
-//                        {"ClientID",    order.ClientID},
+                        {"RequestID",   order.RequestID},
+                        {"InvestUnitID",order.InvestUnitID},
+                        {"BusinessUnit",order.BusinessUnit},
+                        {"ClientID",    order.ClientID},
                         {"OrderRef",    order.OrderRef},
-//                        {"IPAddress",   order.IPAddress},
-//                        {"MacAddress",  order.MacAddress},
-//
-//                        {"InstrumentID",    order.InstrumentID},
-//                        {"Direction",       direction},
-//                        {"CombOffsetFlag",  order.CombOffsetFlag},
+                        {"IPAddress",   order.IPAddress},
+                        {"MacAddress",  order.MacAddress},
+
+                        {"InstrumentID",    order.InstrumentID},
+                        {"Direction",       direction},
+                        {"CombOffsetFlag",  order.CombOffsetFlag},
                         {"LimitPrice",      order.LimitPrice},
-//                        {"OrderPriceType",  orderPriceType},
-//                        {"TimeCondition",   timeCondition},
-//                        {"ContingentCondition",order.ContingentCondition},
-//                        {"MinVolume",           order.MinVolume},
-//                        {"StopPrice",           order.StopPrice},
-//                        {"VolumeTotalOriginal", order.VolumeTotalOriginal},
-//                        {"VolumeCondition",     order.VolumeCondition},
-//                        {"CombHedgeFlag",       order.CombHedgeFlag},
-//
-//                        {"CurrencyID",      order.CurrencyID},
-//                        {"UserForceClose",  order.UserForceClose},
-//                        {"ForceCloseReason",forceCloseReason},
-//                        {"IsAutoSuspend",   order.IsAutoSuspend},
-//                        {"IsSwapOrder",     order.IsSwapOrder},
+                        {"OrderPriceType",  orderPriceType},
+                        {"TimeCondition",   timeCondition},
+                        {"ContingentCondition",order.ContingentCondition},
+                        {"MinVolume",           order.MinVolume},
+                        {"StopPrice",           order.StopPrice},
+                        {"VolumeTotalOriginal", order.VolumeTotalOriginal},
+                        {"VolumeCondition",     order.VolumeCondition},
+                        {"CombHedgeFlag",       order.CombHedgeFlag},
+
+                        {"CurrencyID",      order.CurrencyID},
+                        {"UserForceClose",  order.UserForceClose},
+                        {"ForceCloseReason",forceCloseReason},
+                        {"IsAutoSuspend",   order.IsAutoSuspend},
+                        {"IsSwapOrder",     order.IsSwapOrder},
                         }
                 }
         };
@@ -264,13 +264,9 @@ bool OrderManage::buildOrder(const std::string orderKey, const strategy_trader::
     return true;
 }
 
-bool OrderSave::saveSuccCancelOrder(OrderContent& order, std::string reason)
-{
-    auto& jsonCfg = utils::JsonConfig::getInstance();
-    std::string filePath = jsonCfg.getConfig("trader","AllOrderActionsFilePath").get<std::string>();
-    if(!utils::isFileExist(filePath))
+namespace{
+    bool buildTotalTitles(const std::string& filePath)
     {
-        utils::creatFile(filePath);
         std::string titles = "idectityId,frontId,sessionId,orderRef,instrumentId,price,time,direction,volumn,reason\n";
         ofstream outfile(filePath, std::ofstream::app);
         if(!outfile.is_open())
@@ -280,6 +276,28 @@ bool OrderSave::saveSuccCancelOrder(OrderContent& order, std::string reason)
         }
         outfile << titles;
         outfile.close();
+        return true;
+    }
+}
+
+bool OrderSave::saveSuccCancelOrder(OrderContent& order, std::string reason)
+{
+    auto& jsonCfg = utils::JsonConfig::getInstance();
+    std::string filePath = jsonCfg.getConfig("trader","AllOrderActionsFilePath").get<std::string>();
+    if(!utils::isFileExist(filePath))
+    {
+        utils::creatFile(filePath);
+        if(!buildTotalTitles(filePath))
+        {
+            return false;
+        }
+    }
+    else if(utils::getFileSize(filePath) == 0 || utils::getFileSize(filePath) == -1)
+    {
+        if(!buildTotalTitles(filePath))
+        {
+            return false;
+        }
     }
     std::string saveContent = "";
     ofstream outfile(filePath, ios::app);
@@ -295,7 +313,8 @@ bool OrderSave::saveSuccCancelOrder(OrderContent& order, std::string reason)
     saveContent += order.instrumentID+",";
     saveContent += utils::doubleToStringConvert(order.tradedOrder.price)+",";
     saveContent += order.tradedOrder.time+",";
-    saveContent += order.tradedOrder.direction+",";
+    std::string direction = order.ROLE(CThostFtdcInputOrderField).Direction == THOST_FTDC_D_Buy? "buy":"sell";
+    saveContent += direction+",";
     saveContent += utils::intToString(order.tradedOrder.volume)+",";
     saveContent += reason + "\n";
     outfile << saveContent;
@@ -397,6 +416,29 @@ bool OrderSave::saveOnRtnOrderOrderState(const OrderContent& orderContent)
         tmp["currentStateStr"] = orderContent.currentStateStr;
         tmp["currentStateChar"] = utils::charToString(orderContent.currentStateChar);
         saveContent[orderContent.identityId] = tmp;
+        JsonPrint(saveContent);
+        ofstream saveStream(filePath,ios::trunc);
+        saveStream << setw(4) << saveContent << endl;
+        saveStream.close();
+    }
+    else if(utils::getFileSize(filePath) == 0 || utils::getFileSize(filePath) == -1)
+    {
+        json saveContent;
+        json tmp;
+        tmp["identityId"] = orderContent.identityId;
+        tmp["orderRef"] = orderContent.orderRef;
+        tmp["frontId"] = orderContent.frontId;
+        tmp["sessionId"] = orderContent.sessionId;
+        tmp["investorId"] = orderContent.investorId;
+        tmp["userId"] = orderContent.userId;
+        tmp["instrumentID"] = orderContent.instrumentID;
+        tmp["currentStateStr"] = orderContent.currentStateStr;
+        tmp["currentStateChar"] = utils::charToString(orderContent.currentStateChar);
+        saveContent[orderContent.identityId] = tmp;
+        JsonPrint(saveContent);
+        ofstream saveStream(filePath,ios::trunc);
+        saveStream << setw(4) << saveContent << endl;
+        saveStream.close();
     }
     else
     {
@@ -429,6 +471,7 @@ bool OrderSave::saveOnRtnOrderOrderState(const OrderContent& orderContent)
             tmp["currentStateChar"] = utils::charToString(orderContent.currentStateChar);
             saveContent[orderContent.identityId] = tmp;
         }
+        JsonPrint(saveContent);
         ofstream saveStream(filePath,ios::trunc);
         saveStream << setw(4) << saveContent << endl;
         saveStream.close();
