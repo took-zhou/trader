@@ -195,6 +195,17 @@ int CtpTraderBaseApi::ReqUserLogout()
     return result;
 }
 
+void CtpTraderBaseApi::Release()
+{
+    if (m_pApi)
+    {
+        m_pApi->Release();
+        m_pApi = NULL;
+    }
+
+    return;
+}
+
 void CtpTraderBaseApi::Init()
 {
     std::string semName = "trader_init";
