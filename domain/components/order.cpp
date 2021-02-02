@@ -110,7 +110,11 @@ CThostFtdcInputOrderField* OrderManage::getOrder(const std::string orderKey)
 OrderContent& OrderManage::getOrderContent(const std::string orderKey)
 {
     auto* ctpOrder = getOrder(orderKey);
-
+    if(ctpOrder == nullptr)
+    {
+        static OrderContent staticOrderContent = OrderContent();
+        return staticOrderContent;
+    }
     return *(static_cast<OrderContent*>(ctpOrder));
 }
 

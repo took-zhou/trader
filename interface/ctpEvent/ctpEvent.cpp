@@ -215,19 +215,28 @@ void CtpEvent::OnRtnOrderHandle(MsgStruct& msg)
 {
     CThostFtdcOrderField* pOrder = (CThostFtdcOrderField*) msg.ctpMsg;
     std::string orderKey = std::string(pOrder->OrderRef);
-    auto& orderStates = OrderStates::getInstance();
-    if(! orderStates.insertState(orderKey, pOrder->OrderStatus))
-    {
-        ERROR_LOG("insertState ERROR!");
-    }
+
     auto& traderSer = TraderSevice::getInstance();
     auto& orderManage = traderSer.ROLE(OrderManage);
     auto& orderContent = orderManage.getOrderContent(orderKey);
+    if(!orderContent.isValid())
+    {
+        ERROR_LOG("invalid order key[%s]",orderKey.c_str());
+        return;
+    }
     orderContent.frontId = pOrder->FrontID;
     orderContent.sessionId = pOrder->SessionID;
     orderContent.currentStateStr = statusMap.at(pOrder->OrderStatus);
     orderContent.currentStateChar = pOrder->OrderStatus;
     OrderSave::saveOnRtnOrderOrderState(orderContent);
+
+    auto& orderStates = OrderStates::getInstance();
+    if(! orderStates.insertState(orderKey, pOrder->OrderStatus))
+    {
+        ERROR_LOG("insertState ERROR!");
+    }
+
+
     if (pOrder->OrderStatus == THOST_FTDC_OST_AllTraded)///全部成交
     {
         INFO_LOG("It's all done");
