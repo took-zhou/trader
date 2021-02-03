@@ -211,25 +211,25 @@ bool OrderManage::buildOrder(const std::string orderKey, const strategy_trader::
         ERROR_LOG("error OrderType");
         return false;
     }
-
-    std::string orderPrinceType = jsonCfg.getConfig("order_type",orderTypeSubTitle)["OrderPriceType"].get<std::string>();
+    const auto& orderTypeCfg = jsonCfg.getConfig("order_type",orderTypeSubTitle);
+    std::string orderPrinceType = orderTypeCfg["OrderPriceType"].get<std::string>();
     order.OrderPriceType = orderPrinceType[0];
 
-    std::string combHedgeFlag = jsonCfg.getConfig("order_type",orderTypeSubTitle)["CombHedgeFlag"].get<std::string>();
+    std::string combHedgeFlag = orderTypeCfg["CombHedgeFlag"].get<std::string>();
     strcpy(order.CombHedgeFlag, combHedgeFlag.c_str());
 
-    std::string timeCondition = jsonCfg.getConfig("order_type",orderTypeSubTitle)["TimeCondition"].get<std::string>();
+    std::string timeCondition = orderTypeCfg["TimeCondition"].get<std::string>();
     order.TimeCondition = timeCondition[0];
 
-    std::string gTDDate = jsonCfg.getConfig("order_type",orderTypeSubTitle)["GTDDate"].get<std::string>();
+    std::string gTDDate = orderTypeCfg["GTDDate"].get<std::string>();
     strcpy(order.GTDDate, gTDDate.c_str());
 
-    std::string volumeCondition = jsonCfg.getConfig("order_type",orderTypeSubTitle)["VolumeCondition"].get<std::string>();
+    std::string volumeCondition = orderTypeCfg["VolumeCondition"].get<std::string>();
     order.VolumeCondition = volumeCondition[0];
 
-    order.MinVolume = jsonCfg.getConfig("order_type",orderTypeSubTitle)["MinVolume"].get<int>();
+    order.MinVolume = orderTypeCfg["MinVolume"].get<int>();
 
-    std::string contingentCondition = jsonCfg.getConfig("order_type",orderTypeSubTitle)["ContingentCondition"].get<std::string>();
+    std::string contingentCondition = orderTypeCfg["ContingentCondition"].get<std::string>();
     order.ContingentCondition = contingentCondition[0];
 
 

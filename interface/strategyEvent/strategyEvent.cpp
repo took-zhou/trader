@@ -226,7 +226,6 @@ void StrategyEvent::OrderInsertReqHandle(MsgStruct& msg)
         return;
     }
 
-
     if( ! orderManage.buildOrder(newOrderRef, orderInsertReq))
     {
         ERROR_LOG("build order failed, the orderRef is [%s]",newOrderRef.c_str());
