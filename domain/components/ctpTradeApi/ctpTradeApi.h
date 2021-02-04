@@ -10,7 +10,7 @@
 #include "common/extern/log/log.h"
 #include "common/extern/ctp/inc/ThostFtdcTraderApi.h"
 #include "common/self/dci/Role.h"
-
+#include "trader/infra/recer/ctpRecer.h"
 struct OrderContent;
 struct SettlementConfirm;
 
@@ -371,7 +371,7 @@ struct CtpTraderApi
     CtpLogInState getCtpLogInState();
     void runLogInAndLogOutAlg();
     CtpTraderBaseApi* traderApi{nullptr};
-
+    TraderSpi traderSpi;
     bool isLogIN{false};
     bool isLogInThreadRunning{false};
     bool isForceExitThreadRuning{false};

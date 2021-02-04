@@ -190,7 +190,7 @@ int CtpTraderBaseApi::ReqUserLogout()
     std::string semName = "trader_logOut";
     globalSem.addOrderSem(semName);
     int result = m_pApi->ReqUserLogout(&logOutField, requestIdBuildAlg());
-
+    INFO_LOG("ReqUserLogout send result is [%d]",result);
     return result;
 }
 
@@ -201,7 +201,6 @@ void CtpTraderBaseApi::Release()
         m_pApi->Release();
         m_pApi = NULL;
     }
-
     return;
 }
 
@@ -223,7 +222,7 @@ bool CtpTraderApi::init()
     utils::creatFolder(conPath);
     traderApi->CreateFtdcTraderApi(conPath.c_str()); //设置.con的保存位置
 //        CSimpleHandler sh(pUserApi);     //初始化回调类
-    auto& traderSpi = TraderSpi::getInstance();
+    traderSpi = TraderSpi();
 
     traderApi->RegisterSpi(&traderSpi);      //注册回调类
     traderApi->SubscribePrivateTopic(THOST_TERT_QUICK);   //订阅
@@ -411,7 +410,6 @@ namespace {
 
 void CtpTraderApi::release()
 {
-    traderApi->RegisterSpi(nullptr);
     traderApi->Release();
     delete traderApi;
     traderApi = nullptr;

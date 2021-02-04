@@ -12,14 +12,6 @@
 class TraderSpi : public CThostFtdcTraderSpi
 {
 public:
-    TraderSpi() {};
-    TraderSpi(const TraderSpi&) = delete;
-    TraderSpi& operator=(const TraderSpi&) = delete;
-    static TraderSpi& getInstance()
-    {
-        static TraderSpi instance;
-        return instance;
-    }
     ~TraderSpi() {};
 
 public:
@@ -47,7 +39,7 @@ public:
     void OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
 
     ///登出请求响应
-    void OnRspUserLogout(CThostFtdcUserLogoutField *pUserLogout, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast){};
+    void OnRspUserLogout(CThostFtdcUserLogoutField *pUserLogout, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
 
     ///用户口令更新请求响应
     void OnRspUserPasswordUpdate(CThostFtdcUserPasswordUpdateField *pUserPasswordUpdate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast){};

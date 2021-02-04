@@ -102,6 +102,30 @@ void TraderSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThos
     ctpMsgChan << msgStruct;
 }
 
+void TraderSpi::OnRspUserLogout(CThostFtdcUserLogoutField *pUserLogout, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+{
+    INFO_LOG("<OnRspUserLogout>");
+    if (pUserLogout)
+    {
+        INFO_LOG("\tBrokerID [%s]", pUserLogout->BrokerID);
+        INFO_LOG("\tUserID [%s]", pUserLogout->UserID);
+    }
+    if (pRspInfo)
+    {
+        TThostFtdcErrorMsgType msg;
+        utils::gbk2utf8(pRspInfo->ErrorMsg, msg, sizeof(msg));
+        INFO_LOG("\tErrorMsg [%s]", msg);
+        INFO_LOG("\tErrorID [%d]", pRspInfo->ErrorID);
+    }
+    INFO_LOG("\tnRequestID [%d]", nRequestID);
+    INFO_LOG("\tbIsLast [%d]", bIsLast);
+    INFO_LOG("</OnRspUserLogout>");
+    std::string semName = "trader_logOut";
+    globalSem.postSemBySemName(semName);
+    INFO_LOG("post sem of [%s]",semName.c_str());
+}
+
+
 void TraderSpi::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *pSettlementInfoConfirm, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
     MSG_LOG("%s","<OnRspSettlementInfoConfirm>");
