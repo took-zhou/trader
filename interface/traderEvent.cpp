@@ -48,7 +48,6 @@ bool TraderEvent::run()
 {
     co::Scheduler* sched = co::Scheduler::Create();
     auto& recerSender = RecerSender::getInstance();
-    INFO_LOG("hai******************1");
     INFO_LOG("go into run");
     auto proxyRecRun = [&](){
         while(1)

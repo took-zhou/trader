@@ -431,7 +431,6 @@ bool CtpTraderApi::logIn()
             INFO_LOG("%s", "isForceExitThreadRuning set to false");
             this->isLogInThreadRunning = false;
             INFO_LOG("%s", "isLogInThreadRunning force set to false");
-
             return;
         }
         INFO_LOG("%s", "ctp init ok");
@@ -440,14 +439,30 @@ bool CtpTraderApi::logIn()
         semName = "trader_reqAuthenticate";
         globalSem.waitSemBySemName(semName);
         globalSem.delOrderSem(semName);
+        if (this->isForceExitThreadRuning)
+        {
+            INFO_LOG("%s", "login thread force exit");
+            this->isForceExitThreadRuning = false;
+            INFO_LOG("%s", "isForceExitThreadRuning set to false");
+            this->isLogInThreadRunning = false;
+            INFO_LOG("%s", "isLogInThreadRunning force set to false");
+            return;
+        }
         INFO_LOG("ReqAuthenticate ok");
-
 
         traderApi->ReqUserLogin();
         semName = "trader_logIn";
         globalSem.waitSemBySemName(semName);
         globalSem.delOrderSem(semName);
-
+        if (this->isForceExitThreadRuning)
+        {
+            INFO_LOG("%s", "login thread force exit");
+            this->isForceExitThreadRuning = false;
+            INFO_LOG("%s", "isForceExitThreadRuning set to false");
+            this->isLogInThreadRunning = false;
+            INFO_LOG("%s", "isLogInThreadRunning force set to false");
+            return;
+        }
         INFO_LOG("login ctp ok!");
         this->isLogIN = true;
         std::string tradingDay = traderApi->GetTradingDay();
@@ -569,8 +584,18 @@ void CtpTraderApi::runLogInAndLogOutAlg()
         {
             INFO_LOG("%s", "init failed and trading time over, need to logout");
             this->isForceExitThreadRuning = true;
-            std::string semName = "trader_logIn";
-            globalSem.postSemBySemName(semName);
+            if(globalSem.existSem("trader_init"))
+            {
+                globalSem.postSemBySemName("trader_init");
+            }
+            if(globalSem.existSem("trader_reqAuthenticate"))
+            {
+                globalSem.postSemBySemName("trader_reqAuthenticate");
+            }
+            if(globalSem.existSem("trader_logIn"))
+            {
+                globalSem.postSemBySemName("trader_logIn");
+            }
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             this->logOut();
             continue;

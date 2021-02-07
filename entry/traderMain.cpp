@@ -20,9 +20,7 @@ int main(int argc, char* agrv[])
     auto& jsonCfg = utils::JsonConfig::getInstance();
 
     //开启log
-    INFO_LOG("hai************begin");
     std::string traderLogPath = jsonCfg.getConfig("trader","LogPath").get<std::string>();
-    INFO_LOG("hai************end");
     utils::creatFolder(traderLogPath);
     LOG_INIT(traderLogPath.c_str(), "traderlog", 6);
     INFO_LOG("TRADE LOG PATH is %s",traderLogPath.c_str());
