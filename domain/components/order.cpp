@@ -245,8 +245,8 @@ bool OrderManage::buildOrder(const std::string orderKey, const strategy_trader::
 
     order.RequestID = requestIdBuildAlg();
 
-    order.UserForceClose = jsonCfg.getConfig("order_type",orderTypeSubTitle)["UserForceClose"].get<int>();
-    order.IsSwapOrder = jsonCfg.getConfig("order_type",orderTypeSubTitle)["IsSwapOrder"].get<int>();
+    order.UserForceClose = orderTypeCfg["UserForceClose"].get<int>();
+    order.IsSwapOrder = orderTypeCfg["IsSwapOrder"].get<int>();
 
     string mac;
     if(!utils::get_local_mac(mac))
