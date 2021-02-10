@@ -233,14 +233,14 @@ bool OrderManage::buildOrder(const std::string orderKey, const strategy_trader::
     order.ContingentCondition = contingentCondition[0];
 
 
-    order.StopPrice = jsonCfg.getConfig("order_type",orderTypeSubTitle)["StopPrice"].get<double>();
+    order.StopPrice = orderTypeCfg["StopPrice"].get<double>();
 
-    std::string forceCloseReason = jsonCfg.getConfig("order_type",orderTypeSubTitle)["ForceCloseReason"].get<std::string>();
+    std::string forceCloseReason = orderTypeCfg["ForceCloseReason"].get<std::string>();
     order.ForceCloseReason = forceCloseReason[0];
 
-    order.IsAutoSuspend = jsonCfg.getConfig("order_type",orderTypeSubTitle)["IsAutoSuspend"].get<int>();
+    order.IsAutoSuspend = orderTypeCfg["IsAutoSuspend"].get<int>();
 
-    std::string businessUnit = jsonCfg.getConfig("order_type",orderTypeSubTitle)["BusinessUnit"].get<std::string>();
+    std::string businessUnit = orderTypeCfg["BusinessUnit"].get<std::string>();
     strcpy(order.BusinessUnit, businessUnit.c_str());
 
     order.RequestID = requestIdBuildAlg();

@@ -351,7 +351,7 @@ namespace {
     bool isDuringTradeTime()
     {
         auto& jsonCfg = utils::JsonConfig::getInstance();
-        const std::string mode = jsonCfg.getConfig("trader","LoginMode").get<std::string>();
+        const std::string mode = jsonCfg.getConfig("trader","LoginMode",true).get<std::string>();
         if(logMode.at(string(mode.c_str())) == 0)
         {
             return true;
