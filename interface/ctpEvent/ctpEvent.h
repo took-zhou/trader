@@ -33,10 +33,12 @@ struct CtpEvent
     void OnRspSettlementInfoConfirmHandle(MsgStruct& msg);
     void OnRspUserLoginHandle(MsgStruct& msg);
     void OnRspAuthenticateHandle(MsgStruct& msg);
+
     void OnErrRtnOrderInsertHandle(MsgStruct& msg);
     void OnRspOrderInsertHandle(MsgStruct& msg);
     void OnRtnOrderHandle(MsgStruct& msg);
     void OnRtnTradeHandle(MsgStruct& msg);
+
     void OnRspQryTradingAccountHandle(MsgStruct& msg);
     void OnRspQryInstrumentHandle(MsgStruct& msg);
 

@@ -182,18 +182,24 @@ void CtpEvent::OnRtnTradeHandle(MsgStruct& msg)
     auto& traderSer = TraderSevice::getInstance();
     auto& orderManage = traderSer.ROLE(OrderManage);
     auto& orderContent = orderManage.getOrderContent(orderKey);
+    if(!orderContent.isValid())
+    {
+        ERROR_LOG("OnRtnTrade can not find order in local, orderRef[%s]",orderKey.c_str());
+        return;
+    }
     orderContent.tradedOrder.price = pTrade->Price;
     orderContent.tradedOrder.volume = pTrade ->Volume;
     orderContent.tradedOrder.direction = utils::charToString(pTrade->Direction);
     orderContent.tradedOrder.date = pTrade->TradeDate;
     orderContent.tradedOrder.time = pTrade->TradeTime;
-    std::string semName = "trader_ReqOrderInsert" + std::string(pTrade->OrderRef);
-    globalSem.postSemBySemName(semName);
+
+//    std::string semName = "trader_ReqOrderInsert" + std::string(pTrade->OrderRef);
+//    globalSem.postSemBySemName(semName);
     OrderSave::saveSuccessOrderInsert(orderContent);
     OrderSave::saveSuccCancelOrder(orderContent,"deal");
     OrderSave::delOneRecordByOnRtnOrder(orderContent);
-    INFO_LOG("post sem of [%s]",semName.c_str());
-
+    ROLE(StrategyEvent).pubOrderInsertRsp(orderContent.identityId,true,"success");
+    INFO_LOG("insert order success");
 }
 
 
@@ -236,7 +242,6 @@ void CtpEvent::OnRtnOrderHandle(MsgStruct& msg)
         ERROR_LOG("insertState ERROR!");
     }
 
-
     if (pOrder->OrderStatus == THOST_FTDC_OST_AllTraded)///全部成交
     {
         INFO_LOG("It's all done");
@@ -272,13 +277,20 @@ void CtpEvent::OnRtnOrderHandle(MsgStruct& msg)
             orderCancelRsp->set_failedreason(reason);
             ROLE(StrategyEvent).pubOrderCancelRsp(identityId, true,  reason);
         }
-        auto& ctpRspResultMonitor = InsertResult::getInstance();
-        ctpRspResultMonitor.setResultState(orderKey, InsertRspResult::Failed);
-        std::string semName = "trader_ReqOrderInsert" + std::string(pOrder->OrderRef);
-        globalSem.postSemBySemName(semName);
+
+        auto& traderSer = TraderSevice::getInstance();
+        auto& orderManage = traderSer.ROLE(OrderManage);
+        auto& orderContent = orderManage.getOrderContent(orderKey);
+        if(!orderContent.isValid())
+        {
+            ERROR_LOG("can not find order in local, orderRef[%s]",orderKey.c_str());
+            return;
+        }
         OrderSave::saveSuccCancelOrder(orderContent,"cancel");
         OrderSave::delOneRecordByOnRtnOrder(orderContent);
-        INFO_LOG("cancel the order");
+        std::string reason = ORDER_FILL_ERROR;
+        ROLE(StrategyEvent).pubOrderInsertRsp(orderContent.identityId,false, reason);
+        INFO_LOG("the order be canceled, ref[%s],identity[%s]",orderKey.c_str(), orderContent.identityId.c_str());
     }
     if (pOrder->OrderStatus == THOST_FTDC_OST_Unknown)///未知
     {
@@ -300,17 +312,30 @@ void CtpEvent::OnRspOrderInsertHandle(MsgStruct& msg)
     CThostFtdcInputOrderField* ctpRspField = (CThostFtdcInputOrderField*) msg.ctpMsg;
     std::string orderKey = std::string(ctpRspField->OrderRef);
 
-    auto& ctpRspResultMonitor = InsertResult::getInstance();
-    ctpRspResultMonitor.setResultState(orderKey, InsertRspResult::Failed);
+//    auto& ctpRspResultMonitor = InsertResult::getInstance();
+//    ctpRspResultMonitor.setResultState(orderKey, InsertRspResult::Failed);
 
     auto& orderStates = OrderStates::getInstance();
     if(! orderStates.insertState(orderKey, 'E'))
     {
         ERROR_LOG("insertState ERROR!");
     }
-    std::string semName = "trader_ReqOrderInsert" + std::string(ctpRspField->OrderRef);
-    globalSem.postSemBySemName(semName);
-    INFO_LOG("post sem of [%s]",semName.c_str());
+
+    auto& traderSer = TraderSevice::getInstance();
+    auto& orderManage = traderSer.ROLE(OrderManage);
+    auto& orderContent = orderManage.getOrderContent(orderKey);
+    if(!orderContent.isValid())
+    {
+        ERROR_LOG("can not find order in local, orderRef[%s]",orderKey.c_str());
+        return;
+    }
+    std::string reason = ORDER_FILL_ERROR;
+    ROLE(StrategyEvent).pubOrderInsertRsp(orderContent.identityId,false, reason);
+
+//    std::string semName = "trader_ReqOrderInsert" + std::string(ctpRspField->OrderRef);
+//    globalSem.postSemBySemName(semName);
+//    INFO_LOG("post sem of [%s]",semName.c_str());
+
 }
 
 void CtpEvent::OnRspAuthenticateHandle(MsgStruct& msg)
@@ -339,17 +364,29 @@ void CtpEvent::OnErrRtnOrderInsertHandle(MsgStruct& msg)
     CThostFtdcInputOrderField* ctpRspField = (CThostFtdcInputOrderField*) msg.ctpMsg;
     std::string orderKey = std::string(ctpRspField->OrderRef);
 
-    auto& ctpRspResultMonitor = InsertResult::getInstance();
-    ctpRspResultMonitor.setResultState(orderKey, InsertRspResult::Failed);
+//    auto& ctpRspResultMonitor = InsertResult::getInstance();
+//    ctpRspResultMonitor.setResultState(orderKey, InsertRspResult::Failed);
 
     auto& orderStates = OrderStates::getInstance();
     if(! orderStates.insertState(orderKey, 'E'))
     {
         ERROR_LOG("insertState ERROR!");
     }
-    std::string semName = "trader_ReqOrderInsert" + std::string(ctpRspField->OrderRef);
-    globalSem.postSemBySemName(semName);
-    INFO_LOG("post sem of [%s]",semName.c_str());
+
+    auto& traderSer = TraderSevice::getInstance();
+    auto& orderManage = traderSer.ROLE(OrderManage);
+    auto& orderContent = orderManage.getOrderContent(orderKey);
+    if(!orderContent.isValid())
+    {
+        ERROR_LOG("can not find order in local, orderRef[%s]",orderKey.c_str());
+        return;
+    }
+    std::string reason = ORDER_FILL_ERROR;
+    ROLE(StrategyEvent).pubOrderInsertRsp(orderContent.identityId,false, reason);
+
+//    std::string semName = "trader_ReqOrderInsert" + std::string(ctpRspField->OrderRef);
+//    globalSem.postSemBySemName(semName);
+//    INFO_LOG("post sem of [%s]",semName.c_str());
 }
 
 void CtpEvent::OnRspQryInstrumentHandle(MsgStruct& msg)
