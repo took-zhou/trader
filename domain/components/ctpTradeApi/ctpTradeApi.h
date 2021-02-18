@@ -149,7 +149,7 @@ public:
     int ReqOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, int nRequestID){};
 
     ///查询最大报单数量请求
-    int ReqQueryMaxOrderVolume(CThostFtdcQueryMaxOrderVolumeField *pQueryMaxOrderVolume, int nRequestID){};
+    int ReqQryMaxOrderVolume(CThostFtdcQryMaxOrderVolumeField *pQueryMaxOrderVolume, int nRequestID){};
 
     ///投资者结算结果确认
     int ReqSettlementInfoConfirm();
@@ -351,6 +351,12 @@ public:
 
     ///期货发起查询银行余额请求
     int ReqQueryBankAccountMoneyByFuture(CThostFtdcReqQueryAccountField *pReqQueryAccount, int nRequestID){};
+
+    ///请求查询分类合约
+    int ReqQryClassifiedInstrument(CThostFtdcQryClassifiedInstrumentField *pQryClassifiedInstrument, int nRequestID){};
+
+    ///请求组合优惠比例
+    int ReqQryCombPromotionParam(CThostFtdcQryCombPromotionParamField *pQryCombPromotionParam, int nRequestID){};
 };
 
 enum struct CtpLogInState
