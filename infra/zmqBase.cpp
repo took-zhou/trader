@@ -62,7 +62,6 @@ int ZmqBase::publishMsg(const char* head, const char* msg)
 {
     std::stringstream  tmpStr;
     tmpStr << head << " " << msg;
-//    WARNING_LOG("tmpStr is %s", tmpStr.str().c_str());
 
     int ret = s_send(publisher,  tmpStr.str().c_str());
     if(ret == -1)
@@ -70,7 +69,6 @@ int ZmqBase::publishMsg(const char* head, const char* msg)
         ERROR_LOG("zmq send msg error ret = [%d]",ret);
         return false;
     }
-    s_recv(publisher);
 
     return true;
 }
