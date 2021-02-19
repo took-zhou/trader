@@ -14,6 +14,10 @@
 #include "trader/infra/recerSender.h"
 #include "trader/domain/traderService.h"
 #include "trader/domain/components/InsertResult.h"
+#include "trader/infra/innerZmq.h"
+#include <thread>
+#include "common/extern/libzmq/include/zhelpers.h"
+#include <cstring>
 
 #include "common/self/semaphorePart.h"
 extern GlobalSem globalSem;
@@ -21,7 +25,7 @@ extern GlobalSem globalSem;
 bool StrategyEvent::init()
 {
     regMsgFun();
-
+    queueOrderInsert();
     return true;
 }
 
@@ -52,6 +56,58 @@ void StrategyEvent::regMsgFun()
         cnt++;
     }
     return;
+}
+
+void StrategyEvent::queueOrderInsert()
+{
+    auto orderInsertFunc = [this]()
+    {
+        auto& innerZmq = InnerZmq::getInstance();
+        MsgStruct msg;
+        while(true)
+        {
+            char* recContent = s_recv(innerZmq.receiver);
+            std::memcpy(&msg, recContent, sizeof(MsgStruct));
+            strategy_trader::message reqMsg;
+            reqMsg.ParseFromString(msg.pbMsg);
+
+            const auto& orderInsertReq = reqMsg.order_insert_req();
+            std::string identity = orderInsertReq.identity();
+            INFO_LOG("identity[%s] insert begin",identity.c_str());
+
+            auto& traderSer = TraderSevice::getInstance();
+            auto& orderManage = traderSer.ROLE(OrderManage);
+            std::string newOrderRef = utils::genOrderRef();
+            if(! orderManage.addOrder(newOrderRef))
+            {
+                ERROR_LOG("add order [%s] to OrderManage error", newOrderRef.c_str());
+                pubOrderInsertRsp(identity,false, ORDER_BUILD_ERROR);
+                return;
+            }
+
+            if( ! orderManage.buildOrder(newOrderRef, orderInsertReq))
+            {
+                ERROR_LOG("build order failed, the orderRef is [%s]",newOrderRef.c_str());
+                pubOrderInsertRsp(identity,false,ORDER_BUILD_ERROR);
+                return;
+            }
+
+            auto& orderContent = orderManage.getOrderContent(newOrderRef);
+            orderContent.orderRef = newOrderRef;
+            orderContent.identityId = identity;
+            orderContent.instrumentID = orderContent.ROLE(CThostFtdcInputOrderField).InstrumentID;
+            orderContent.investorId  = orderContent.ROLE(CThostFtdcInputOrderField).InvestorID;
+            orderContent.userId = orderContent.ROLE(CThostFtdcInputOrderField).UserID;
+            auto* traderApi = traderSer.ROLE(Trader).ROLE(CtpTraderApi).traderApi;
+            auto& ctpRspResultMonitor = InsertResult::getInstance();
+            ctpRspResultMonitor.addResultMonitor(newOrderRef);
+            auto* newOrder = orderManage.getOrder(newOrderRef);
+            traderApi->ReqOrderInsert(newOrder);
+        }
+    };
+
+    std::thread(orderInsertFunc).detach();
+    INFO_LOG("orderInsertFunc while 1 thread runing...");
 }
 
 void StrategyEvent::OrderCancelReqHandle(MsgStruct& msg)
@@ -215,56 +271,29 @@ void StrategyEvent::OrderInsertReqHandle(MsgStruct& msg)
         pubOrderInsertRsp(identity,false, ORDER_BUILD_ERROR);
         return;
     }
-    auto& orderIndication = orderInsertReq.order();
+    auto& innerZmq = InnerZmq::getInstance();
+    auto client = innerZmq.getNewClient();
+    innerZmq.pushTask(client, static_cast<void*>(&msg), sizeof(MsgStruct));
+    innerZmq.closeClient(client);
 
-    auto& orderManage = traderSer.ROLE(OrderManage);
-    std::string newOrderRef = utils::genOrderRef();
-    if(! orderManage.addOrder(newOrderRef))
-    {
-        ERROR_LOG("add order [%s] to OrderManage error", newOrderRef.c_str());
-        pubOrderInsertRsp(identity,false, ORDER_BUILD_ERROR);
-        return;
-    }
 
-    if( ! orderManage.buildOrder(newOrderRef, orderInsertReq))
-    {
-        ERROR_LOG("build order failed, the orderRef is [%s]",newOrderRef.c_str());
-        pubOrderInsertRsp(identity,false,ORDER_BUILD_ERROR);
-        return;
-    }
-//    auto* newOrder = orderManage.getOrder(newOrderRef);
-    auto& orderContent = orderManage.getOrderContent(newOrderRef);
-
-    orderContent.orderRef = newOrderRef;
-    orderContent.identityId = identity;
-    orderContent.instrumentID = orderContent.ROLE(CThostFtdcInputOrderField).InstrumentID;
-    orderContent.investorId  = orderContent.ROLE(CThostFtdcInputOrderField).InvestorID;
-    orderContent.userId = orderContent.ROLE(CThostFtdcInputOrderField).UserID;
-    auto* traderApi = traderSer.ROLE(Trader).ROLE(CtpTraderApi).traderApi;
-    auto& ctpRspResultMonitor = InsertResult::getInstance();
-    ctpRspResultMonitor.addResultMonitor(newOrderRef);
-
-    auto* newOrder = orderManage.getOrder(newOrderRef);
-
-    int insertResult = traderApi->ReqOrderInsert(newOrder);
-
-    std::string semName = "trader_ReqOrderInsert" + std::string(newOrder->OrderRef);;
-    globalSem.waitSemBySemName(semName);
-    INFO_LOG("waitSemBySemName [%s] ok",semName.c_str());
-    globalSem.delOrderSem(semName);
-
-    auto insertRes = ctpRspResultMonitor.getRspMonitorResult(newOrderRef);
-    if(insertRes != InsertRspResult::Success)
-    {
-        ERROR_LOG("insert order failed");
-        std::string reason = insertRes == InsertRspResult::Failed ? ORDER_FILL_ERROR
-                                                                  : ORDER_CANCEL;
-        pubOrderInsertRsp(identity,false, reason);
-        return;
-    }
-
-    INFO_LOG("insert order success");
-    pubOrderInsertRsp(identity,true,"success");
+//    std::string semName = "trader_ReqOrderInsert" + std::string(newOrder->OrderRef);;
+//    globalSem.waitSemBySemName(semName);
+//    INFO_LOG("waitSemBySemName [%s] ok",semName.c_str());
+//    globalSem.delOrderSem(semName);
+//
+//    auto insertRes = ctpRspResultMonitor.getRspMonitorResult(newOrderRef);
+//    if(insertRes != InsertRspResult::Success)
+//    {
+//        ERROR_LOG("insert order failed");
+//        std::string reason = insertRes == InsertRspResult::Failed ? ORDER_FILL_ERROR
+//                                                                  : ORDER_CANCEL;
+//        pubOrderInsertRsp(identity,false, reason);
+//        return;
+//    }
+//
+//    INFO_LOG("insert order success");
+//    pubOrderInsertRsp(identity,true,"success");
     return;
 }
 
