@@ -20,12 +20,11 @@ struct InnerZmq
         return instance;
     }
     bool init();
-    void pushTask(void* client, void* msg, size_t size);
-    void* getNewClient();
-    int closeClient(void* client);
+    void pushTask(const std::string& msg);
     std::string inprocAddress{"inproc://innerzmq"};
     void* context   {nullptr};
     void* receiver  {nullptr};
+    void* sender    {nullptr};
 };
 
 

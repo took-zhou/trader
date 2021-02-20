@@ -18,6 +18,7 @@
 #include <thread>
 #include "common/extern/libzmq/include/zhelpers.h"
 #include <cstring>
+#include "trader/domain/components/orderstates.h"
 
 #include "common/self/semaphorePart.h"
 extern GlobalSem globalSem;
@@ -63,13 +64,13 @@ void StrategyEvent::queueOrderInsert()
     auto orderInsertFunc = [this]()
     {
         auto& innerZmq = InnerZmq::getInstance();
-        MsgStruct msg;
         while(true)
         {
-            char* recContent = s_recv(innerZmq.receiver);
-            std::memcpy(&msg, recContent, sizeof(MsgStruct));
+            char* pbMsg = s_recv(innerZmq.receiver);
+            INFO_LOG("receved msg inner pbMsg");
             strategy_trader::message reqMsg;
-            reqMsg.ParseFromString(msg.pbMsg);
+            reqMsg.ParseFromString(std::string(pbMsg));
+            utils::printProtoMsg(reqMsg);
 
             const auto& orderInsertReq = reqMsg.order_insert_req();
             std::string identity = orderInsertReq.identity();
@@ -82,14 +83,14 @@ void StrategyEvent::queueOrderInsert()
             {
                 ERROR_LOG("add order [%s] to OrderManage error", newOrderRef.c_str());
                 pubOrderInsertRsp(identity,false, ORDER_BUILD_ERROR);
-                return;
+                continue;
             }
 
             if( ! orderManage.buildOrder(newOrderRef, orderInsertReq))
             {
                 ERROR_LOG("build order failed, the orderRef is [%s]",newOrderRef.c_str());
                 pubOrderInsertRsp(identity,false,ORDER_BUILD_ERROR);
-                return;
+                continue;
             }
 
             auto& orderContent = orderManage.getOrderContent(newOrderRef);
@@ -272,28 +273,8 @@ void StrategyEvent::OrderInsertReqHandle(MsgStruct& msg)
         return;
     }
     auto& innerZmq = InnerZmq::getInstance();
-    auto client = innerZmq.getNewClient();
-    innerZmq.pushTask(client, static_cast<void*>(&msg), sizeof(MsgStruct));
-    innerZmq.closeClient(client);
+    innerZmq.pushTask(msg.pbMsg);
 
-
-//    std::string semName = "trader_ReqOrderInsert" + std::string(newOrder->OrderRef);;
-//    globalSem.waitSemBySemName(semName);
-//    INFO_LOG("waitSemBySemName [%s] ok",semName.c_str());
-//    globalSem.delOrderSem(semName);
-//
-//    auto insertRes = ctpRspResultMonitor.getRspMonitorResult(newOrderRef);
-//    if(insertRes != InsertRspResult::Success)
-//    {
-//        ERROR_LOG("insert order failed");
-//        std::string reason = insertRes == InsertRspResult::Failed ? ORDER_FILL_ERROR
-//                                                                  : ORDER_CANCEL;
-//        pubOrderInsertRsp(identity,false, reason);
-//        return;
-//    }
-//
-//    INFO_LOG("insert order success");
-//    pubOrderInsertRsp(identity,true,"success");
     return;
 }
 
@@ -330,5 +311,7 @@ void StrategyEvent::pubOrderInsertRsp(std::string identity, bool result, std::st
     {
         ERROR_LOG("send OrderInsertRsp error");
     }
+    auto& orderStates = OrderStates::getInstance();
+    orderStates.showAllOrderStates();
     return;
 }

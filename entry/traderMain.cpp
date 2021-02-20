@@ -14,6 +14,7 @@
 #include "trader/interface/traderEvent.h"
 #include "trader/infra/recerSender.h"
 #include "trader/domain/traderService.h"
+#include "trader/infra/innerZmq.h"
 
 int main(int argc, char* agrv[])
 {
@@ -38,6 +39,13 @@ int main(int argc, char* agrv[])
     while(!recerSender.init())
     {
         ERROR_LOG("recerSender init failed");
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
+
+    auto& innerZmq = InnerZmq::getInstance();
+    while(not innerZmq.init())
+    {
+        ERROR_LOG("innerZmq init failed");
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 

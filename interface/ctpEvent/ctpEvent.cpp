@@ -288,7 +288,7 @@ void CtpEvent::OnRtnOrderHandle(MsgStruct& msg)
         }
         OrderSave::saveSuccCancelOrder(orderContent,"cancel");
         OrderSave::delOneRecordByOnRtnOrder(orderContent);
-        std::string reason = ORDER_FILL_ERROR;
+        std::string reason = ORDER_CANCEL;
         ROLE(StrategyEvent).pubOrderInsertRsp(orderContent.identityId,false, reason);
         INFO_LOG("the order be canceled, ref[%s],identity[%s]",orderKey.c_str(), orderContent.identityId.c_str());
     }
