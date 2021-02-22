@@ -52,12 +52,9 @@ void TraderSpi::OnRspAuthenticate(CThostFtdcRspAuthenticateField *pRspAuthentica
     MSG_LOG("%s","</OnRspAuthenticate>");
     INFO_LOG("%s","ReqAuthenticate OK");
 
-    static CThostFtdcRspAuthenticateField staticRspAuthenticateField;
-    staticRspAuthenticateField = *pRspAuthenticateField;
     MsgStruct msgStruct;
     msgStruct.sessionName = "ctp";
     msgStruct.msgName = "OnRspAuthenticate";
-    msgStruct.ctpMsg = &staticRspAuthenticateField;
     ctpMsgChan << msgStruct;
 }
 
@@ -93,12 +90,12 @@ void TraderSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThos
     PURE_LOG("\tbIsLast [%d]", bIsLast);
     MSG_LOG("%s","</OnRspUserLogin>");
 
-    static CThostFtdcRspUserLoginField staticRspUserLoginField;
-    staticRspUserLoginField = *pRspUserLogin;
+    CThostFtdcRspUserLoginField* staticRspUserLoginField = new CThostFtdcRspUserLoginField;
+    *staticRspUserLoginField = *pRspUserLogin;
     MsgStruct msgStruct;
     msgStruct.sessionName = "ctp";
     msgStruct.msgName = "OnRspUserLogin";
-    msgStruct.ctpMsg = &staticRspUserLoginField;
+    msgStruct.ctpMsg = static_cast<void*>(staticRspUserLoginField);
     ctpMsgChan << msgStruct;
 }
 
@@ -150,12 +147,12 @@ void TraderSpi::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField 
     PURE_LOG("\tbIsLast [%d]", bIsLast);
     PURE_LOG("</OnRspSettlementInfoConfirm>");
 
-    static CThostFtdcSettlementInfoConfirmField staticSettlementInfoConfirmField;
-    staticSettlementInfoConfirmField = *pSettlementInfoConfirm;
+    CThostFtdcSettlementInfoConfirmField* staticSettlementInfoConfirmField = new CThostFtdcSettlementInfoConfirmField;
+    *staticSettlementInfoConfirmField = *pSettlementInfoConfirm;
     MsgStruct msgStruct;
     msgStruct.sessionName = "ctp";
     msgStruct.msgName = "OnRspSettlementInfoConfirm";
-    msgStruct.ctpMsg = &staticSettlementInfoConfirmField;
+    msgStruct.ctpMsg = static_cast<void*>(staticSettlementInfoConfirmField);
     ctpMsgChan << msgStruct;
 }
 
@@ -214,15 +211,15 @@ void TraderSpi::OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CTho
         PURE_LOG("</OnErrRtnOrderInsert>");
     }
 
-    static CThostFtdcInputOrderField staticInputOrderField;
-    static CThostFtdcRspInfoField staticRspInfoField;
-    staticInputOrderField = *pInputOrder;
-    staticRspInfoField    = *pRspInfo;
+    CThostFtdcInputOrderField* staticInputOrderField = new CThostFtdcInputOrderField;
+    CThostFtdcRspInfoField* staticRspInfoField = new CThostFtdcRspInfoField;
+    *staticInputOrderField = *pInputOrder;
+    *staticRspInfoField    = *pRspInfo;
     MsgStruct msgStruct;
     msgStruct.sessionName = "ctp";
     msgStruct.msgName = "OnErrRtnOrderInsert";
-    msgStruct.ctpMsg = &staticInputOrderField;
-    msgStruct.ctpMsgInfo = &staticRspInfoField;
+    msgStruct.ctpMsg = static_cast<void*>(staticInputOrderField);
+    msgStruct.ctpMsgInfo = static_cast<void*>(staticRspInfoField);
     ctpMsgChan << msgStruct;
 }
 
@@ -285,15 +282,16 @@ void TraderSpi::OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostF
         PURE_LOG("</OnRspOrderInsert>");
     }
 
-    static CThostFtdcInputOrderField staticInputOrderField;
-    static CThostFtdcRspInfoField staticRspInfoField;
-    staticInputOrderField = *pInputOrder;
-    staticRspInfoField    = *pRspInfo;
+    CThostFtdcInputOrderField* staticInputOrderField = new CThostFtdcInputOrderField;
+    CThostFtdcRspInfoField* staticRspInfoField = new CThostFtdcRspInfoField;
+
+    *staticInputOrderField = *pInputOrder;
+    *staticRspInfoField    = *pRspInfo;
     MsgStruct msgStruct;
     msgStruct.sessionName = "ctp";
     msgStruct.msgName = "OnRspOrderInsert";
-    msgStruct.ctpMsg = &staticInputOrderField;
-    msgStruct.ctpMsgInfo = &staticRspInfoField;
+    msgStruct.ctpMsg = static_cast<void*>(staticInputOrderField);
+    msgStruct.ctpMsgInfo = static_cast<void*>(staticRspInfoField);
     ctpMsgChan << msgStruct;
 }
 
@@ -394,12 +392,12 @@ void TraderSpi::OnRtnOrder(CThostFtdcOrderField *pOrder)
     }
 
 
-    static CThostFtdcOrderField staticOrderField;
-    staticOrderField = *pOrder;
+    CThostFtdcOrderField* staticOrderField = new CThostFtdcOrderField;
+    *staticOrderField = *pOrder;
     MsgStruct msgStruct;
     msgStruct.sessionName = "ctp";
     msgStruct.msgName = "OnRtnOrder";
-    msgStruct.ctpMsg = &staticOrderField;
+    msgStruct.ctpMsg = static_cast<void*>(staticOrderField);
     ctpMsgChan << msgStruct;
 }
 
@@ -443,12 +441,12 @@ void TraderSpi::OnRtnTrade(CThostFtdcTradeField *pTrade)
     }
     INFO_LOG("******</OnRtnTrade>******");
 
-    static CThostFtdcTradeField staticTradeField;
-    staticTradeField = *pTrade;
+    CThostFtdcTradeField* staticTradeField = new CThostFtdcTradeField;
+    *staticTradeField = *pTrade;
     MsgStruct msgStruct;
     msgStruct.sessionName = "ctp";
     msgStruct.msgName = "OnRtnTrade";
-    msgStruct.ctpMsg = &staticTradeField;
+    msgStruct.ctpMsg = static_cast<void*>(staticTradeField);
     ctpMsgChan << msgStruct;
 }
 
@@ -518,12 +516,13 @@ void TraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAc
     PURE_LOG("\tbIsLast [%d]", bIsLast);
     PURE_LOG("</OnRspQryTradingAccount>");
 
-    static CThostFtdcTradingAccountField staticTradingAccountField;
-    staticTradingAccountField = *pTradingAccount;
+//    static CThostFtdcTradingAccountField staticTradingAccountField;
+    CThostFtdcTradingAccountField* staticTradingAccountField = new CThostFtdcTradingAccountField;
+    *staticTradingAccountField = *pTradingAccount;
     MsgStruct msgStruct;
     msgStruct.sessionName = "ctp";
     msgStruct.msgName = "OnRspQryTradingAccount";
-    msgStruct.ctpMsg = &staticTradingAccountField;
+    msgStruct.ctpMsg = static_cast<void*>(staticTradingAccountField);
     ctpMsgChan << msgStruct;
 }
 

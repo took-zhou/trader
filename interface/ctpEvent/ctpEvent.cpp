@@ -113,8 +113,10 @@ void CtpEvent::OnRspOrderActionHandle(MsgStruct& msg)
 
 void CtpEvent::OnRspQryTradingAccountHandle(MsgStruct& msg)
 {
-    CThostFtdcTradingAccountField tmp = *(CThostFtdcTradingAccountField*)msg.ctpMsg;
+    CThostFtdcTradingAccountField* tradeAccount = static_cast<CThostFtdcTradingAccountField*>(msg.ctpMsg);
+    CThostFtdcTradingAccountField tmp = *tradeAccount;
     CThostFtdcTradingAccountField* pTradingAccount = &tmp;//(CThostFtdcTradingAccountField*)msg.ctpMsg;
+    delete tradeAccount;
    // 目前只支持全量响应, 精确响应需要设置临时变量，以后根据需要再做适配
 
     auto& traderSer = TraderSevice::getInstance();
@@ -199,6 +201,7 @@ void CtpEvent::OnRtnTradeHandle(MsgStruct& msg)
     OrderSave::saveSuccCancelOrder(orderContent,"deal");
     OrderSave::delOneRecordByOnRtnOrder(orderContent);
     ROLE(StrategyEvent).pubOrderInsertRsp(orderContent.identityId,true,"success");
+    delete pTrade;
     INFO_LOG("insert order success");
 }
 
@@ -219,7 +222,10 @@ namespace
 }
 void CtpEvent::OnRtnOrderHandle(MsgStruct& msg)
 {
-    CThostFtdcOrderField* pOrder = (CThostFtdcOrderField*) msg.ctpMsg;
+    CThostFtdcOrderField* tmpPOrder = (CThostFtdcOrderField*) msg.ctpMsg;
+    CThostFtdcOrderField tmp = *tmpPOrder;
+    delete tmpPOrder;
+    CThostFtdcOrderField* pOrder = &tmp;
     std::string orderKey = std::string(pOrder->OrderRef);
 
     auto& traderSer = TraderSevice::getInstance();
@@ -309,7 +315,9 @@ void CtpEvent::OnRtnOrderHandle(MsgStruct& msg)
 
 void CtpEvent::OnRspOrderInsertHandle(MsgStruct& msg)
 {
-    CThostFtdcInputOrderField* ctpRspField = (CThostFtdcInputOrderField*) msg.ctpMsg;
+    CThostFtdcInputOrderField* ctpRspField = static_cast<CThostFtdcInputOrderField*>(msg.ctpMsg);
+    CThostFtdcRspInfoField* ctpMsgInfo = static_cast<CThostFtdcRspInfoField*>(msg.ctpMsgInfo);
+
     std::string orderKey = std::string(ctpRspField->OrderRef);
 
 //    auto& ctpRspResultMonitor = InsertResult::getInstance();
@@ -331,11 +339,8 @@ void CtpEvent::OnRspOrderInsertHandle(MsgStruct& msg)
     }
     std::string reason = ORDER_FILL_ERROR;
     ROLE(StrategyEvent).pubOrderInsertRsp(orderContent.identityId,false, reason);
-
-//    std::string semName = "trader_ReqOrderInsert" + std::string(ctpRspField->OrderRef);
-//    globalSem.postSemBySemName(semName);
-//    INFO_LOG("post sem of [%s]",semName.c_str());
-
+    delete ctpRspField;
+    delete ctpMsgInfo;
 }
 
 void CtpEvent::OnRspAuthenticateHandle(MsgStruct& msg)
@@ -347,6 +352,8 @@ void CtpEvent::OnRspAuthenticateHandle(MsgStruct& msg)
 
 void CtpEvent::OnRspUserLoginHandle(MsgStruct& msg)
 {
+    CThostFtdcRspUserLoginField* pMsg = static_cast<CThostFtdcRspUserLoginField*>(msg.ctpMsg);
+    delete pMsg;
     std::string semName = "trader_logIn";
     globalSem.postSemBySemName(semName);
     INFO_LOG("post sem of [%s]",semName.c_str());
@@ -354,6 +361,8 @@ void CtpEvent::OnRspUserLoginHandle(MsgStruct& msg)
 
 void CtpEvent::OnRspSettlementInfoConfirmHandle(MsgStruct& msg)
 {
+    CThostFtdcSettlementInfoConfirmField* pMsg = static_cast<CThostFtdcSettlementInfoConfirmField*>(msg.ctpMsg);
+    delete pMsg;
     std::string semName = "trader_ReqSettlementInfoConfirm";
     globalSem.postSemBySemName(semName);
     INFO_LOG("post sem of [%s]",semName.c_str());
@@ -362,11 +371,9 @@ void CtpEvent::OnRspSettlementInfoConfirmHandle(MsgStruct& msg)
 void CtpEvent::OnErrRtnOrderInsertHandle(MsgStruct& msg)
 {
     CThostFtdcInputOrderField* ctpRspField = (CThostFtdcInputOrderField*) msg.ctpMsg;
+    CThostFtdcRspInfoField* rspInfoField = (CThostFtdcRspInfoField*)msg.ctpMsgInfo;
+
     std::string orderKey = std::string(ctpRspField->OrderRef);
-
-//    auto& ctpRspResultMonitor = InsertResult::getInstance();
-//    ctpRspResultMonitor.setResultState(orderKey, InsertRspResult::Failed);
-
     auto& orderStates = OrderStates::getInstance();
     if(! orderStates.insertState(orderKey, 'E'))
     {
@@ -383,10 +390,8 @@ void CtpEvent::OnErrRtnOrderInsertHandle(MsgStruct& msg)
     }
     std::string reason = ORDER_FILL_ERROR;
     ROLE(StrategyEvent).pubOrderInsertRsp(orderContent.identityId,false, reason);
-
-//    std::string semName = "trader_ReqOrderInsert" + std::string(ctpRspField->OrderRef);
-//    globalSem.postSemBySemName(semName);
-//    INFO_LOG("post sem of [%s]",semName.c_str());
+    delete ctpRspField;
+    delete rspInfoField;
 }
 
 void CtpEvent::OnRspQryInstrumentHandle(MsgStruct& msg)
