@@ -38,6 +38,8 @@ struct OrderContent : CThostFtdcInputOrderField
     char currentStateChar          {'I'};
     bool activeCancleIndication {false};
 
+    bool isFlowFinish           {false};
+
     TradedOrder tradedOrder;
     bool isValid()
     {
@@ -49,8 +51,8 @@ struct OrderContent : CThostFtdcInputOrderField
 struct OrderManage
 {
     bool addOrder(std::string orderKey);
-    void delOrder(std::string orderKey);
-    CThostFtdcInputOrderField* getOrder(const std::string orderKey);
+    void delOrder(const std::string& orderKey);
+    CThostFtdcInputOrderField* getOrder(const std::string& orderKey);
     OrderContent& getOrderContent(const std::string orderKey);
     OrderContent& getOrderCOntentByIdentityId(std::string& identityKey);
     void printOrderInfo(const CThostFtdcInputOrderField& order, const std::string& orderName="no_name_order");

@@ -86,18 +86,20 @@ bool OrderManage::addOrder(std::string orderKey)
     return true;
 }
 
-void OrderManage::delOrder(std::string orderKey)
+void OrderManage::delOrder(const std::string& orderKey)
 {
     auto it = orderMaps.find(orderKey);
     if(it != orderMaps.end())
     {
-        delete it->second;
+        delete static_cast<OrderContent*>(it->second);
         it->second = nullptr;
         orderMaps.erase(it);
         INFO_LOG("del order[%s] ok",orderKey.c_str());
+        return;
     }
+    ERROR_LOG("not find order in local ref is[%s]",orderKey.c_str());
 }
-CThostFtdcInputOrderField* OrderManage::getOrder(const std::string orderKey)
+CThostFtdcInputOrderField* OrderManage::getOrder(const std::string& orderKey)
 {
     if(orderMaps.find(orderKey) != orderMaps.end())
     {

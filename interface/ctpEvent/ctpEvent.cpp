@@ -195,12 +195,11 @@ void CtpEvent::OnRtnTradeHandle(MsgStruct& msg)
     orderContent.tradedOrder.date = pTrade->TradeDate;
     orderContent.tradedOrder.time = pTrade->TradeTime;
 
-//    std::string semName = "trader_ReqOrderInsert" + std::string(pTrade->OrderRef);
-//    globalSem.postSemBySemName(semName);
     OrderSave::saveSuccessOrderInsert(orderContent);
     OrderSave::saveSuccCancelOrder(orderContent,"deal");
     OrderSave::delOneRecordByOnRtnOrder(orderContent);
     ROLE(StrategyEvent).pubOrderInsertRsp(orderContent.identityId,true,"success");
+    orderManage.delOrder(orderKey);
     delete pTrade;
     INFO_LOG("insert order success");
 }
@@ -296,6 +295,7 @@ void CtpEvent::OnRtnOrderHandle(MsgStruct& msg)
         OrderSave::delOneRecordByOnRtnOrder(orderContent);
         std::string reason = ORDER_CANCEL;
         ROLE(StrategyEvent).pubOrderInsertRsp(orderContent.identityId,false, reason);
+        orderManage.delOrder(orderKey);
         INFO_LOG("the order be canceled, ref[%s],identity[%s]",orderKey.c_str(), orderContent.identityId.c_str());
     }
     if (pOrder->OrderStatus == THOST_FTDC_OST_Unknown)///未知
@@ -320,15 +320,6 @@ void CtpEvent::OnRspOrderInsertHandle(MsgStruct& msg)
 
     std::string orderKey = std::string(ctpRspField->OrderRef);
 
-//    auto& ctpRspResultMonitor = InsertResult::getInstance();
-//    ctpRspResultMonitor.setResultState(orderKey, InsertRspResult::Failed);
-
-    auto& orderStates = OrderStates::getInstance();
-    if(! orderStates.insertState(orderKey, 'E'))
-    {
-        ERROR_LOG("insertState ERROR!");
-    }
-
     auto& traderSer = TraderSevice::getInstance();
     auto& orderManage = traderSer.ROLE(OrderManage);
     auto& orderContent = orderManage.getOrderContent(orderKey);
@@ -337,8 +328,21 @@ void CtpEvent::OnRspOrderInsertHandle(MsgStruct& msg)
         ERROR_LOG("can not find order in local, orderRef[%s]",orderKey.c_str());
         return;
     }
+    if(orderContent.isFlowFinish)
+    {
+        INFO_LOG("insert flow has finished, ref[%s], identity[%s]",orderKey.c_str(), orderContent.identityId.c_str());
+        return;
+    }
+    orderContent.isFlowFinish = true;
+    auto& orderStates = OrderStates::getInstance();
+    if(! orderStates.insertState(orderKey, 'E'))
+    {
+        ERROR_LOG("insertState ERROR!");
+    }
+
     std::string reason = ORDER_FILL_ERROR;
     ROLE(StrategyEvent).pubOrderInsertRsp(orderContent.identityId,false, reason);
+    orderManage.delOrder(orderKey);
     delete ctpRspField;
     delete ctpMsgInfo;
 }
@@ -374,12 +378,6 @@ void CtpEvent::OnErrRtnOrderInsertHandle(MsgStruct& msg)
     CThostFtdcRspInfoField* rspInfoField = (CThostFtdcRspInfoField*)msg.ctpMsgInfo;
 
     std::string orderKey = std::string(ctpRspField->OrderRef);
-    auto& orderStates = OrderStates::getInstance();
-    if(! orderStates.insertState(orderKey, 'E'))
-    {
-        ERROR_LOG("insertState ERROR!");
-    }
-
     auto& traderSer = TraderSevice::getInstance();
     auto& orderManage = traderSer.ROLE(OrderManage);
     auto& orderContent = orderManage.getOrderContent(orderKey);
@@ -388,8 +386,21 @@ void CtpEvent::OnErrRtnOrderInsertHandle(MsgStruct& msg)
         ERROR_LOG("can not find order in local, orderRef[%s]",orderKey.c_str());
         return;
     }
+    if(orderContent.isFlowFinish)
+    {
+        INFO_LOG("insert flow has finished, ref[%s], identity[%s]",orderKey.c_str(), orderContent.identityId.c_str());
+        return;
+    }
+    orderContent.isFlowFinish = true;
+    auto& orderStates = OrderStates::getInstance();
+    if(! orderStates.insertState(orderKey, 'E'))
+    {
+        ERROR_LOG("insertState ERROR!");
+    }
+
     std::string reason = ORDER_FILL_ERROR;
     ROLE(StrategyEvent).pubOrderInsertRsp(orderContent.identityId,false, reason);
+    orderManage.delOrder(orderKey);
     delete ctpRspField;
     delete rspInfoField;
 }
