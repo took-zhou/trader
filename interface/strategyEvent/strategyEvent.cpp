@@ -90,6 +90,7 @@ void StrategyEvent::queueOrderInsert()
             {
                 ERROR_LOG("build order failed, the orderRef is [%s]",newOrderRef.c_str());
                 pubOrderInsertRsp(identity,false,ORDER_BUILD_ERROR);
+                orderManage.delOrder(newOrderRef);
                 continue;
             }
 
