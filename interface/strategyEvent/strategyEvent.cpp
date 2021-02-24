@@ -286,6 +286,25 @@ void StrategyEvent::pubOrderInsertRsp(std::string identity, bool result, std::st
     insertRsp->set_identity(identity);
     auto rspResult = result ? strategy_trader::Result::success : strategy_trader::Result::failed;
     insertRsp->set_result(rspResult);
+    if(result)
+    {
+        auto* succInfo = insertRsp->mutable_info();
+        if(succInfo == nullptr)
+        {
+            ERROR_LOG("mutable_info error! identity[%s]", identity.c_str());
+            return;
+        }
+        auto& traderSer = TraderSevice::getInstance();
+        auto& orderManage = traderSer.ROLE(OrderManage);
+        auto& orderContent = orderManage.getOrderCOntentByIdentityId(identity);
+        if(!orderContent.isValid())
+        {
+            ERROR_LOG("OnRtnTrade can not find order in local, identity[%s]",identity.c_str());
+            return;
+        }
+        succInfo->set_orderprice(utils::doubleToStringConvert(orderContent.tradedOrder.price));
+        succInfo->set_ordervolume(orderContent.tradedOrder.volume);
+    }
 
     if(!result)
     {
