@@ -71,6 +71,12 @@ namespace
         };
         JsonPrint(jorder);
     }
+
+    std::map<strategy_trader::OrderType, std::string> orderTypeMap ={
+            {strategy_trader::OrderType::limit_LIMIT,"limit_limit"},
+            {strategy_trader::OrderType::Limit_FAK, "limit_fak"},
+            {strategy_trader::OrderType::limit_FOK, "limit_fok"}
+    };
 }
 
 bool OrderManage::addOrder(std::string orderKey)
@@ -199,23 +205,15 @@ bool OrderManage::buildOrder(const std::string orderKey, const strategy_trader::
 
     /*****************************************************************************/
     auto orderType = orderIndication.order_type();
-    std::string orderTypeSubTitle = "";
-    if(orderType == strategy_trader::OrderType::limit_LIMIT)
+    if(orderTypeMap.find(orderType) == orderTypeMap.end())
     {
-        orderTypeSubTitle = LIMIT_LIMIT_SUBTITLE;
-    }
-    else if(orderType == strategy_trader::OrderType::Limit_FAK)
-    {
-        orderTypeSubTitle = LIMIT_FAK_SUBTITLE;
-    }
-    if(orderTypeSubTitle == std::string(""))
-    {
-        ERROR_LOG("error OrderType");
+        ERROR_LOG("error OrderType[%d]",(int)orderType);
         return false;
     }
+    std::string orderTypeSubTitle = orderTypeMap.at(orderType);
     const auto& orderTypeCfg = jsonCfg.getConfig("order_type",orderTypeSubTitle);
-    std::string orderPrinceType = orderTypeCfg["OrderPriceType"].get<std::string>();
-    order.OrderPriceType = orderPrinceType[0];
+    std::string orderPriceType = orderTypeCfg["OrderPriceType"].get<std::string>();
+    order.OrderPriceType = orderPriceType[0];
 
     std::string combHedgeFlag = orderTypeCfg["CombHedgeFlag"].get<std::string>();
     strcpy(order.CombHedgeFlag, combHedgeFlag.c_str());
