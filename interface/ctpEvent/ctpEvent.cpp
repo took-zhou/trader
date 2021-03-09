@@ -199,7 +199,7 @@ void CtpEvent::OnRtnTradeHandle(MsgStruct& msg)
     OrderSave::saveSuccCancelOrder(orderContent,"deal");
     OrderSave::delOneRecordByOnRtnOrder(orderContent);
     ROLE(StrategyEvent).pubOrderInsertRsp(orderContent.identityId,true,"success");
-    orderManage.delOrder(orderKey);
+//    orderManage.delOrder(orderKey); // 暂时屏蔽 有内存泄漏， 暂时每周程序重启
     delete pTrade;
     INFO_LOG("insert order success");
 }

@@ -19,9 +19,69 @@
 #include "common/extern/libzmq/include/zhelpers.h"
 #include <cstring>
 #include "trader/domain/components/orderstates.h"
+#include <fstream>
+#include <iomanip>
+#include<iostream>
 
 #include "common/self/semaphorePart.h"
 extern GlobalSem globalSem;
+
+namespace{
+    void sendEail(const std::string& fileName, const std::string& instrumentId)
+    {
+        INFO_LOG("order insert success, begin send emails");
+        auto& jsonCfg = utils::JsonConfig::getInstance();
+        const auto& jsonCfgPath = jsonCfg.fileName;
+        auto emailPart = jsonCfg.getConfig("trader","Email");
+        std::string command = emailPart["command"].get<std::string>();
+        command += std::string(" " + jsonCfgPath + " " + fileName + " " + instrumentId);
+        system(command.c_str());
+        INFO_LOG("exec [%s] ok",command.c_str());
+    }
+
+    bool saveAttachment(const std::string& identity, std::string& fileName, std::string& instrumentId)
+    {
+        const auto& traderSer = TraderSevice::getInstance();
+        auto& orderManage = traderSer.ROLE(OrderManage);
+        const auto& orderContent = orderManage.getOrderCOntentByIdentityId(identity);
+        if(!orderContent.isValid())
+        {
+            ERROR_LOG("saveAttachment can not find order in local, identity[%s]",identity.c_str());
+            return false;
+        }
+
+        auto& jsonCfg = utils::JsonConfig::getInstance();
+        auto emailCfg = jsonCfg.getConfig("trader","Email");
+        std::string fileRootPath = emailCfg["EmailAttachmentPath"].get<std::string>();
+        fileName = fileRootPath + orderContent.instrumentID +identity + utils::genEmailId()+std::string(".txt");
+        if(!utils::isFileExist(fileName))
+        {
+            utils::creatFile(fileName);
+        }
+        std::string saveContent = "";
+        ofstream outfile(fileName, ios::app);
+        if(!outfile.is_open())
+        {
+            ERROR_LOG("open file[%s] failed",fileName.c_str());
+            return false;
+        }
+        saveContent += "合约：       "    +orderContent.instrumentID+"\n";
+        saveContent += "下单价格："  +utils::doubleToStringConvert(orderContent.LimitPrice)+"\n";
+        saveContent += "成交价格："  +utils::doubleToStringConvert(orderContent.tradedOrder.price)+"\n";
+        saveContent += "成交时间："+orderContent.tradedOrder.time+"\n";
+        saveContent += "方向：       "    +orderContent.tradedOrder.direction+"\n";
+        saveContent += "下单数量："+utils::intToString(orderContent.VolumeTotalOriginal)+"\n";
+        saveContent += "本批成交数量："+utils::intToString(orderContent.tradedOrder.volume)+"\n";
+        outfile << saveContent;
+        outfile.close();
+        instrumentId = orderContent.instrumentID;
+        INFO_LOG("save attachment ok");
+        return true;
+
+    }
+
+}
+
 
 bool StrategyEvent::init()
 {
@@ -333,5 +393,16 @@ void StrategyEvent::pubOrderInsertRsp(std::string identity, bool result, std::st
     }
     auto& orderStates = OrderStates::getInstance();
     orderStates.showAllOrderStates();
+    if(result)
+    {
+        std::string fileName{""}, instrumentId{""};
+        if(saveAttachment(identity, fileName, instrumentId))
+        {
+            auto sendfunc = [=](){
+                sendEail(fileName, instrumentId);
+            };
+            std::thread(sendfunc).detach();
+        }
+    }
     return;
 }

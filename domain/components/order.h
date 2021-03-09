@@ -41,7 +41,7 @@ struct OrderContent : CThostFtdcInputOrderField
     bool isFlowFinish           {false};
 
     TradedOrder tradedOrder;
-    bool isValid()
+    bool isValid() const
     {
         return identityId!= std::string("");
     };
@@ -54,7 +54,7 @@ struct OrderManage
     void delOrder(const std::string& orderKey);
     CThostFtdcInputOrderField* getOrder(const std::string& orderKey);
     OrderContent& getOrderContent(const std::string orderKey);
-    OrderContent& getOrderCOntentByIdentityId(std::string& identityKey);
+    OrderContent& getOrderCOntentByIdentityId(const std::string& identityKey);
     void printOrderInfo(const CThostFtdcInputOrderField& order, const std::string& orderName="no_name_order");
     void printOrderInfo(const std::string orderKey, const std::string& orderName="no_name_order");
     bool buildOrder(const std::string orderKey, const strategy_trader::OrderInsertReq& orderInsertReq);

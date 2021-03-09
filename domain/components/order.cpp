@@ -126,7 +126,7 @@ OrderContent& OrderManage::getOrderContent(const std::string orderKey)
     return *(static_cast<OrderContent*>(ctpOrder));
 }
 
-OrderContent& OrderManage::getOrderCOntentByIdentityId(std::string& identityKey)
+OrderContent& OrderManage::getOrderCOntentByIdentityId(const std::string& identityKey)
 {
     for(auto& orderMap : orderMaps)
     {
