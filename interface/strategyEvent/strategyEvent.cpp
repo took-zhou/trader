@@ -205,6 +205,20 @@ void StrategyEvent::OrderCancelReqHandle(MsgStruct& msg)
 
 void StrategyEvent::pubOrderCancelRsp(std::string identityId, bool result, const std::string& reason)
 {
+    auto& traderSer = TraderSevice::getInstance();
+    auto& orderManage = traderSer.ROLE(OrderManage);
+    auto& orderContent = orderManage.getOrderCOntentByIdentityId(identityId);
+    if(!orderContent.isValid())
+    {
+        ERROR_LOG("invalid order, identityId[%s]",identityId.c_str());
+        return;
+    }
+    if(orderContent.isFlowFinish)
+    {
+        INFO_LOG("flow has finished identityId[%s]",identityId.c_str());
+        return;
+    }
+    orderContent.isFlowFinish = true;
     strategy_trader::message rspMsg;
     auto* orderCancelRsp  = rspMsg.mutable_order_cancel_rsp();
     orderCancelRsp->set_identity(identityId);
