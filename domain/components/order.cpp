@@ -75,7 +75,9 @@ namespace
     std::map<strategy_trader::OrderType, std::string> orderTypeMap ={
             {strategy_trader::OrderType::limit_LIMIT,"limit_limit"},
             {strategy_trader::OrderType::Limit_FAK, "limit_fak"},
-            {strategy_trader::OrderType::limit_FOK, "limit_fok"}
+            {strategy_trader::OrderType::limit_FOK, "limit_fok"},
+            {strategy_trader::OrderType::AnyPrice_Fok, "any_price_fok"},
+            {strategy_trader::OrderType::AnyPrice_Fak, "any_price_fak"}
     };
 }
 
