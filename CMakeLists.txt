@@ -10,7 +10,6 @@ add_library(tradelib  ${trader_source})
 target_link_libraries(tradelib 
     LinuxDataCollect_6.3.15
     thosttraderapi_se_6.5.1
-    thosttraderapi_se_6.5.1
     pthread
     commonlib
     zmq

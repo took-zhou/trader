@@ -32,8 +32,7 @@ namespace{
         INFO_LOG("order insert success, begin send emails");
         auto& jsonCfg = utils::JsonConfig::getInstance();
         const auto& jsonCfgPath = jsonCfg.fileName;
-        auto emailPart = jsonCfg.getConfig("trader","Email");
-        std::string command = emailPart["command"].get<std::string>();
+        std::string command = jsonCfg.getConfig("emailbox", "command").get<std::string>();
         command += std::string(" " + jsonCfgPath + " " + fileName + " " + instrumentId);
         system(command.c_str());
         INFO_LOG("exec [%s] ok",command.c_str());
@@ -51,8 +50,7 @@ namespace{
         }
 
         auto& jsonCfg = utils::JsonConfig::getInstance();
-        auto emailCfg = jsonCfg.getConfig("trader","Email");
-        std::string fileRootPath = emailCfg["EmailAttachmentPath"].get<std::string>();
+        std::string fileRootPath = jsonCfg.getConfig("emailbox", "EmailAttachmentPath").get<std::string>();
         fileName = fileRootPath + orderContent.instrumentID +identity + utils::genEmailId()+std::string(".txt");
         if(!utils::isFileExist(fileName))
         {
