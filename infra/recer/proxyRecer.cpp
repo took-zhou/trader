@@ -21,7 +21,8 @@ void ProxyRecer::init()
     topicList.push_back("strategy_trader.OrderInsertReq");
     topicList.push_back("strategy_trader.AccountStatusReq");
     topicList.push_back("strategy_trader.OrderCancelReq");
-
+    topicList.push_back("strategy_trader.MarginRateReq");
+    topicList.push_back("strategy_trader.CommissionRateReq");
     //trader_trader
     topicList.push_back("trader_trader.HeartBeat");
 

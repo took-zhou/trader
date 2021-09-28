@@ -43,6 +43,8 @@ void CtpEvent::regMsgFun()
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRspQryInstrument",           [this](MsgStruct& msg){OnRspQryInstrumentHandle(msg);}));
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRspOrderAction",             [this](MsgStruct& msg){OnRspOrderActionHandle(msg);}));
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnErrRtnOrderAction",          [this](MsgStruct& msg){OnErrRtnOrderActionHandle(msg);}));
+    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRspQryInstrumentMarginRate",       [this](MsgStruct& msg){OnRspQryInstrumentMarginRateHandle(msg);}));
+    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OnRspQryInstrumentCommissionRate",   [this](MsgStruct& msg){OnRspQryInstrumentCommissionRateHandle(msg);}));
 
     for(auto iter : msgFuncMap)
     {
@@ -78,7 +80,7 @@ void CtpEvent::OnErrRtnOrderActionHandle(MsgStruct& msg)
     auto identityId = orderContent.identityId;
     strategy_trader::message rspMsg;
     auto* orderCancelRsp  = rspMsg.mutable_order_cancel_rsp();
-    orderCancelRsp->set_identity(identityId);
+    orderCancelRsp->set_identity(identityId.identity);
     orderCancelRsp->set_result(strategy_trader::Result::failed);
     TThostFtdcErrorMsgType errmsg;
     utils::gbk2utf8(msgInfo.ErrorMsg,errmsg,sizeof(errmsg));
@@ -86,7 +88,6 @@ void CtpEvent::OnErrRtnOrderActionHandle(MsgStruct& msg)
     orderCancelRsp->set_failedreason(reason);
     ROLE(StrategyEvent).pubOrderCancelRsp(identityId, false,  reason);
 }
-
 
 void CtpEvent::OnRspOrderActionHandle(MsgStruct& msg)
 {
@@ -102,7 +103,7 @@ void CtpEvent::OnRspOrderActionHandle(MsgStruct& msg)
     auto identityId = orderContent.identityId;
     strategy_trader::message rspMsg;
     auto* orderCancelRsp  = rspMsg.mutable_order_cancel_rsp();
-    orderCancelRsp->set_identity(identityId);
+    orderCancelRsp->set_identity(identityId.identity);
     orderCancelRsp->set_result(strategy_trader::Result::failed);
     TThostFtdcErrorMsgType errmsg;
     utils::gbk2utf8(msgInfo.ErrorMsg,errmsg,sizeof(errmsg));
@@ -174,6 +175,7 @@ void CtpEvent::OnRspQryTradingAccountHandle(MsgStruct& msg)
     globalSem.postSemBySemName(semName);
     INFO_LOG("post sem of [%s]",semName.c_str());
 }
+
 void CtpEvent::OnRtnTradeHandle(MsgStruct& msg)
 {
     CThostFtdcTradeField* pTrade = (CThostFtdcTradeField*) msg.ctpMsg;
@@ -203,7 +205,6 @@ void CtpEvent::OnRtnTradeHandle(MsgStruct& msg)
     delete pTrade;
     INFO_LOG("insert order success");
 }
-
 
 namespace
 {
@@ -275,7 +276,7 @@ void CtpEvent::OnRtnOrderHandle(MsgStruct& msg)
             auto identityId = orderContent.identityId;
             strategy_trader::message rspMsg;
             auto* orderCancelRsp  = rspMsg.mutable_order_cancel_rsp();
-            orderCancelRsp->set_identity(identityId);
+            orderCancelRsp->set_identity(identityId.identity);
             orderCancelRsp->set_result(strategy_trader::Result::failed);
             TThostFtdcErrorMsgType errmsg;
             std::string reason = std::string("INVALID");
@@ -296,7 +297,7 @@ void CtpEvent::OnRtnOrderHandle(MsgStruct& msg)
         std::string reason = ORDER_CANCEL;
         ROLE(StrategyEvent).pubOrderInsertRsp(orderContent.identityId,false, reason);
         orderManage.delOrder(orderKey);
-        INFO_LOG("the order be canceled, ref[%s],identity[%s]",orderKey.c_str(), orderContent.identityId.c_str());
+        INFO_LOG("the order be canceled, ref[%s],identity[%s]",orderKey.c_str(), orderContent.identityId.identity.c_str());
     }
     if (pOrder->OrderStatus == THOST_FTDC_OST_Unknown)///未知
     {
@@ -330,7 +331,7 @@ void CtpEvent::OnRspOrderInsertHandle(MsgStruct& msg)
     }
     if(orderContent.isFlowFinish)
     {
-        INFO_LOG("insert flow has finished, ref[%s], identity[%s]",orderKey.c_str(), orderContent.identityId.c_str());
+        INFO_LOG("insert flow has finished, ref[%s], identity[%s]",orderKey.c_str(), orderContent.identityId.identity.c_str());
         return;
     }
     orderContent.isFlowFinish = true;
@@ -388,7 +389,7 @@ void CtpEvent::OnErrRtnOrderInsertHandle(MsgStruct& msg)
     }
     if(orderContent.isFlowFinish)
     {
-        INFO_LOG("insert flow has finished, ref[%s], identity[%s]",orderKey.c_str(), orderContent.identityId.c_str());
+        INFO_LOG("insert flow has finished, ref[%s], identity[%s]",orderKey.c_str(), orderContent.identityId.identity.c_str());
         return;
     }
     orderContent.isFlowFinish = true;
@@ -489,4 +490,54 @@ U32 CtpEvent::buildNewKey()
     return maxKey+1;
 }
 
+void CtpEvent::OnRspQryInstrumentMarginRateHandle(MsgStruct& msg)
+{
+    CThostFtdcInstrumentMarginRateField* marginRateField = static_cast<CThostFtdcInstrumentMarginRateField*>(msg.ctpMsg);
+    auto& traderSer = TraderSevice::getInstance();
+    auto& marginRate = traderSer.ROLE(Trader).ROLE(TmpStore).marginRate;
 
+    if (marginRateField)
+    {
+        marginRate.LongMarginRatioByMoney = utils::doubleToStringConvert(marginRateField->LongMarginRatioByMoney);
+        marginRate.LongMarginRatioByVolume = utils::doubleToStringConvert(marginRateField->LongMarginRatioByVolume);
+        marginRate.ShortMarginRatioByMoney = utils::doubleToStringConvert(marginRateField->ShortMarginRatioByMoney);
+        marginRate.ShortMarginRatioByVolume = utils::doubleToStringConvert(marginRateField->ShortMarginRatioByVolume);
+
+        delete marginRateField;
+    }
+    else
+    {
+        ROLE(StrategyEvent).pubMarginRateRsp(marginRate.ProcessRandomId, false, "rsp is null");
+    }
+
+    std::string semName = "margin_rate";
+    globalSem.postSemBySemName(semName);
+    INFO_LOG("post sem of [%s]",semName.c_str());
+}
+
+void CtpEvent::OnRspQryInstrumentCommissionRateHandle(MsgStruct& msg)
+{
+    CThostFtdcInstrumentCommissionRateField* commissionRateField = static_cast<CThostFtdcInstrumentCommissionRateField*>(msg.ctpMsg);
+    auto& traderSer = TraderSevice::getInstance();
+    auto& commissionRate = traderSer.ROLE(Trader).ROLE(TmpStore).commissionRate;
+
+    if (commissionRateField)
+    {
+        commissionRate.CloseRatioByMoney = utils::doubleToStringConvert(commissionRateField->CloseRatioByMoney);
+        commissionRate.CloseRatioByVolume = utils::doubleToStringConvert(commissionRateField->CloseRatioByVolume);
+        commissionRate.CloseTodayRatioByMoney = utils::doubleToStringConvert(commissionRateField->CloseTodayRatioByMoney);
+        commissionRate.CloseTodayRatioByVolume = utils::doubleToStringConvert(commissionRateField->CloseTodayRatioByVolume);
+        commissionRate.OpenRatioByMoney = utils::doubleToStringConvert(commissionRateField->OpenRatioByMoney);
+        commissionRate.OpenRatioByVolume = utils::doubleToStringConvert(commissionRateField->OpenRatioByVolume);
+
+        delete commissionRateField;
+    }
+    else
+    {
+        ROLE(StrategyEvent).pubCommissionRateRsp(commissionRate.ProcessRandomId, false, "rsp is null");
+    }
+
+    std::string semName = "commission_rate";
+    globalSem.postSemBySemName(semName);
+    INFO_LOG("post sem of [%s]",semName.c_str());
+}

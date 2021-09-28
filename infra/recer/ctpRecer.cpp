@@ -675,4 +675,103 @@ void TraderSpi::OnErrRtnOrderAction(CThostFtdcOrderActionField *pOrderAction, CT
     ctpMsgChan << msgStruct;
 };
 
+void TraderSpi::OnRspQryInstrumentMarginRate(CThostFtdcInstrumentMarginRateField *pInstrumentMarginRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+{
+    PURE_LOG("<OnRspQryInstrumentMarginRate>");
+    if (pInstrumentMarginRate)
+    {
+        PURE_LOG("\tInvestorRange [%d]", pInstrumentMarginRate->InvestorRange);
+        PURE_LOG("\tBrokerID [%s]", pInstrumentMarginRate->BrokerID);
+        PURE_LOG("\tInvestorID [%s]", pInstrumentMarginRate->InvestorID);
+        PURE_LOG("\tHedgeFlag [%d]", pInstrumentMarginRate->HedgeFlag);
+        PURE_LOG("\tLongMarginRatioByMoney [%.8lf]", pInstrumentMarginRate->LongMarginRatioByMoney);
+        PURE_LOG("\tLongMarginRatioByVolume [%.8lf]", pInstrumentMarginRate->LongMarginRatioByVolume);
+        PURE_LOG("\tShortMarginRatioByMoney [%.8lf]", pInstrumentMarginRate->ShortMarginRatioByMoney);
+        PURE_LOG("\tShortMarginRatioByVolume [%.8lf]", pInstrumentMarginRate->ShortMarginRatioByVolume);
+        PURE_LOG("\tIsRelative [%d]", pInstrumentMarginRate->IsRelative);
+        PURE_LOG("\tExchangeID [%s]", pInstrumentMarginRate->ExchangeID);
+        PURE_LOG("\tInvestUnitID [%s]", pInstrumentMarginRate->InvestUnitID);
+        PURE_LOG("\tInstrumentID [%s]", pInstrumentMarginRate->InstrumentID);
+    }
+    if (pRspInfo)
+    {
+        TThostFtdcErrorMsgType msg;
+        utils::gbk2utf8(pRspInfo->ErrorMsg, msg, sizeof(msg));
+        PURE_LOG("\tErrorMsg [%s]", msg);
+        PURE_LOG("\tErrorID [%d]", pRspInfo->ErrorID);
+    }
+    PURE_LOG("\tnRequestID [%d]", nRequestID);
+    PURE_LOG("\tbIsLast [%d]", bIsLast);
+    PURE_LOG("</OnRspQryInstrumentMarginRate>");
+
+    if (pInstrumentMarginRate)
+    {
+        CThostFtdcInstrumentMarginRateField* staticInstrumentMarginRateField = new CThostFtdcInstrumentMarginRateField;
+        *staticInstrumentMarginRateField = *pInstrumentMarginRate;
+        MsgStruct msgStruct;
+        msgStruct.sessionName = "ctp";
+        msgStruct.msgName = "OnRspQryInstrumentMarginRate";
+        msgStruct.ctpMsg = static_cast<void*>(staticInstrumentMarginRateField);
+        ctpMsgChan << msgStruct;
+    }
+    else
+    {
+        MsgStruct msgStruct;
+        msgStruct.sessionName = "ctp";
+        msgStruct.msgName = "OnRspQryInstrumentMarginRate";
+        msgStruct.ctpMsg = nullptr;
+        ctpMsgChan << msgStruct;
+    }
+
+};
+
+void TraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionRateField *pInstrumentCommissionRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+{
+    PURE_LOG("<OnRspQryInstrumentCommissionRate>");
+    if (pInstrumentCommissionRate)
+    {
+        PURE_LOG("\tInvestorRange [%d]", pInstrumentCommissionRate->InvestorRange);
+        PURE_LOG("\tBrokerID [%s]", pInstrumentCommissionRate->BrokerID);
+        PURE_LOG("\tInvestorID [%s]", pInstrumentCommissionRate->InvestorID);
+        PURE_LOG("\tOpenRatioByMoney [%.8lf]", pInstrumentCommissionRate->OpenRatioByMoney);
+        PURE_LOG("\tOpenRatioByVolume [%.8lf]", pInstrumentCommissionRate->OpenRatioByVolume);
+        PURE_LOG("\tCloseRatioByMoney [%.8lf]", pInstrumentCommissionRate->CloseRatioByMoney);
+        PURE_LOG("\tCloseRatioByVolume [%.8lf]", pInstrumentCommissionRate->CloseRatioByVolume);
+        PURE_LOG("\tCloseTodayRatioByMoney [%.8lf]", pInstrumentCommissionRate->CloseTodayRatioByMoney);
+        PURE_LOG("\tCloseTodayRatioByVolume [%.8lf]", pInstrumentCommissionRate->CloseTodayRatioByVolume);
+        PURE_LOG("\tExchangeID [%s]", pInstrumentCommissionRate->ExchangeID);
+        PURE_LOG("\tBizType [%d]", pInstrumentCommissionRate->BizType);
+        PURE_LOG("\tInvestUnitID [%s]", pInstrumentCommissionRate->InvestUnitID);
+        PURE_LOG("\tInstrumentID [%s]", pInstrumentCommissionRate->InstrumentID);
+    }
+    if (pRspInfo)
+    {
+        TThostFtdcErrorMsgType msg;
+        utils::gbk2utf8(pRspInfo->ErrorMsg, msg, sizeof(msg));
+        PURE_LOG("\tErrorMsg [%s]", msg);
+        PURE_LOG("\tErrorID [%d]", pRspInfo->ErrorID);
+    }
+    PURE_LOG("\tnRequestID [%d]", nRequestID);
+    PURE_LOG("\tbIsLast [%d]", bIsLast);
+    PURE_LOG("</OnRspQryInstrumentCommissionRate>");
+
+    if (pInstrumentCommissionRate)
+    {
+        CThostFtdcInstrumentCommissionRateField* staticInstrumentCommissionRateField = new CThostFtdcInstrumentCommissionRateField;
+        *staticInstrumentCommissionRateField = *pInstrumentCommissionRate;
+        MsgStruct msgStruct;
+        msgStruct.sessionName = "ctp";
+        msgStruct.msgName = "OnRspQryInstrumentCommissionRate";
+        msgStruct.ctpMsg = static_cast<void*>(staticInstrumentCommissionRateField);
+        ctpMsgChan << msgStruct;
+    }
+    else
+    {
+        MsgStruct msgStruct;
+        msgStruct.sessionName = "ctp";
+        msgStruct.msgName = "OnRspQryInstrumentCommissionRate";
+        msgStruct.ctpMsg = nullptr;
+        ctpMsgChan << msgStruct;
+    }
+};
 

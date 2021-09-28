@@ -44,6 +44,9 @@ struct CtpEvent
 
     void OnRspOrderActionHandle(MsgStruct& msg);
     void OnErrRtnOrderActionHandle(MsgStruct& msg);
+
+    void OnRspQryInstrumentMarginRateHandle(MsgStruct& msg);
+    void OnRspQryInstrumentCommissionRateHandle(MsgStruct& msg);
     std::map<std::string, std::function<void(MsgStruct& msg)>> msgFuncMap;
 
     USE_ROLE(MarketEvent);

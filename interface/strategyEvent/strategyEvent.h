@@ -10,6 +10,8 @@
 #include <map>
 #include <functional>
 #include <string>
+
+struct OrderIdentify;
 struct MsgStruct;
 
 struct StrategyEvent
@@ -17,15 +19,22 @@ struct StrategyEvent
     bool init();
     void handle(MsgStruct& msg);
     void regMsgFun();
+
     void OrderInsertReqHandle(MsgStruct& msg);
-    void queueOrderInsert();
-    void pubOrderInsertRsp(std::string identity, bool result, std::string reason);
+    void pubOrderInsertRsp(OrderIdentify identity, bool result, std::string reason);
 
     void AccountStatusReqHandle(MsgStruct& msg);
-    void pubAccountStatusRsq(bool result, const std::string& reason = "success");
+    void pubAccountStatusRsp(std::string identity, int field, bool result, const std::string& reason = "success");
 
     void OrderCancelReqHandle(MsgStruct& msg);
-    void pubOrderCancelRsp(std::string identity, bool result, const std::string& reason);
+    void pubOrderCancelRsp(OrderIdentify identity, bool result, const std::string& reason);
+
+    void MarginRateReqHandle(MsgStruct& msg);
+    void pubMarginRateRsp(std::string identity, bool result, const std::string& reason = "success");
+
+    void CommissionRateReqHandle(MsgStruct& msg);
+    void pubCommissionRateRsp(std::string identity, bool result, const std::string& reason = "success");
+
     std::map<std::string, std::function<void(MsgStruct& msg)>> msgFuncMap;
 };
 

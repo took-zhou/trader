@@ -11,6 +11,7 @@
 #include "common/extern/ctp/inc/ThostFtdcTraderApi.h"
 #include "common/self/dci/Role.h"
 #include "trader/infra/recer/ctpRecer.h"
+#include "common/self/utils.h"
 struct OrderContent;
 struct SettlementConfirm;
 
@@ -208,9 +209,11 @@ public:
     int ReqQryTradingCode(CThostFtdcQryTradingCodeField *pQryTradingCode, int nRequestID){};
 
     ///请求查询合约保证金率
+    int ReqQryInstrumentMarginRate(utils::InstrumtntID ins_exch);
     int ReqQryInstrumentMarginRate(CThostFtdcQryInstrumentMarginRateField *pQryInstrumentMarginRate, int nRequestID){};
 
     ///请求查询合约手续费率
+    int ReqQryInstrumentCommissionRate(utils::InstrumtntID ins_exch);
     int ReqQryInstrumentCommissionRate(CThostFtdcQryInstrumentCommissionRateField *pQryInstrumentCommissionRate, int nRequestID){};
 
     ///请求查询交易所

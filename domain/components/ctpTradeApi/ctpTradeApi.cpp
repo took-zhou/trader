@@ -39,7 +39,7 @@ int CtpTraderBaseApi::ReqQryTradingAccount()
 {
     CThostFtdcQryTradingAccountField  requestMsg{0};
     auto& jsonCfg = utils::JsonConfig::getInstance();
-    const std::string brokerID = jsonCfg.getConfig("commoon","BrokerID").get<std::string>();
+    const std::string brokerID = jsonCfg.getConfig("common","BrokerID").get<std::string>();
     const std::string investorID = jsonCfg.getConfig("common","InvestorID").get<std::string>();
     strcpy(requestMsg.InvestorID, investorID.c_str());
     strcpy(requestMsg.BrokerID, brokerID.c_str());
@@ -191,6 +191,44 @@ int CtpTraderBaseApi::ReqUserLogout()
     globalSem.addOrderSem(semName);
     int result = m_pApi->ReqUserLogout(&logOutField, requestIdBuildAlg());
     INFO_LOG("ReqUserLogout send result is [%d]",result);
+    return result;
+}
+
+int CtpTraderBaseApi::ReqQryInstrumentMarginRate(utils::InstrumtntID ins_exch)
+{
+    CThostFtdcQryInstrumentMarginRateField marginRateField{0};
+
+    auto& jsonCfg = utils::JsonConfig::getInstance();
+    const std::string investorID = jsonCfg.getConfig("common","InvestorID").get<std::string>();
+    const std::string brokerID = jsonCfg.getConfig("common","BrokerID").get<std::string>();
+    strcpy(marginRateField.BrokerID, brokerID.c_str());
+    strcpy(marginRateField.InvestorID, investorID.c_str());
+    strcpy(marginRateField.ExchangeID, ins_exch.exch.c_str());
+    strcpy(marginRateField.InstrumentID, ins_exch.ins.c_str());
+    marginRateField.HedgeFlag = THOST_FTDC_HF_Speculation;
+
+    std::string semName = "margin_rate";
+    globalSem.addOrderSem(semName);
+    int result = m_pApi->ReqQryInstrumentMarginRate(&marginRateField, requestIdBuildAlg());
+    INFO_LOG("ReqQryInstrumentMarginRate send result is [%d]",result);
+    return result;
+}
+
+int CtpTraderBaseApi::ReqQryInstrumentCommissionRate(utils::InstrumtntID ins_exch)
+{
+    CThostFtdcQryInstrumentCommissionRateField commissonRateField{0};
+    auto& jsonCfg = utils::JsonConfig::getInstance();
+    const std::string investorID = jsonCfg.getConfig("common","InvestorID").get<std::string>();
+    const std::string brokerID = jsonCfg.getConfig("common","BrokerID").get<std::string>();
+    strcpy(commissonRateField.BrokerID, brokerID.c_str());
+    strcpy(commissonRateField.InvestorID, investorID.c_str());
+    strcpy(commissonRateField.ExchangeID, ins_exch.exch.c_str());
+    strcpy(commissonRateField.InstrumentID, ins_exch.ins.c_str());
+
+    std::string semName = "commission_rate";
+    globalSem.addOrderSem(semName);
+    int result = m_pApi->ReqQryInstrumentCommissionRate(&commissonRateField, requestIdBuildAlg());
+    INFO_LOG("ReqQryInstrumentCommissionRate send result is [%d]",result);
     return result;
 }
 

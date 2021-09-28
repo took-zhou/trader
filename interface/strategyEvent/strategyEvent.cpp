@@ -14,10 +14,6 @@
 #include "trader/infra/recerSender.h"
 #include "trader/domain/traderService.h"
 #include "trader/domain/components/InsertResult.h"
-#include "trader/infra/innerZmq.h"
-#include <thread>
-#include "common/extern/libzmq/include/zhelpers.h"
-#include <cstring>
 #include "trader/domain/components/orderstates.h"
 #include <fstream>
 #include <iomanip>
@@ -75,16 +71,12 @@ namespace{
         instrumentId = orderContent.instrumentID;
         INFO_LOG("save attachment ok");
         return true;
-
     }
-
 }
-
 
 bool StrategyEvent::init()
 {
     regMsgFun();
-    queueOrderInsert();
     return true;
 }
 
@@ -105,9 +97,10 @@ void StrategyEvent::regMsgFun()
     int cnt = 0;
     msgFuncMap.clear();
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OrderInsertReq",     [this](MsgStruct& msg){OrderInsertReqHandle(msg);}));
-
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("AccountStatusReq",   [this](MsgStruct& msg){AccountStatusReqHandle(msg);}));
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OrderCancelReq",     [this](MsgStruct& msg){OrderCancelReqHandle(msg);}));
+    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("MarginRateReq",     [this](MsgStruct& msg){MarginRateReqHandle(msg);}));
+    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("CommissionRateReq",     [this](MsgStruct& msg){CommissionRateReqHandle(msg);}));
 
     for(auto iter : msgFuncMap)
     {
@@ -117,59 +110,6 @@ void StrategyEvent::regMsgFun()
     return;
 }
 
-void StrategyEvent::queueOrderInsert()
-{
-    auto orderInsertFunc = [this]()
-    {
-        auto& innerZmq = InnerZmq::getInstance();
-        while(true)
-        {
-            char* pbMsg = s_recv(innerZmq.receiver);
-            INFO_LOG("receved msg inner pbMsg");
-            strategy_trader::message reqMsg;
-            reqMsg.ParseFromString(std::string(pbMsg));
-            utils::printProtoMsg(reqMsg);
-
-            const auto& orderInsertReq = reqMsg.order_insert_req();
-            std::string identity = orderInsertReq.identity();
-            INFO_LOG("identity[%s] insert begin",identity.c_str());
-
-            auto& traderSer = TraderSevice::getInstance();
-            auto& orderManage = traderSer.ROLE(OrderManage);
-            std::string newOrderRef = utils::genOrderRef();
-            if(! orderManage.addOrder(newOrderRef))
-            {
-                ERROR_LOG("add order [%s] to OrderManage error", newOrderRef.c_str());
-                pubOrderInsertRsp(identity,false, ORDER_BUILD_ERROR);
-                continue;
-            }
-
-            if( ! orderManage.buildOrder(newOrderRef, orderInsertReq))
-            {
-                ERROR_LOG("build order failed, the orderRef is [%s]",newOrderRef.c_str());
-                pubOrderInsertRsp(identity,false,ORDER_BUILD_ERROR);
-                orderManage.delOrder(newOrderRef);
-                continue;
-            }
-
-            auto& orderContent = orderManage.getOrderContent(newOrderRef);
-            orderContent.orderRef = newOrderRef;
-            orderContent.identityId = identity;
-            orderContent.instrumentID = orderContent.ROLE(CThostFtdcInputOrderField).InstrumentID;
-            orderContent.investorId  = orderContent.ROLE(CThostFtdcInputOrderField).InvestorID;
-            orderContent.userId = orderContent.ROLE(CThostFtdcInputOrderField).UserID;
-            auto* traderApi = traderSer.ROLE(Trader).ROLE(CtpTraderApi).traderApi;
-            auto& ctpRspResultMonitor = InsertResult::getInstance();
-            ctpRspResultMonitor.addResultMonitor(newOrderRef);
-            auto* newOrder = orderManage.getOrder(newOrderRef);
-            traderApi->ReqOrderInsert(newOrder);
-        }
-    };
-
-    std::thread(orderInsertFunc).detach();
-    INFO_LOG("orderInsertFunc while 1 thread runing...");
-}
-
 void StrategyEvent::OrderCancelReqHandle(MsgStruct& msg)
 {
     strategy_trader::message reqMsg;
@@ -177,20 +117,22 @@ void StrategyEvent::OrderCancelReqHandle(MsgStruct& msg)
     utils::printProtoMsg(reqMsg);
 
     auto& orderCancelReq = reqMsg.order_cancel_req();
-    std::string identity = orderCancelReq.identity();
+    OrderIdentify IdentifyId;
+    IdentifyId.prid = orderCancelReq.process_random_id();
+    IdentifyId.identity = orderCancelReq.identity();
     auto& traderSer = TraderSevice::getInstance();
     if(!traderSer.ROLE(Trader).ROLE(CtpTraderApi).isLogIN)
     {
         ERROR_LOG("ctp not login!");
-        pubOrderCancelRsp(identity, false, "ctp_logout");
+        pubOrderCancelRsp(IdentifyId, false, "ctp_logout");
         return;
     }
     auto& orderManage = traderSer.ROLE(OrderManage);
-    auto& orderContent = orderManage.getOrderCOntentByIdentityId(identity);
+    auto& orderContent = orderManage.getOrderCOntentByIdentityId(IdentifyId.identity);
     if(!orderContent.isValid())
     {
         std::string reason = "invalidOrderIdentityId";
-        pubOrderCancelRsp(identity, false, reason);
+        pubOrderCancelRsp(IdentifyId, false, reason);
         return;
     }
 
@@ -201,25 +143,25 @@ void StrategyEvent::OrderCancelReqHandle(MsgStruct& msg)
     traderApi->ReqOrderAction(orderContent);
 }
 
-void StrategyEvent::pubOrderCancelRsp(std::string identityId, bool result, const std::string& reason)
+void StrategyEvent::pubOrderCancelRsp(OrderIdentify identityId, bool result, const std::string& reason)
 {
     auto& traderSer = TraderSevice::getInstance();
     auto& orderManage = traderSer.ROLE(OrderManage);
-    auto& orderContent = orderManage.getOrderCOntentByIdentityId(identityId);
+    auto& orderContent = orderManage.getOrderCOntentByIdentityId(identityId.identity);
     if(!orderContent.isValid())
     {
-        ERROR_LOG("invalid order, identityId[%s]",identityId.c_str());
+        ERROR_LOG("invalid order, identityId[%s]",identityId.identity.c_str());
         return;
     }
     if(orderContent.isFlowFinish)
     {
-        INFO_LOG("flow has finished identityId[%s]",identityId.c_str());
+        INFO_LOG("flow has finished identityId[%s]",identityId.identity.c_str());
         return;
     }
     orderContent.isFlowFinish = true;
     strategy_trader::message rspMsg;
     auto* orderCancelRsp  = rspMsg.mutable_order_cancel_rsp();
-    orderCancelRsp->set_identity(identityId);
+    orderCancelRsp->set_identity(identityId.identity);
     orderCancelRsp->set_result(result? strategy_trader::Result::success:strategy_trader::Result::failed);
     orderCancelRsp->set_failedreason(reason);
 
@@ -241,84 +183,236 @@ void StrategyEvent::AccountStatusReqHandle(MsgStruct& msg)
     strategy_trader::message reqMsg;
     reqMsg.ParseFromString(msg.pbMsg);
     utils::printProtoMsg(reqMsg);
-
+    auto reqInfo = reqMsg.account_status_req();
+    int field  = reqInfo.field();
+    auto identify = reqInfo.process_random_id();
     auto& traderSer = TraderSevice::getInstance();
     if(!traderSer.ROLE(Trader).ROLE(CtpTraderApi).isLogIN)
     {
         ERROR_LOG("ctp not login!");
-        pubAccountStatusRsq(false,"ctp_logout");
+        pubAccountStatusRsp(identify, field, false, "ctp_logout");
         return;
     }
+
+    traderSer.ROLE(Trader).ROLE(TmpStore).accountInfo.ProcessRandomId = identify;
     auto* traderApi = traderSer.ROLE(Trader).ROLE(CtpTraderApi).traderApi;
     traderApi->ReqQryTradingAccount();
     std::string semName = "trader_ReqQryTradingAccount";
     globalSem.waitSemBySemName(semName);
     INFO_LOG("waitSemBySemName [%s] ok",semName.c_str());
     globalSem.delOrderSem(semName);
-    pubAccountStatusRsq(true);
+    pubAccountStatusRsp(identify, field, true);
 }
 
-void StrategyEvent::pubAccountStatusRsq(bool result, const std::string& reason)
+void StrategyEvent::pubAccountStatusRsp(std::string identity, int field, bool result, const std::string& reason)
 {
     strategy_trader::message rsp;
-    auto* accountRsp = rsp.mutable_account_status_rsq();
+    auto* accountRsp = rsp.mutable_account_status_rsp();
     auto& traderSer = TraderSevice::getInstance();
     accountRsp->set_result(result?strategy_trader::Result::success:strategy_trader::Result::failed);
-    accountRsp->set_failedreason(reason);
-    accountRsp->set_level(strategy_trader::Level::ALL);
-    auto& tmpAccountInfo = traderSer.ROLE(Trader).ROLE(TmpStore).accountInfo;
-    auto* filedContent = accountRsp->mutable_filed_content();
+    accountRsp->set_field_name((strategy_trader::AccountFiledReq)field);
 
-    filedContent->set_available(tmpAccountInfo.Available);
-    filedContent->set_balance(tmpAccountInfo.Balance);
-    filedContent->set_biztype(tmpAccountInfo.BizType);
-    filedContent->set_cashin(tmpAccountInfo.CashIn);
-    filedContent->set_closeprofit(tmpAccountInfo.CloseProfit);
-    filedContent->set_commission(tmpAccountInfo.Commission);
-    filedContent->set_credit(tmpAccountInfo.Credit);
-    filedContent->set_currmargin(tmpAccountInfo.CurrMargin);
-    filedContent->set_currencyid(tmpAccountInfo.CurrencyID);
-    filedContent->set_deliverymargin(tmpAccountInfo.DeliveryMargin);
-    filedContent->set_deposit(tmpAccountInfo.Deposit);
-    filedContent->set_exchangedeliverymargin(tmpAccountInfo.ExchangeDeliveryMargin);
-    filedContent->set_exchangemargin(tmpAccountInfo.ExchangeMargin);
-    filedContent->set_frozencash(tmpAccountInfo.FrozenCash);
-    filedContent->set_frozencommission(tmpAccountInfo.FrozenCommission);
-    filedContent->set_frozenmargin(tmpAccountInfo.FrozenMargin);
-    filedContent->set_frozenswap(tmpAccountInfo.FrozenSwap);
-    filedContent->set_fundmortgageavailable(tmpAccountInfo.FundMortgageAvailable);
-    filedContent->set_fundmortgagein(tmpAccountInfo.FundMortgageIn);
-    filedContent->set_fundmortgageout(tmpAccountInfo.FundMortgageOut);
-    filedContent->set_interest(tmpAccountInfo.Interest);
-    filedContent->set_interestbase(tmpAccountInfo.InterestBase);
-    filedContent->set_mortgage(tmpAccountInfo.Mortgage);
-    filedContent->set_mortgageablefund(tmpAccountInfo.MortgageableFund);
-    filedContent->set_positionprofit(tmpAccountInfo.PositionProfit);
-    filedContent->set_prebalance(tmpAccountInfo.PreBalance);
-    filedContent->set_precredit(tmpAccountInfo.PreCredit);
-    filedContent->set_predeposit(tmpAccountInfo.PreDeposit);
-    filedContent->set_prefundmortgagein(tmpAccountInfo.PreFundMortgageIn);
-    filedContent->set_prefundmortgageout(tmpAccountInfo.PreFundMortgageOut);
-    filedContent->set_premargin(tmpAccountInfo.PreMargin);
-    filedContent->set_premortgage(tmpAccountInfo.PreMortgage);
-    filedContent->set_remainswap(tmpAccountInfo.RemainSwap);
-    filedContent->set_reserve(tmpAccountInfo.Reserve);
-    filedContent->set_reservebalance(tmpAccountInfo.ReserveBalance);
-    filedContent->set_settlementid(tmpAccountInfo.SettlementID);
-    filedContent->set_specproductcloseprofit(tmpAccountInfo.SpecProductCloseProfit);
-    filedContent->set_specproductcommission(tmpAccountInfo.SpecProductCommission);
-    filedContent->set_specproductexchangemargin(tmpAccountInfo.SpecProductExchangeMargin);
-    filedContent->set_specproductfrozencommission(tmpAccountInfo.SpecProductFrozenCommission);
-    filedContent->set_specproductfrozenmargin(tmpAccountInfo.SpecProductFrozenMargin);
-    filedContent->set_specproductmargin(tmpAccountInfo.SpecProductMargin);
-    filedContent->set_specproductpositionprofit(tmpAccountInfo.SpecProductPositionProfit);
-    filedContent->set_specproductpositionprofitbyalg(tmpAccountInfo.SpecProductPositionProfitByAlg);
-    filedContent->set_tradingday(tmpAccountInfo.TradingDay);
-    filedContent->set_withdraw(tmpAccountInfo.Withdraw);
-    filedContent->set_withdrawquota(tmpAccountInfo.WithdrawQuota);
+    if (result == true)
+    {
+        auto& tmpAccountInfo = traderSer.ROLE(Trader).ROLE(TmpStore).accountInfo;
+        auto* filedContent = accountRsp->mutable_filed_content();
+
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::Available)
+        {
+            filedContent->set_available(tmpAccountInfo.Available);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::Balance)
+        {
+            filedContent->set_balance(tmpAccountInfo.Balance);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::BizType)
+        {
+            filedContent->set_biztype(tmpAccountInfo.BizType);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::CashIn)
+        {
+            filedContent->set_cashin(tmpAccountInfo.CashIn);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::CloseProfit)
+        {
+            filedContent->set_closeprofit(tmpAccountInfo.CloseProfit);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::Commission)
+        {
+            filedContent->set_commission(tmpAccountInfo.Commission);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::Credit)
+        {
+            filedContent->set_credit(tmpAccountInfo.Credit);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::CurrMargin)
+        {
+            filedContent->set_currmargin(tmpAccountInfo.CurrMargin);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::CurrencyID)
+        {
+            filedContent->set_currencyid(tmpAccountInfo.CurrencyID);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::DeliveryMargin)
+        {
+            filedContent->set_deliverymargin(tmpAccountInfo.DeliveryMargin);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::Deposit)
+        {
+            filedContent->set_deposit(tmpAccountInfo.Deposit);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::ExchangeDeliveryMargin)
+        {
+            filedContent->set_exchangedeliverymargin(tmpAccountInfo.ExchangeDeliveryMargin);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::ExchangeMargin)
+        {
+            filedContent->set_exchangemargin(tmpAccountInfo.ExchangeMargin);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::FrozenCash)
+        {
+            filedContent->set_frozencash(tmpAccountInfo.FrozenCash);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::FrozenCommission)
+        {
+            filedContent->set_frozencommission(tmpAccountInfo.FrozenCommission);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::FrozenMargin)
+        {
+            filedContent->set_frozenmargin(tmpAccountInfo.FrozenMargin);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::FrozenSwap)
+        {
+            filedContent->set_frozenswap(tmpAccountInfo.FrozenSwap);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::FundMortgageAvailable)
+        {
+            filedContent->set_fundmortgageavailable(tmpAccountInfo.FundMortgageAvailable);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::FundMortgageIn)
+        {
+            filedContent->set_fundmortgagein(tmpAccountInfo.FundMortgageIn);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::FundMortgageOut)
+        {
+            filedContent->set_fundmortgageout(tmpAccountInfo.FundMortgageOut);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::Interest)
+        {
+            filedContent->set_interest(tmpAccountInfo.Interest);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::InterestBase)
+        {
+            filedContent->set_interestbase(tmpAccountInfo.InterestBase);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::Mortgage)
+        {
+            filedContent->set_mortgage(tmpAccountInfo.Mortgage);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::MortgageableFund)
+        {
+            filedContent->set_mortgageablefund(tmpAccountInfo.MortgageableFund);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::PositionProfit)
+        {
+            filedContent->set_positionprofit(tmpAccountInfo.PositionProfit);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::PreBalance)
+        {
+            filedContent->set_prebalance(tmpAccountInfo.PreBalance);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::PreCredit)
+        {
+            filedContent->set_precredit(tmpAccountInfo.PreCredit);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::PreDeposit)
+        {
+            filedContent->set_predeposit(tmpAccountInfo.PreDeposit);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::PreFundMortgageIn)
+        {
+            filedContent->set_prefundmortgagein(tmpAccountInfo.PreFundMortgageIn);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::PreFundMortgageOut)
+        {
+            filedContent->set_prefundmortgageout(tmpAccountInfo.PreFundMortgageOut);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::PreMargin)
+        {
+            filedContent->set_premargin(tmpAccountInfo.PreMargin);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::PreMortgage)
+        {
+            filedContent->set_premortgage(tmpAccountInfo.PreMortgage);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::RemainSwap)
+        {
+            filedContent->set_remainswap(tmpAccountInfo.RemainSwap);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::Reserve)
+        {
+            filedContent->set_reserve(tmpAccountInfo.Reserve);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::ReserveBalance)
+        {
+            filedContent->set_reservebalance(tmpAccountInfo.ReserveBalance);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::SettlementID)
+        {
+            filedContent->set_settlementid(tmpAccountInfo.SettlementID);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::SpecProductCloseProfit)
+        {
+            filedContent->set_specproductcloseprofit(tmpAccountInfo.SpecProductCloseProfit);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::SpecProductCommission)
+        {
+            filedContent->set_specproductcommission(tmpAccountInfo.SpecProductCommission);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::SpecProductExchangeMargin)
+        {
+            filedContent->set_specproductexchangemargin(tmpAccountInfo.SpecProductExchangeMargin);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::SpecProductFrozenCommission)
+        {
+            filedContent->set_specproductfrozencommission(tmpAccountInfo.SpecProductFrozenCommission);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::SpecProductFrozenMargin)
+        {
+            filedContent->set_specproductfrozenmargin(tmpAccountInfo.SpecProductFrozenMargin);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::SpecProductMargin)
+        {
+            filedContent->set_specproductmargin(tmpAccountInfo.SpecProductMargin);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::SpecProductPositionProfit)
+        {
+            filedContent->set_specproductpositionprofit(tmpAccountInfo.SpecProductPositionProfit);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::SpecProductPositionProfitByAlg)
+        {
+            filedContent->set_specproductpositionprofitbyalg(tmpAccountInfo.SpecProductPositionProfitByAlg);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::TradingDay)
+        {
+            filedContent->set_tradingday(tmpAccountInfo.TradingDay);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::Withdraw)
+        {
+            filedContent->set_withdraw(tmpAccountInfo.Withdraw);
+        }
+        if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::WithdrawQuota)
+        {
+            filedContent->set_withdrawquota(tmpAccountInfo.WithdrawQuota);
+        }
+    }
+    else
+    {
+        accountRsp->set_failedreason(reason);
+    }
 
     std::string strRsp = rsp.SerializeAsString();
-    std::string head = "strategy_trader.AccountStatusRsq";
+    std::string head = "strategy_trader.AccountStatusRsp." + identity;
     auto& recerSender = RecerSender::getInstance();
     bool sendRes = recerSender.ROLE(Sender).ROLE(ProxySender).send(head.c_str(), strRsp.c_str());
     utils::printProtoMsg(rsp);
@@ -337,25 +431,56 @@ void StrategyEvent::OrderInsertReqHandle(MsgStruct& msg)
     utils::printProtoMsg(reqMsg);
 
     const auto& orderInsertReq = reqMsg.order_insert_req();
-    std::string identity = orderInsertReq.identity();
+    OrderIdentify identity;
+    identity.identity = orderInsertReq.identity();
+    identity.prid = orderInsertReq.process_random_id();
     auto& traderSer = TraderSevice::getInstance();
     if(!traderSer.ROLE(Trader).ROLE(CtpTraderApi).isLogIN)
     {
         ERROR_LOG("ctp not login!");
+        pubOrderInsertRsp(identity, false, ORDER_BUILD_ERROR);
+        return;
+    }
+
+    INFO_LOG("identity[%s] insert begin",identity.identity.c_str());
+    auto& orderManage = traderSer.ROLE(OrderManage);
+    std::string newOrderRef = utils::genOrderRef();
+    if(! orderManage.addOrder(newOrderRef))
+    {
+        ERROR_LOG("add order [%s] to OrderManage error", newOrderRef.c_str());
         pubOrderInsertRsp(identity,false, ORDER_BUILD_ERROR);
         return;
     }
-    auto& innerZmq = InnerZmq::getInstance();
-    innerZmq.pushTask(msg.pbMsg);
+
+    if( ! orderManage.buildOrder(newOrderRef, orderInsertReq))
+    {
+        ERROR_LOG("build order failed, the orderRef is [%s]",newOrderRef.c_str());
+        pubOrderInsertRsp(identity,false,ORDER_BUILD_ERROR);
+        orderManage.delOrder(newOrderRef);
+        return;
+    }
+
+    auto& orderContent = orderManage.getOrderContent(newOrderRef);
+    orderContent.orderRef = newOrderRef;
+    orderContent.identityId.prid  = identity.prid;
+    orderContent.identityId.identity = identity.identity;
+    orderContent.instrumentID = orderContent.ROLE(CThostFtdcInputOrderField).InstrumentID;
+    orderContent.investorId  = orderContent.ROLE(CThostFtdcInputOrderField).InvestorID;
+    orderContent.userId = orderContent.ROLE(CThostFtdcInputOrderField).UserID;
+    auto* traderApi = traderSer.ROLE(Trader).ROLE(CtpTraderApi).traderApi;
+    auto& ctpRspResultMonitor = InsertResult::getInstance();
+    ctpRspResultMonitor.addResultMonitor(newOrderRef);
+    auto* newOrder = orderManage.getOrder(newOrderRef);
+    traderApi->ReqOrderInsert(newOrder);
 
     return;
 }
 
-void StrategyEvent::pubOrderInsertRsp(std::string identity, bool result, std::string reason)
+void StrategyEvent::pubOrderInsertRsp(OrderIdentify identity, bool result, std::string reason)
 {
     strategy_trader::message rsp;
     auto* insertRsp = rsp.mutable_order_insert_rsp();
-    insertRsp->set_identity(identity);
+    insertRsp->set_identity(identity.identity);
     auto rspResult = result ? strategy_trader::Result::success : strategy_trader::Result::failed;
     insertRsp->set_result(rspResult);
     if(result)
@@ -363,15 +488,15 @@ void StrategyEvent::pubOrderInsertRsp(std::string identity, bool result, std::st
         auto* succInfo = insertRsp->mutable_info();
         if(succInfo == nullptr)
         {
-            ERROR_LOG("mutable_info error! identity[%s]", identity.c_str());
+            ERROR_LOG("mutable_info error! identity[%s]", identity.identity.c_str());
             return;
         }
         auto& traderSer = TraderSevice::getInstance();
         auto& orderManage = traderSer.ROLE(OrderManage);
-        auto& orderContent = orderManage.getOrderCOntentByIdentityId(identity);
+        auto& orderContent = orderManage.getOrderCOntentByIdentityId(identity.identity);
         if(!orderContent.isValid())
         {
-            ERROR_LOG("OnRtnTrade can not find order in local, identity[%s]",identity.c_str());
+            ERROR_LOG("OnRtnTrade can not find order in local, identity[%s]",identity.identity.c_str());
             return;
         }
         succInfo->set_orderprice(utils::doubleToStringConvert(orderContent.tradedOrder.price));
@@ -395,7 +520,7 @@ void StrategyEvent::pubOrderInsertRsp(std::string identity, bool result, std::st
     }
 
     std::string strRsp = rsp.SerializeAsString();
-    std::string head = "strategy_trader.OrderInsertRsp";
+    std::string head = "strategy_trader.OrderInsertRsp." + identity.prid;
     auto& recerSender = RecerSender::getInstance();
     bool sendRes = recerSender.ROLE(Sender).ROLE(ProxySender).send(head.c_str(), strRsp.c_str());
     utils::printProtoMsg(rsp);
@@ -408,13 +533,140 @@ void StrategyEvent::pubOrderInsertRsp(std::string identity, bool result, std::st
     if(result)
     {
         std::string fileName{""}, instrumentId{""};
-        if(saveAttachment(identity, fileName, instrumentId))
+        if(saveAttachment(identity.identity, fileName, instrumentId))
         {
             auto sendfunc = [=](){
                 sendEail(fileName, instrumentId);
             };
             std::thread(sendfunc).detach();
         }
+    }
+    return;
+}
+
+void StrategyEvent::MarginRateReqHandle(MsgStruct& msg)
+{
+    strategy_trader::message reqMsg;
+    reqMsg.ParseFromString(msg.pbMsg);
+    utils::printProtoMsg(reqMsg);
+    auto identify = reqMsg.margin_rate_req().process_random_id();
+    auto& traderSer = TraderSevice::getInstance();
+    if(!traderSer.ROLE(Trader).ROLE(CtpTraderApi).isLogIN)
+    {
+        ERROR_LOG("ctp not login!");
+        pubMarginRateRsp(identify, false, "ctp_logout");
+        return;
+    }
+
+    traderSer.ROLE(Trader).ROLE(TmpStore).marginRate.ProcessRandomId = identify;
+    utils::InstrumtntID ins_exch;
+    ins_exch.ins = reqMsg.margin_rate_req().instrument_info().instrument_id();
+    ins_exch.exch = reqMsg.margin_rate_req().instrument_info().exchange_id();
+    auto* traderApi = traderSer.ROLE(Trader).ROLE(CtpTraderApi).traderApi;
+    traderApi->ReqQryInstrumentMarginRate(ins_exch);
+    std::string semName = "margin_rate";
+    globalSem.waitSemBySemName(semName);
+    INFO_LOG("waitSemBySemName [%s] ok",semName.c_str());
+    globalSem.delOrderSem(semName);
+    pubMarginRateRsp(identify, true);
+}
+
+void StrategyEvent::pubMarginRateRsp(std::string identity, bool result, const std::string& reason)
+{
+    strategy_trader::message rsp;
+    auto* marginRateRsp = rsp.mutable_margin_rate_rsp();
+    auto& traderSer = TraderSevice::getInstance();
+    marginRateRsp->set_result(result?strategy_trader::Result::success:strategy_trader::Result::failed);
+
+    //string LongMarginRatioByMoney = 1;                      ///多头保证金率
+    //string LongMarginRatioByVolume = 2;                     ///多头保证金费
+    //string ShortMarginRatioByMoney = 3;                     ///空头保证金率
+    //string ShortMarginRatioByVolume = 4;                    ///空头保证金费
+
+    if (result == true)
+    {
+        auto& marginRateInfo = traderSer.ROLE(Trader).ROLE(TmpStore).marginRate;
+        marginRateRsp->set_longmarginratiobymoney(marginRateInfo.LongMarginRatioByMoney);
+        marginRateRsp->set_longmarginratiobyvolume(marginRateInfo.LongMarginRatioByVolume);
+        marginRateRsp->set_shortmarginratiobymoney(marginRateInfo.ShortMarginRatioByMoney);
+        marginRateRsp->set_shortmarginratiobyvolume(marginRateInfo.ShortMarginRatioByVolume);
+    }
+    else
+    {
+        marginRateRsp->set_failedreason(reason);
+    }
+
+    std::string strRsp = rsp.SerializeAsString();
+    std::string head = "strategy_trader.MarginRateRsp." + identity;
+    auto& recerSender = RecerSender::getInstance();
+    bool sendRes = recerSender.ROLE(Sender).ROLE(ProxySender).send(head.c_str(), strRsp.c_str());
+    utils::printProtoMsg(rsp);
+    if(!sendRes)
+    {
+        ERROR_LOG("send OrderInsertRsp error");
+        return;
+    }
+    return;
+}
+
+void StrategyEvent::CommissionRateReqHandle(MsgStruct& msg)
+{
+    strategy_trader::message reqMsg;
+    reqMsg.ParseFromString(msg.pbMsg);
+    utils::printProtoMsg(reqMsg);
+    auto identify = reqMsg.commission_rate_req().process_random_id();
+    auto& traderSer = TraderSevice::getInstance();
+    if(!traderSer.ROLE(Trader).ROLE(CtpTraderApi).isLogIN)
+    {
+        ERROR_LOG("ctp not login!");
+        pubCommissionRateRsp(identify, false, "ctp_logout");
+        return;
+    }
+
+    traderSer.ROLE(Trader).ROLE(TmpStore).commissionRate.ProcessRandomId = identify;
+    utils::InstrumtntID ins_exch;
+    ins_exch.ins = reqMsg.commission_rate_req().instrument_info().instrument_id();
+    ins_exch.exch = reqMsg.commission_rate_req().instrument_info().exchange_id();
+    auto* traderApi = traderSer.ROLE(Trader).ROLE(CtpTraderApi).traderApi;
+    traderApi->ReqQryInstrumentCommissionRate(ins_exch);
+    std::string semName = "commission_rate";
+    globalSem.waitSemBySemName(semName);
+    INFO_LOG("waitSemBySemName [%s] ok",semName.c_str());
+    globalSem.delOrderSem(semName);
+    pubCommissionRateRsp(identify, true);
+}
+
+void StrategyEvent::pubCommissionRateRsp(std::string identity, bool result, const std::string& reason)
+{
+    strategy_trader::message rsp;
+    auto* commissionRateRsp = rsp.mutable_commission_rate_rsp();
+    auto& traderSer = TraderSevice::getInstance();
+    commissionRateRsp->set_result(result?strategy_trader::Result::success:strategy_trader::Result::failed);
+
+    if (result == true)
+    {
+        auto& commissionRateInfo = traderSer.ROLE(Trader).ROLE(TmpStore).commissionRate;
+        commissionRateRsp->set_openratiobymoney(commissionRateInfo.OpenRatioByMoney);
+        commissionRateRsp->set_openratiobyvolume(commissionRateInfo.OpenRatioByVolume);
+        commissionRateRsp->set_closeratiobymoney(commissionRateInfo.CloseRatioByMoney);
+        commissionRateRsp->set_closeratiobyvolume(commissionRateInfo.CloseRatioByVolume);
+        commissionRateRsp->set_closetodayratiobymoney(commissionRateInfo.CloseTodayRatioByMoney);
+        commissionRateRsp->set_closetodayratiobyvolume(commissionRateInfo.CloseTodayRatioByVolume);
+    }
+    else
+    {
+        commissionRateRsp->set_failedreason(reason);
+    }
+
+    std::string strRsp = rsp.SerializeAsString();
+    std::string head = "strategy_trader.CommissionRateRsp." + identity;
+    auto& recerSender = RecerSender::getInstance();
+    bool sendRes = recerSender.ROLE(Sender).ROLE(ProxySender).send(head.c_str(), strRsp.c_str());
+    utils::printProtoMsg(rsp);
+    if(!sendRes)
+    {
+        ERROR_LOG("send OrderInsertRsp error");
+        return;
     }
     return;
 }

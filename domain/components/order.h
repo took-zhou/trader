@@ -25,9 +25,15 @@ struct TradedOrder
     std::string time{"unknow"};
 };
 
+struct OrderIdentify
+{
+    std::string prid            {"unknow"};        // 策略进程随机标识
+    std::string identity        {"unknow"};    // 订单随机标识
+};
+
 struct OrderContent : CThostFtdcInputOrderField
 {
-    std::string identityId      {"unknow"};
+    OrderIdentify identityId;
     std::string orderRef        {"unknow"};
     int frontId                 {INVALID_S32};
     int sessionId               {INVALID_S32};
@@ -43,7 +49,7 @@ struct OrderContent : CThostFtdcInputOrderField
     TradedOrder tradedOrder;
     bool isValid() const
     {
-        return identityId!= std::string("");
+        return identityId.identity!= std::string("");
     };
     IMPL_ROLE(CThostFtdcInputOrderField);
 };

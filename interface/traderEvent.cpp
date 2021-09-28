@@ -60,19 +60,20 @@ bool TraderEvent::run()
                 // ERROR_LOG(" invalid msg, session is [%s], msgName is [%s]",msg.sessionName.c_str(), msg.msgName.c_str());
                 continue;
             }
-            auto eventFunc = [this, msg]{
-                if(sessionFuncMap.find(msg.sessionName) != sessionFuncMap.end())
-                {
-                    sessionFuncMap[msg.sessionName](msg);
-                    return;
-                }
+
+            if(sessionFuncMap.find(msg.sessionName) != sessionFuncMap.end())
+            {
+                sessionFuncMap[msg.sessionName](msg);
+            }
+            else
+            {
                 ERROR_LOG("can not find[%s] in sessionFuncMap",msg.sessionName.c_str());
-            };
-            std::thread(eventFunc).detach();
+            }
         }
     };
     INFO_LOG("proxyRecRun prepare ok");
     std::thread(proxyRecRun).detach();   // zmq 在libgo的携程里会跑死，单独拎出来一个线程。
+
     auto ctpRecRun = [&](){
         MsgStruct msg;
         while(1)
@@ -85,13 +86,15 @@ bool TraderEvent::run()
                 ERROR_LOG(" invalid msg, session is [%s], msgName is [%s]",msg.sessionName.c_str(), msg.msgName.c_str());
                 continue;
             }
-            auto eventFunc = [this, msg]{
-                if(sessionFuncMap.find(msg.sessionName) != sessionFuncMap.end())
-                {
-                    sessionFuncMap[msg.sessionName](msg);
-                }
-            };
-            std::thread(eventFunc).detach();
+
+            if(sessionFuncMap.find(msg.sessionName) != sessionFuncMap.end())
+            {
+                sessionFuncMap[msg.sessionName](msg);
+            }
+            else
+            {
+                ERROR_LOG("can not find[%s] in sessionFuncMap",msg.sessionName.c_str());
+            }
         }
     };
     INFO_LOG("ctpRecRun prepare ok");

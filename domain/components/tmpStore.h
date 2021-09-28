@@ -11,6 +11,7 @@
 
 struct AccountInfo
 {
+    std::string ProcessRandomId   {""};                   ///请求进程标识
     std::string PreCredit         {""};                   ///上次信用额度
     std::string PreDeposit        {""};                   ///上次存款额
     std::string PreBalance        {""};                   ///上次结算准备金
@@ -60,9 +61,31 @@ struct AccountInfo
     std::string PreMortgage               {""};          ///上次质押金额
 };
 
+struct MarginRate
+{
+    std::string ProcessRandomId             {""};                    ///请求进程标识
+    std::string LongMarginRatioByMoney      {""};                    ///多头保证金率
+    std::string LongMarginRatioByVolume     {""};                    ///多头保证金费
+    std::string ShortMarginRatioByMoney     {""};                    ///空头保证金率
+    std::string ShortMarginRatioByVolume    {""};                    ///空头保证金费
+};
+
+struct CommissionRate
+{
+    std::string ProcessRandomId         {""};                 ///请求进程标识
+    std::string OpenRatioByMoney        {""};                 ///开仓手续费率
+    std::string OpenRatioByVolume       {""};                 ///开仓手续费
+    std::string CloseRatioByMoney       {""};                 ///平仓手续费率
+    std::string CloseRatioByVolume      {""};                 ///平仓手续费
+    std::string CloseTodayRatioByMoney  {""};                 ///平今手续费率
+    std::string CloseTodayRatioByVolume {""};                 ///平今手续费
+};
+
 struct TmpStore
 {
     AccountInfo accountInfo;
+    MarginRate marginRate;
+    CommissionRate commissionRate;
 };
 
 
