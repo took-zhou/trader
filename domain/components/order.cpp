@@ -312,12 +312,14 @@ bool OrderSave::saveSuccCancelOrder(OrderContent& order, std::string reason)
         ERROR_LOG("open file[%s] failed",filePath.c_str());
         return false;
     }
+    saveContent += order.userId+",";
     saveContent += order.identityId.identity+",";
     saveContent += utils::intToString(order.frontId)+",";
     saveContent += utils::intToString(order.sessionId)+",";
     saveContent += order.orderRef+",";
     saveContent += order.instrumentID+",";
     saveContent += utils::doubleToStringConvert(order.tradedOrder.price)+",";
+    saveContent += order.tradedOrder.date+",";
     saveContent += order.tradedOrder.time+",";
     std::string direction = order.ROLE(CThostFtdcInputOrderField).Direction == THOST_FTDC_D_Buy? "buy":"sell";
     saveContent += direction+",";
@@ -352,12 +354,14 @@ bool OrderSave::saveSuccessOrderInsert(OrderContent& order)
         ERROR_LOG("open file[%s] failed",filePath.c_str());
         return false;
     }
+    saveContent += order.userId+",";
     saveContent += order.identityId.identity+",";
     saveContent += utils::intToString(order.frontId)+",";
     saveContent += utils::intToString(order.sessionId)+",";
     saveContent += order.orderRef+",";
     saveContent += order.instrumentID+",";
     saveContent += utils::doubleToStringConvert(order.tradedOrder.price)+",";
+    saveContent += order.tradedOrder.date+",";
     saveContent += order.tradedOrder.time+",";
     saveContent += order.tradedOrder.direction+",";
     saveContent += utils::intToString(order.tradedOrder.volume)+"\n";

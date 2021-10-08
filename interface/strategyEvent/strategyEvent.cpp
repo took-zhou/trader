@@ -59,9 +59,11 @@ namespace{
             ERROR_LOG("open file[%s] failed",fileName.c_str());
             return false;
         }
+        saveContent += "账户：" +orderContent.userId+"\n";
         saveContent += "合约：       "    +orderContent.instrumentID+"\n";
         saveContent += "下单价格："  +utils::doubleToStringConvert(orderContent.LimitPrice)+"\n";
         saveContent += "成交价格："  +utils::doubleToStringConvert(orderContent.tradedOrder.price)+"\n";
+        saveContent += "成交日期："+orderContent.tradedOrder.date+"\n";
         saveContent += "成交时间："+orderContent.tradedOrder.time+"\n";
         saveContent += "方向：       "    +orderContent.tradedOrder.direction+"\n";
         saveContent += "下单数量："+utils::intToString(orderContent.VolumeTotalOriginal)+"\n";
