@@ -198,11 +198,24 @@ void StrategyEvent::AccountStatusReqHandle(MsgStruct& msg)
 
     traderSer.ROLE(Trader).ROLE(TmpStore).accountInfo.ProcessRandomId = identify;
     auto* traderApi = traderSer.ROLE(Trader).ROLE(CtpTraderApi).traderApi;
-    traderApi->ReqQryTradingAccount();
+
+    if (traderApi->ReqQryTradingAccount() != 0)
+    {
+        ERROR_LOG("req error!");
+        pubAccountStatusRsp(identify, field, false, "req error");
+        return;
+    }
+
     std::string semName = "trader_ReqQryTradingAccount";
     globalSem.waitSemBySemName(semName);
     INFO_LOG("waitSemBySemName [%s] ok",semName.c_str());
     globalSem.delOrderSem(semName);
+
+    if (traderSer.ROLE(Trader).ROLE(TmpStore).accountInfo.rsp_is_null == true)
+    {
+        pubAccountStatusRsp(identify, field, false, "rsp is null");
+        return;
+    }
     pubAccountStatusRsp(identify, field, true);
 }
 
@@ -565,11 +578,25 @@ void StrategyEvent::MarginRateReqHandle(MsgStruct& msg)
     ins_exch.ins = reqMsg.margin_rate_req().instrument_info().instrument_id();
     ins_exch.exch = reqMsg.margin_rate_req().instrument_info().exchange_id();
     auto* traderApi = traderSer.ROLE(Trader).ROLE(CtpTraderApi).traderApi;
-    traderApi->ReqQryInstrumentMarginRate(ins_exch);
+
+    if (traderApi->ReqQryInstrumentMarginRate(ins_exch) != 0)
+    {
+        ERROR_LOG("req error!");
+        pubMarginRateRsp(identify, false, "req error");
+        return;
+    }
+
     std::string semName = "margin_rate";
     globalSem.waitSemBySemName(semName);
     INFO_LOG("waitSemBySemName [%s] ok",semName.c_str());
     globalSem.delOrderSem(semName);
+
+    if (traderSer.ROLE(Trader).ROLE(TmpStore).marginRate.rsp_is_null == true)
+    {
+        pubMarginRateRsp(identify, false, "rsp is null");
+        return;
+    }
+
     pubMarginRateRsp(identify, true);
 }
 
@@ -579,11 +606,6 @@ void StrategyEvent::pubMarginRateRsp(std::string identity, bool result, const st
     auto* marginRateRsp = rsp.mutable_margin_rate_rsp();
     auto& traderSer = TraderSevice::getInstance();
     marginRateRsp->set_result(result?strategy_trader::Result::success:strategy_trader::Result::failed);
-
-    //string LongMarginRatioByMoney = 1;                      ///多头保证金率
-    //string LongMarginRatioByVolume = 2;                     ///多头保证金费
-    //string ShortMarginRatioByMoney = 3;                     ///空头保证金率
-    //string ShortMarginRatioByVolume = 4;                    ///空头保证金费
 
     if (result == true)
     {
@@ -630,11 +652,25 @@ void StrategyEvent::CommissionRateReqHandle(MsgStruct& msg)
     ins_exch.ins = reqMsg.commission_rate_req().instrument_info().instrument_id();
     ins_exch.exch = reqMsg.commission_rate_req().instrument_info().exchange_id();
     auto* traderApi = traderSer.ROLE(Trader).ROLE(CtpTraderApi).traderApi;
-    traderApi->ReqQryInstrumentCommissionRate(ins_exch);
+
+    if (traderApi->ReqQryInstrumentCommissionRate(ins_exch) != 0)
+    {
+        ERROR_LOG("req error!");
+        pubCommissionRateRsp(identify, false, "req error");
+        return;
+    }
+
     std::string semName = "commission_rate";
     globalSem.waitSemBySemName(semName);
     INFO_LOG("waitSemBySemName [%s] ok",semName.c_str());
     globalSem.delOrderSem(semName);
+
+    if (traderSer.ROLE(Trader).ROLE(TmpStore).commissionRate.rsp_is_null == true)
+    {
+        pubCommissionRateRsp(identify, false, "rsp is null");
+        return;
+    }
+
     pubCommissionRateRsp(identify, true);
 }
 

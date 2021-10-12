@@ -7,11 +7,15 @@
 #include "trader/infra/zmqBase.h"
 #include "common/extern/libzmq/include/zhelpers.h"
 #include "common/extern/log/log.h"
-#include <map>
+#include "common/extern/libgo/libgo/libgo.h"
 #include "common/self/utils.h"
+
+#include <map>
 
 extern MsgStruct NilMsgStruct;
 extern std::map<std::string, EventType> TitleToEvent;
+extern co_chan<MsgStruct> orderMsgChan;
+extern co_chan<MsgStruct> queryMsgChan;
 
 void ProxyRecer::init()
 {
@@ -37,7 +41,6 @@ void ProxyRecer::init()
 
     INFO_LOG("sub topics ok");
 }
-
 
 bool ProxyRecer::checkSessionAndTitle(std::vector<std::string>& sessionAndTitle)
 {
@@ -94,6 +97,15 @@ MsgStruct ProxyRecer::receMsg()
     msg.sessionName = session;
     msg.msgName = msgTitle;
     msg.pbMsg = pbMsg;
-    INFO_LOG("return msg");
+
+    if (strstr(msgTitle.c_str(), "Order") == NULL)
+    {
+        queryMsgChan << msg;
+    }
+    else
+    {
+        orderMsgChan << msg;
+    }
+
     return msg;
 }

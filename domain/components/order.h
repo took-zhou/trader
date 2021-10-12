@@ -49,7 +49,7 @@ struct OrderContent : CThostFtdcInputOrderField
     TradedOrder tradedOrder;
     bool isValid() const
     {
-        return identityId.identity!= std::string("");
+        return (identityId.identity != std::string("") && identityId.identity != std::string("unknow"));
     };
     IMPL_ROLE(CThostFtdcInputOrderField);
 };

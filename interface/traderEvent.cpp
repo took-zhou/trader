@@ -8,13 +8,16 @@
 #include "trader/interface/traderEvent.h"
 #include "common/extern/libgo/libgo/libgo.h"
 #include "trader/infra/recerSender.h"
-
 #include "trader/domain/traderService.h"
+
 #include <thread>
 #include <chrono>
 
 extern co_chan<MsgStruct> ctpMsgChan;
+extern co_chan<MsgStruct> orderMsgChan;
+extern co_chan<MsgStruct> queryMsgChan;
 constexpr U32 MAIN_THREAD_WAIT_TIME = 100000;
+constexpr U32 RSP_HANDLE_THREAD_WAIT_TIME = 1000000;
 
 void TraderEvent::regSessionFunc()
 {
@@ -53,11 +56,22 @@ bool TraderEvent::run()
         while(1)
         {
             INFO_LOG("proxyRecRun while");
-            MsgStruct msg = recerSender.ROLE(Recer).ROLE(ProxyRecer).receMsg();
-            INFO_LOG("handle new msg, session is[%s],msgName is[%s]",msg.sessionName.c_str(), msg.msgName.c_str());
+            recerSender.ROLE(Recer).ROLE(ProxyRecer).receMsg();
+        }
+    };
+    INFO_LOG("proxyRecRun prepare ok");
+    std::thread(proxyRecRun).detach();   // zmq 在libgo的携程里会跑死，单独拎出来一个线程。
+
+    auto orderRecRun = [&](){
+        MsgStruct msg;
+        while(1)
+        {
+            //INFO_LOG("orderRecRun while");
+            orderMsgChan >> msg;
+            //INFO_LOG("hai*************msg name[%s]",msg.msgName.c_str());
             if(! msg.isValid())
             {
-                // ERROR_LOG(" invalid msg, session is [%s], msgName is [%s]",msg.sessionName.c_str(), msg.msgName.c_str());
+                ERROR_LOG(" invalid msg, session is [%s], msgName is [%s]",msg.sessionName.c_str(), msg.msgName.c_str());
                 continue;
             }
 
@@ -71,8 +85,35 @@ bool TraderEvent::run()
             }
         }
     };
-    INFO_LOG("proxyRecRun prepare ok");
-    std::thread(proxyRecRun).detach();   // zmq 在libgo的携程里会跑死，单独拎出来一个线程。
+    INFO_LOG("orderRecRun prepare ok");
+    std::thread(orderRecRun).detach();
+
+    auto queryRecRun = [&](){
+        MsgStruct msg;
+        while(1)
+        {
+            //INFO_LOG("queryRecRun while");
+            queryMsgChan >> msg;
+            //INFO_LOG("hai*************msg name[%s]",msg.msgName.c_str());
+            if(! msg.isValid())
+            {
+                ERROR_LOG(" invalid msg, session is [%s], msgName is [%s]",msg.sessionName.c_str(), msg.msgName.c_str());
+                continue;
+            }
+
+            if(sessionFuncMap.find(msg.sessionName) != sessionFuncMap.end())
+            {
+                sessionFuncMap[msg.sessionName](msg);
+                usleep(RSP_HANDLE_THREAD_WAIT_TIME);
+            }
+            else
+            {
+                ERROR_LOG("can not find[%s] in sessionFuncMap",msg.sessionName.c_str());
+            }
+        }
+    };
+    INFO_LOG("queryRecRun prepare ok");
+    std::thread(queryRecRun).detach();
 
     auto ctpRecRun = [&](){
         MsgStruct msg;

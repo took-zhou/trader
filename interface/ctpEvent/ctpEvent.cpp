@@ -115,61 +115,65 @@ void CtpEvent::OnRspOrderActionHandle(MsgStruct& msg)
 void CtpEvent::OnRspQryTradingAccountHandle(MsgStruct& msg)
 {
     CThostFtdcTradingAccountField* tradeAccount = static_cast<CThostFtdcTradingAccountField*>(msg.ctpMsg);
-    CThostFtdcTradingAccountField tmp = *tradeAccount;
-    CThostFtdcTradingAccountField* pTradingAccount = &tmp;//(CThostFtdcTradingAccountField*)msg.ctpMsg;
-    delete tradeAccount;
-   // 目前只支持全量响应, 精确响应需要设置临时变量，以后根据需要再做适配
-
     auto& traderSer = TraderSevice::getInstance();
     auto& tmpAccountInfo = traderSer.ROLE(Trader).ROLE(TmpStore).accountInfo;
 
-    tmpAccountInfo.Available = utils::doubleToStringConvert(pTradingAccount->Available);
-    tmpAccountInfo.Balance = utils::doubleToStringConvert(pTradingAccount->Balance);
-    tmpAccountInfo.BizType = utils::doubleToStringConvert(pTradingAccount->BizType);
-    tmpAccountInfo.CashIn = utils::doubleToStringConvert(pTradingAccount->CashIn);
-    tmpAccountInfo.CloseProfit = utils::doubleToStringConvert(pTradingAccount->CloseProfit);
-    tmpAccountInfo.Commission = utils::doubleToStringConvert(pTradingAccount->Commission);
-    tmpAccountInfo.Credit = utils::doubleToStringConvert(pTradingAccount->Credit);
-    tmpAccountInfo.CurrMargin = utils::doubleToStringConvert(pTradingAccount->CurrMargin);
-    tmpAccountInfo.CurrencyID = pTradingAccount->CurrencyID;
-    tmpAccountInfo.DeliveryMargin = utils::doubleToStringConvert(pTradingAccount->DeliveryMargin);
-    tmpAccountInfo.Deposit = utils::doubleToStringConvert(pTradingAccount->Deposit);
-    tmpAccountInfo.ExchangeDeliveryMargin = utils::doubleToStringConvert(pTradingAccount->ExchangeDeliveryMargin);
-    tmpAccountInfo.ExchangeMargin = utils::doubleToStringConvert(pTradingAccount->ExchangeMargin);
-    tmpAccountInfo.FrozenCash = utils::doubleToStringConvert(pTradingAccount->FrozenCash);
-    tmpAccountInfo.FrozenCommission = utils::doubleToStringConvert(pTradingAccount->FrozenCommission);
-    tmpAccountInfo.FrozenMargin = utils::doubleToStringConvert(pTradingAccount->FrozenMargin);
-    tmpAccountInfo.FrozenSwap = utils::doubleToStringConvert(pTradingAccount->FrozenSwap);
-    tmpAccountInfo.FundMortgageAvailable = utils::doubleToStringConvert(pTradingAccount->FundMortgageAvailable);
-    tmpAccountInfo.FundMortgageIn = utils::doubleToStringConvert(pTradingAccount->FundMortgageIn);
-    tmpAccountInfo.FundMortgageOut = utils::doubleToStringConvert(pTradingAccount->FundMortgageOut);
-    tmpAccountInfo.Interest = utils::doubleToStringConvert(pTradingAccount->Interest);
-    tmpAccountInfo.InterestBase = utils::doubleToStringConvert(pTradingAccount->InterestBase);
-    tmpAccountInfo.Mortgage = utils::doubleToStringConvert(pTradingAccount->Mortgage);
-    tmpAccountInfo.MortgageableFund = utils::doubleToStringConvert(pTradingAccount->MortgageableFund);
-    tmpAccountInfo.PositionProfit = utils::doubleToStringConvert(pTradingAccount->PositionProfit);
-    tmpAccountInfo.PreBalance = utils::doubleToStringConvert(pTradingAccount->PreBalance);
-    tmpAccountInfo.PreCredit = utils::doubleToStringConvert(pTradingAccount->PreCredit);
-    tmpAccountInfo.PreDeposit = utils::doubleToStringConvert(pTradingAccount->PreDeposit);
-    tmpAccountInfo.PreFundMortgageIn = utils::doubleToStringConvert(pTradingAccount->PreFundMortgageIn);
-    tmpAccountInfo.PreFundMortgageOut = utils::doubleToStringConvert(pTradingAccount->PreFundMortgageOut);
-    tmpAccountInfo.PreMargin = utils::doubleToStringConvert(pTradingAccount->PreMargin);
-    tmpAccountInfo.PreMortgage = utils::doubleToStringConvert(pTradingAccount->PreMortgage);
-    tmpAccountInfo.RemainSwap = utils::doubleToStringConvert(pTradingAccount->RemainSwap);
-    tmpAccountInfo.Reserve = utils::doubleToStringConvert(pTradingAccount->Reserve);
-    tmpAccountInfo.ReserveBalance = utils::doubleToStringConvert(pTradingAccount->ReserveBalance);
-    tmpAccountInfo.SettlementID = utils::doubleToStringConvert(pTradingAccount->SettlementID);
-    tmpAccountInfo.SpecProductCloseProfit = utils::doubleToStringConvert(pTradingAccount->SpecProductCloseProfit);
-    tmpAccountInfo.SpecProductCommission = utils::doubleToStringConvert(pTradingAccount->SpecProductCommission);
-    tmpAccountInfo.SpecProductExchangeMargin = utils::doubleToStringConvert(pTradingAccount->SpecProductExchangeMargin);
-    tmpAccountInfo.SpecProductFrozenCommission = utils::doubleToStringConvert(pTradingAccount->SpecProductFrozenCommission);
-    tmpAccountInfo.SpecProductFrozenMargin = utils::doubleToStringConvert(pTradingAccount->SpecProductFrozenMargin);
-    tmpAccountInfo.SpecProductMargin = utils::doubleToStringConvert(pTradingAccount->SpecProductMargin);
-    tmpAccountInfo.SpecProductPositionProfit = utils::doubleToStringConvert(pTradingAccount->SpecProductPositionProfit);
-    tmpAccountInfo.SpecProductPositionProfitByAlg = utils::doubleToStringConvert(pTradingAccount->SpecProductPositionProfitByAlg);
-    tmpAccountInfo.TradingDay = pTradingAccount->TradingDay;
-    tmpAccountInfo.Withdraw = utils::doubleToStringConvert(pTradingAccount->Withdraw);
-    tmpAccountInfo.WithdrawQuota = utils::doubleToStringConvert(pTradingAccount->WithdrawQuota);
+    if (tradeAccount)
+    {
+        tmpAccountInfo.Available = utils::doubleToStringConvert(tradeAccount->Available);
+        tmpAccountInfo.Balance = utils::doubleToStringConvert(tradeAccount->Balance);
+        tmpAccountInfo.BizType = utils::doubleToStringConvert(tradeAccount->BizType);
+        tmpAccountInfo.CashIn = utils::doubleToStringConvert(tradeAccount->CashIn);
+        tmpAccountInfo.CloseProfit = utils::doubleToStringConvert(tradeAccount->CloseProfit);
+        tmpAccountInfo.Commission = utils::doubleToStringConvert(tradeAccount->Commission);
+        tmpAccountInfo.Credit = utils::doubleToStringConvert(tradeAccount->Credit);
+        tmpAccountInfo.CurrMargin = utils::doubleToStringConvert(tradeAccount->CurrMargin);
+        tmpAccountInfo.CurrencyID = tradeAccount->CurrencyID;
+        tmpAccountInfo.DeliveryMargin = utils::doubleToStringConvert(tradeAccount->DeliveryMargin);
+        tmpAccountInfo.Deposit = utils::doubleToStringConvert(tradeAccount->Deposit);
+        tmpAccountInfo.ExchangeDeliveryMargin = utils::doubleToStringConvert(tradeAccount->ExchangeDeliveryMargin);
+        tmpAccountInfo.ExchangeMargin = utils::doubleToStringConvert(tradeAccount->ExchangeMargin);
+        tmpAccountInfo.FrozenCash = utils::doubleToStringConvert(tradeAccount->FrozenCash);
+        tmpAccountInfo.FrozenCommission = utils::doubleToStringConvert(tradeAccount->FrozenCommission);
+        tmpAccountInfo.FrozenMargin = utils::doubleToStringConvert(tradeAccount->FrozenMargin);
+        tmpAccountInfo.FrozenSwap = utils::doubleToStringConvert(tradeAccount->FrozenSwap);
+        tmpAccountInfo.FundMortgageAvailable = utils::doubleToStringConvert(tradeAccount->FundMortgageAvailable);
+        tmpAccountInfo.FundMortgageIn = utils::doubleToStringConvert(tradeAccount->FundMortgageIn);
+        tmpAccountInfo.FundMortgageOut = utils::doubleToStringConvert(tradeAccount->FundMortgageOut);
+        tmpAccountInfo.Interest = utils::doubleToStringConvert(tradeAccount->Interest);
+        tmpAccountInfo.InterestBase = utils::doubleToStringConvert(tradeAccount->InterestBase);
+        tmpAccountInfo.Mortgage = utils::doubleToStringConvert(tradeAccount->Mortgage);
+        tmpAccountInfo.MortgageableFund = utils::doubleToStringConvert(tradeAccount->MortgageableFund);
+        tmpAccountInfo.PositionProfit = utils::doubleToStringConvert(tradeAccount->PositionProfit);
+        tmpAccountInfo.PreBalance = utils::doubleToStringConvert(tradeAccount->PreBalance);
+        tmpAccountInfo.PreCredit = utils::doubleToStringConvert(tradeAccount->PreCredit);
+        tmpAccountInfo.PreDeposit = utils::doubleToStringConvert(tradeAccount->PreDeposit);
+        tmpAccountInfo.PreFundMortgageIn = utils::doubleToStringConvert(tradeAccount->PreFundMortgageIn);
+        tmpAccountInfo.PreFundMortgageOut = utils::doubleToStringConvert(tradeAccount->PreFundMortgageOut);
+        tmpAccountInfo.PreMargin = utils::doubleToStringConvert(tradeAccount->PreMargin);
+        tmpAccountInfo.PreMortgage = utils::doubleToStringConvert(tradeAccount->PreMortgage);
+        tmpAccountInfo.RemainSwap = utils::doubleToStringConvert(tradeAccount->RemainSwap);
+        tmpAccountInfo.Reserve = utils::doubleToStringConvert(tradeAccount->Reserve);
+        tmpAccountInfo.ReserveBalance = utils::doubleToStringConvert(tradeAccount->ReserveBalance);
+        tmpAccountInfo.SettlementID = utils::doubleToStringConvert(tradeAccount->SettlementID);
+        tmpAccountInfo.SpecProductCloseProfit = utils::doubleToStringConvert(tradeAccount->SpecProductCloseProfit);
+        tmpAccountInfo.SpecProductCommission = utils::doubleToStringConvert(tradeAccount->SpecProductCommission);
+        tmpAccountInfo.SpecProductExchangeMargin = utils::doubleToStringConvert(tradeAccount->SpecProductExchangeMargin);
+        tmpAccountInfo.SpecProductFrozenCommission = utils::doubleToStringConvert(tradeAccount->SpecProductFrozenCommission);
+        tmpAccountInfo.SpecProductFrozenMargin = utils::doubleToStringConvert(tradeAccount->SpecProductFrozenMargin);
+        tmpAccountInfo.SpecProductMargin = utils::doubleToStringConvert(tradeAccount->SpecProductMargin);
+        tmpAccountInfo.SpecProductPositionProfit = utils::doubleToStringConvert(tradeAccount->SpecProductPositionProfit);
+        tmpAccountInfo.SpecProductPositionProfitByAlg = utils::doubleToStringConvert(tradeAccount->SpecProductPositionProfitByAlg);
+        tmpAccountInfo.TradingDay = tradeAccount->TradingDay;
+        tmpAccountInfo.Withdraw = utils::doubleToStringConvert(tradeAccount->Withdraw);
+        tmpAccountInfo.WithdrawQuota = utils::doubleToStringConvert(tradeAccount->WithdrawQuota);
+        tmpAccountInfo.rsp_is_null = false;
+        delete tradeAccount;
+    }
+    else
+    {
+        tmpAccountInfo.rsp_is_null = true;
+    }
 
     std::string semName = "trader_ReqQryTradingAccount";
     globalSem.postSemBySemName(semName);
@@ -311,7 +315,6 @@ void CtpEvent::OnRtnOrderHandle(MsgStruct& msg)
     {
         INFO_LOG("have triggered");
     }
-
 }
 
 void CtpEvent::OnRspOrderInsertHandle(MsgStruct& msg)
@@ -502,12 +505,12 @@ void CtpEvent::OnRspQryInstrumentMarginRateHandle(MsgStruct& msg)
         marginRate.LongMarginRatioByVolume = utils::doubleToStringConvert(marginRateField->LongMarginRatioByVolume);
         marginRate.ShortMarginRatioByMoney = utils::doubleToStringConvert(marginRateField->ShortMarginRatioByMoney);
         marginRate.ShortMarginRatioByVolume = utils::doubleToStringConvert(marginRateField->ShortMarginRatioByVolume);
-
+        marginRate.rsp_is_null = false;
         delete marginRateField;
     }
     else
     {
-        ROLE(StrategyEvent).pubMarginRateRsp(marginRate.ProcessRandomId, false, "rsp is null");
+        marginRate.rsp_is_null = true;
     }
 
     std::string semName = "margin_rate";
@@ -529,12 +532,13 @@ void CtpEvent::OnRspQryInstrumentCommissionRateHandle(MsgStruct& msg)
         commissionRate.CloseTodayRatioByVolume = utils::doubleToStringConvert(commissionRateField->CloseTodayRatioByVolume);
         commissionRate.OpenRatioByMoney = utils::doubleToStringConvert(commissionRateField->OpenRatioByMoney);
         commissionRate.OpenRatioByVolume = utils::doubleToStringConvert(commissionRateField->OpenRatioByVolume);
+        commissionRate.rsp_is_null = false;
 
         delete commissionRateField;
     }
     else
     {
-        ROLE(StrategyEvent).pubCommissionRateRsp(commissionRate.ProcessRandomId, false, "rsp is null");
+        commissionRate.rsp_is_null = true;
     }
 
     std::string semName = "commission_rate";

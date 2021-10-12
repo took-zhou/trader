@@ -14,3 +14,5 @@ std::map<std::string, EventType> TitleToEvent;
 static MsgStruct NilMsgStruct;
 
 co_chan<MsgStruct> ctpMsgChan;
+co_chan<MsgStruct> orderMsgChan;
+co_chan<MsgStruct> queryMsgChan;

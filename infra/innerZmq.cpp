@@ -9,6 +9,7 @@
 #include "common/extern/libzmq/include/zhelpers.h"
 #include <cstring>
 #include "common/extern/log/log.h"
+
 bool InnerZmq::init()
 {
     context = zmq_ctx_new();

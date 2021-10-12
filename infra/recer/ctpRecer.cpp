@@ -516,41 +516,40 @@ void TraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAc
     PURE_LOG("\tbIsLast [%d]", bIsLast);
     PURE_LOG("</OnRspQryTradingAccount>");
 
-//    static CThostFtdcTradingAccountField staticTradingAccountField;
-    CThostFtdcTradingAccountField* staticTradingAccountField = new CThostFtdcTradingAccountField;
-    *staticTradingAccountField = *pTradingAccount;
-    MsgStruct msgStruct;
-    msgStruct.sessionName = "ctp";
-    msgStruct.msgName = "OnRspQryTradingAccount";
-    msgStruct.ctpMsg = static_cast<void*>(staticTradingAccountField);
-    ctpMsgChan << msgStruct;
+    if (pTradingAccount)
+    {
+        CThostFtdcTradingAccountField* staticTradingAccountField = new CThostFtdcTradingAccountField;
+        *staticTradingAccountField = *pTradingAccount;
+        MsgStruct msgStruct;
+        msgStruct.sessionName = "ctp";
+        msgStruct.msgName = "OnRspQryTradingAccount";
+        msgStruct.ctpMsg = static_cast<void*>(staticTradingAccountField);
+        ctpMsgChan << msgStruct;
+    }
+    else
+    {
+        MsgStruct msgStruct;
+        msgStruct.sessionName = "ctp";
+        msgStruct.msgName = "OnRspQryTradingAccount";
+        msgStruct.ctpMsg = nullptr;
+        ctpMsgChan << msgStruct;
+    }
 }
 
 void TraderSpi::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-//    static CThostFtdcInstrumentField staticInstrumentField;
     if(pInstrument ==nullptr)
     {
         ERROR_LOG("pInstrument == nullptr");
         return;
     }
-//    WARNING_LOG("new CThostFtdcInstrumentField");
-//    CThostFtdcInstrumentField* staticInstrumentField = new CThostFtdcInstrumentField();
-//    if(staticInstrumentField ==nullptr)
-//    {
-//        ERROR_LOG("staticInstrumentField ==nullptr");
-//    }
-//    *staticInstrumentField = *pInstrument;
-//    CThostFtdcInstrumentField filed = *pInstrument;
+
     MsgStruct msgStruct;
     msgStruct.sessionName = "ctp";
     msgStruct.msgName = "OnRspQryInstrument";
     msgStruct.specialMsg.instrumentField =*pInstrument;
     msgStruct.bIsLast = bIsLast;
-//    m.lock();
     ctpMsgChan << msgStruct;
-//    m.unlock();
-
 }
 
 void TraderSpi::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
@@ -570,18 +569,12 @@ void TraderSpi::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAct
     if (pInputOrderAction)
     {
         PURE_LOG("\tBrokerID [%s]", pInputOrderAction->BrokerID);
-
         PURE_LOG("\tInvestorID [%s]", pInputOrderAction->InvestorID);
-
         PURE_LOG("\tOrderRef [%s]", pInputOrderAction->OrderRef);
         PURE_LOG("\tExchangeID [%s]", pInputOrderAction->ExchangeID);
-
         PURE_LOG("\tOrderSysID [%s]", pInputOrderAction->OrderSysID);
-
         PURE_LOG("\tUserID [%s]", pInputOrderAction->UserID);
-
         PURE_LOG("\tInstrumentID [%s]", pInputOrderAction->InstrumentID);
-
         PURE_LOG("\tInvestUnitID [%s]", pInputOrderAction->InvestUnitID);
         PURE_LOG("\tIPAddress [%s]", pInputOrderAction->IPAddress);
         PURE_LOG("\tMacAddress [%s]", pInputOrderAction->MacAddress);
@@ -589,10 +582,8 @@ void TraderSpi::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAct
         PURE_LOG("\tRequestID [%d]", pInputOrderAction->RequestID);
         PURE_LOG("\tFrontID [%d]", pInputOrderAction->FrontID);
         PURE_LOG("\tSessionID [%d]", pInputOrderAction->SessionID);
-
         PURE_LOG("\tVolumeChange [%d]", pInputOrderAction->VolumeChange);
         PURE_LOG("\tActionFlag [%c]", pInputOrderAction->ActionFlag);
-
         PURE_LOG("\tLimitPrice [%.8lf]", pInputOrderAction->LimitPrice);
     }
     if (pRspInfo)
@@ -722,7 +713,6 @@ void TraderSpi::OnRspQryInstrumentMarginRate(CThostFtdcInstrumentMarginRateField
         msgStruct.ctpMsg = nullptr;
         ctpMsgChan << msgStruct;
     }
-
 };
 
 void TraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionRateField *pInstrumentCommissionRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
@@ -774,4 +764,3 @@ void TraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionR
         ctpMsgChan << msgStruct;
     }
 };
-

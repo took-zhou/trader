@@ -11,6 +11,7 @@
 
 struct AccountInfo
 {
+    bool rsp_is_null              {false};                //请求是否空标志
     std::string ProcessRandomId   {""};                   ///请求进程标识
     std::string PreCredit         {""};                   ///上次信用额度
     std::string PreDeposit        {""};                   ///上次存款额
@@ -63,6 +64,7 @@ struct AccountInfo
 
 struct MarginRate
 {
+    bool rsp_is_null                        {false};                //请求是否空标志
     std::string ProcessRandomId             {""};                    ///请求进程标识
     std::string LongMarginRatioByMoney      {""};                    ///多头保证金率
     std::string LongMarginRatioByVolume     {""};                    ///多头保证金费
@@ -72,6 +74,7 @@ struct MarginRate
 
 struct CommissionRate
 {
+    bool rsp_is_null                    {false};              //请求是否空标志
     std::string ProcessRandomId         {""};                 ///请求进程标识
     std::string OpenRatioByMoney        {""};                 ///开仓手续费率
     std::string OpenRatioByVolume       {""};                 ///开仓手续费

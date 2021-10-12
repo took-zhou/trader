@@ -9,6 +9,7 @@
 #define H56F09BAA_8284_4208_94EE_31E9DC18CE89
 #include <string>
 #include "trader/infra/define.h"
+
 struct InnerZmq
 {
     InnerZmq(){}
@@ -19,6 +20,7 @@ struct InnerZmq
         static InnerZmq instance;
         return instance;
     }
+
     bool init();
     void pushTask(const std::string& msg);
     std::string inprocAddress{"inproc://innerzmq"};

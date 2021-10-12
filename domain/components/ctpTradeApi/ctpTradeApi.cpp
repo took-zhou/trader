@@ -45,10 +45,15 @@ int CtpTraderBaseApi::ReqQryTradingAccount()
     strcpy(requestMsg.BrokerID, brokerID.c_str());
     strcpy(requestMsg.CurrencyID , "CNY");
 
-    std::string semName = "trader_ReqQryTradingAccount";
-    globalSem.addOrderSem(semName);
     int result = m_pApi->ReqQryTradingAccount(&requestMsg, requestIdBuildAlg());
     INFO_LOG("ReqQryTradingAccount send result is [%d]",result);
+
+    if (result == 0)
+    {
+        std::string semName = "trader_ReqQryTradingAccount";
+        globalSem.addOrderSem(semName);
+    }
+
     return result;
 }
 
@@ -207,10 +212,15 @@ int CtpTraderBaseApi::ReqQryInstrumentMarginRate(utils::InstrumtntID ins_exch)
     strcpy(marginRateField.InstrumentID, ins_exch.ins.c_str());
     marginRateField.HedgeFlag = THOST_FTDC_HF_Speculation;
 
-    std::string semName = "margin_rate";
-    globalSem.addOrderSem(semName);
     int result = m_pApi->ReqQryInstrumentMarginRate(&marginRateField, requestIdBuildAlg());
     INFO_LOG("ReqQryInstrumentMarginRate send result is [%d]",result);
+
+    if (result == 0)
+    {
+        std::string semName = "margin_rate";
+        globalSem.addOrderSem(semName);
+    }
+
     return result;
 }
 
@@ -225,10 +235,15 @@ int CtpTraderBaseApi::ReqQryInstrumentCommissionRate(utils::InstrumtntID ins_exc
     strcpy(commissonRateField.ExchangeID, ins_exch.exch.c_str());
     strcpy(commissonRateField.InstrumentID, ins_exch.ins.c_str());
 
-    std::string semName = "commission_rate";
-    globalSem.addOrderSem(semName);
     int result = m_pApi->ReqQryInstrumentCommissionRate(&commissonRateField, requestIdBuildAlg());
     INFO_LOG("ReqQryInstrumentCommissionRate send result is [%d]",result);
+
+    if (result == 0)
+    {
+        std::string semName = "commission_rate";
+        globalSem.addOrderSem(semName);
+    }
+
     return result;
 }
 
