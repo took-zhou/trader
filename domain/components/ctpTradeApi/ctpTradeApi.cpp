@@ -39,8 +39,9 @@ int CtpTraderBaseApi::ReqQryTradingAccount()
 {
     CThostFtdcQryTradingAccountField  requestMsg{0};
     auto& jsonCfg = utils::JsonConfig::getInstance();
-    const std::string brokerID = jsonCfg.getConfig("common","BrokerID").get<std::string>();
-    const std::string investorID = jsonCfg.getConfig("common","InvestorID").get<std::string>();
+    const std::string username = jsonCfg.getConfig("common","user").get<std::string>();
+    const std::string brokerID = jsonCfg.getDeepConfig("users", username, "BrokerID").get<std::string>();
+    const std::string investorID = jsonCfg.getDeepConfig("users", username, "InvestorID").get<std::string>();
     strcpy(requestMsg.InvestorID, investorID.c_str());
     strcpy(requestMsg.BrokerID, brokerID.c_str());
     strcpy(requestMsg.CurrencyID , "CNY");
@@ -111,10 +112,11 @@ int CtpTraderBaseApi::ReqSettlementInfoConfirm()
 {
     CThostFtdcSettlementInfoConfirmField requestMsg{0};
     auto& jsonCfg = utils::JsonConfig::getInstance();
-    const std::string brokerID = jsonCfg.getConfig("common","BrokerID").get<std::string>();
-    const std::string investorID = jsonCfg.getConfig("common","InvestorID").get<std::string>();
-    strcpy(requestMsg.BrokerID, brokerID.c_str());
+    const std::string username = jsonCfg.getConfig("common","user").get<std::string>();
+    const std::string brokerID = jsonCfg.getDeepConfig("users", username, "BrokerID").get<std::string>();
+    const std::string investorID = jsonCfg.getDeepConfig("users", username, "InvestorID").get<std::string>();
     strcpy(requestMsg.InvestorID, investorID.c_str());
+    strcpy(requestMsg.BrokerID, brokerID.c_str());
 
     std::string semName = "trader_ReqSettlementInfoConfirm";
     globalSem.addOrderSem(semName);
@@ -147,10 +149,11 @@ int CtpTraderBaseApi::ReqAuthenticate()
 {
     CThostFtdcReqAuthenticateField pReqAuthenticateField = {0};
     auto& jsonCfg = utils::JsonConfig::getInstance();
-    const std::string authCode = jsonCfg.getConfig("common","AuthCode").get<std::string>();
-    const std::string appId = jsonCfg.getConfig("common","AppID").get<std::string>();
-    const std::string userID = jsonCfg.getConfig("common","UserID").get<std::string>();
-    const std::string brokerID = jsonCfg.getConfig("common","BrokerID").get<std::string>();
+    const std::string username = jsonCfg.getConfig("common","user").get<std::string>();
+    const std::string authCode = jsonCfg.getDeepConfig("users", username, "AuthCode").get<std::string>();
+    const std::string appId = jsonCfg.getDeepConfig("users", username, "AppID").get<std::string>();
+    const std::string userID = jsonCfg.getDeepConfig("users", username, "UserID").get<std::string>();
+    const std::string brokerID = jsonCfg.getDeepConfig("users", username, "BrokerID").get<std::string>();
 
     strcpy(pReqAuthenticateField.BrokerID, brokerID.c_str());
     strcpy(pReqAuthenticateField.UserID, userID.c_str());
@@ -169,9 +172,10 @@ int CtpTraderBaseApi::ReqUserLogin()
 {
     CThostFtdcReqUserLoginField reqUserLogin{ 0 };
     auto& jsonCfg = utils::JsonConfig::getInstance();
-    const std::string userID = jsonCfg.getConfig("common","UserID").get<std::string>();
-    const std::string brokerID = jsonCfg.getConfig("common","BrokerID").get<std::string>();
-    const std::string passWord = jsonCfg.getConfig("common","Password").get<std::string>();
+    const std::string username = jsonCfg.getConfig("common","user").get<std::string>();
+    const std::string userID = jsonCfg.getDeepConfig("users", username, "UserID").get<std::string>();
+    const std::string brokerID = jsonCfg.getDeepConfig("users", username, "BrokerID").get<std::string>();
+    const std::string passWord = jsonCfg.getDeepConfig("users", username, "Password").get<std::string>();
     strcpy(reqUserLogin.BrokerID, brokerID.c_str());
     strcpy(reqUserLogin.UserID, userID.c_str());
     strcpy(reqUserLogin.Password, passWord.c_str());
@@ -187,8 +191,9 @@ int CtpTraderBaseApi::ReqUserLogout()
 {
     CThostFtdcUserLogoutField logOutField{0};
     auto& jsonCfg = utils::JsonConfig::getInstance();
-    const std::string userID = jsonCfg.getConfig("common","UserID").get<std::string>();
-    const std::string brokerID = jsonCfg.getConfig("common","BrokerID").get<std::string>();
+    const std::string username = jsonCfg.getConfig("common","user").get<std::string>();
+    const std::string userID = jsonCfg.getDeepConfig("users", username, "UserID").get<std::string>();
+    const std::string brokerID = jsonCfg.getDeepConfig("users", username, "BrokerID").get<std::string>();
     strcpy(logOutField.BrokerID, brokerID.c_str());
     strcpy(logOutField.UserID, userID.c_str());
 
@@ -204,8 +209,10 @@ int CtpTraderBaseApi::ReqQryInstrumentMarginRate(utils::InstrumtntID ins_exch)
     CThostFtdcQryInstrumentMarginRateField marginRateField{0};
 
     auto& jsonCfg = utils::JsonConfig::getInstance();
-    const std::string investorID = jsonCfg.getConfig("common","InvestorID").get<std::string>();
-    const std::string brokerID = jsonCfg.getConfig("common","BrokerID").get<std::string>();
+    const std::string username = jsonCfg.getConfig("common","user").get<std::string>();
+    const std::string investorID = jsonCfg.getDeepConfig("users", username, "InvestorID").get<std::string>();
+    const std::string brokerID = jsonCfg.getDeepConfig("users", username, "BrokerID").get<std::string>();
+
     strcpy(marginRateField.BrokerID, brokerID.c_str());
     strcpy(marginRateField.InvestorID, investorID.c_str());
     strcpy(marginRateField.ExchangeID, ins_exch.exch.c_str());
@@ -228,8 +235,9 @@ int CtpTraderBaseApi::ReqQryInstrumentCommissionRate(utils::InstrumtntID ins_exc
 {
     CThostFtdcQryInstrumentCommissionRateField commissonRateField{0};
     auto& jsonCfg = utils::JsonConfig::getInstance();
-    const std::string investorID = jsonCfg.getConfig("common","InvestorID").get<std::string>();
-    const std::string brokerID = jsonCfg.getConfig("common","BrokerID").get<std::string>();
+    const std::string username = jsonCfg.getConfig("common","user").get<std::string>();
+    const std::string investorID = jsonCfg.getDeepConfig("users", username, "InvestorID").get<std::string>();
+    const std::string brokerID = jsonCfg.getDeepConfig("users", username, "BrokerID").get<std::string>();
     strcpy(commissonRateField.BrokerID, brokerID.c_str());
     strcpy(commissonRateField.InvestorID, investorID.c_str());
     strcpy(commissonRateField.ExchangeID, ins_exch.exch.c_str());
@@ -281,7 +289,9 @@ bool CtpTraderApi::init()
     traderApi->SubscribePrivateTopic(THOST_TERT_QUICK);   //订阅
     traderApi->SubscribePublicTopic(THOST_TERT_QUICK);    //订阅
 
-    std::string frontaddr = jsonCfg.getConfig("common","FrontAddr").get<std::string>();
+    const std::string username = jsonCfg.getConfig("common","user").get<std::string>();
+    const std::string frontaddr = jsonCfg.getDeepConfig("users", username, "FrontAddr").get<std::string>();
+
     traderApi->RegisterFront(const_cast<char *>(frontaddr.c_str()));  //注册前置地址
     return true;
 }

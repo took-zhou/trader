@@ -160,7 +160,9 @@ void TraderSpi::OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CTho
 {
 
     auto& jsonCfg = utils::JsonConfig::getInstance();
-    const std::string investorID = jsonCfg.getConfig("common","InvestorID").get<std::string>();
+    const std::string username = jsonCfg.getConfig("common","user").get<std::string>();
+    const std::string investorID = jsonCfg.getDeepConfig("users", username, "InvestorID").get<std::string>();
+
     if (pInputOrder && strcmp(pInputOrder->InvestorID, investorID.c_str()) != 0)
     {
         return;
@@ -227,7 +229,9 @@ void TraderSpi::OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostF
 {
 
     auto& jsonCfg = utils::JsonConfig::getInstance();
-    const std::string investorID = jsonCfg.getConfig("common","InvestorID").get<std::string>();
+    const std::string username = jsonCfg.getConfig("common","user").get<std::string>();
+    const std::string investorID = jsonCfg.getDeepConfig("users", username, "InvestorID").get<std::string>();
+
     if (pInputOrder && strcmp(pInputOrder->InvestorID, investorID.c_str()) != 0)
     {
         return;
@@ -299,7 +303,9 @@ void TraderSpi::OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostF
 void TraderSpi::OnRtnOrder(CThostFtdcOrderField *pOrder)
 {
     auto& jsonCfg = utils::JsonConfig::getInstance();
-    const std::string investorID = jsonCfg.getConfig("common","InvestorID").get<std::string>();
+    const std::string username = jsonCfg.getConfig("common","user").get<std::string>();
+    const std::string investorID = jsonCfg.getDeepConfig("users", username, "InvestorID").get<std::string>();
+
     if (pOrder && strcmp(pOrder->InvestorID, investorID.c_str()) != 0)
     {
         return;

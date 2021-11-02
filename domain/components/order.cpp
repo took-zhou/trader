@@ -172,13 +172,15 @@ bool OrderManage::buildOrder(const std::string orderKey, const strategy_trader::
     auto& order = *(getOrder(orderKey));
     strcpy(order.OrderRef, orderKey.c_str());
 
-    std::string brokerId = jsonCfg.getConfig("common","BrokerID").get<std::string>();
+    const std::string username = jsonCfg.getConfig("common","user").get<std::string>();
+    const std::string brokerId = jsonCfg.getDeepConfig("users", username, "BrokerID").get<std::string>();
+
     strcpy(order.BrokerID, brokerId.c_str());
 
-    std::string investorId = jsonCfg.getConfig("common","InvestorID").get<std::string>();
+    std::string investorId = jsonCfg.getDeepConfig("users", username, "InvestorID").get<std::string>();
     strcpy(order.InvestorID, investorId.c_str());
 
-    std::string userId = jsonCfg.getConfig("common","UserID").get<std::string>();
+    std::string userId = jsonCfg.getDeepConfig("users", username, "UserID").get<std::string>();
     strcpy(order.UserID, userId.c_str());
 
     /*************************************************************************/
