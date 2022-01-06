@@ -200,12 +200,28 @@ bool OrderManage::buildOrder(const std::string orderKey, const strategy_trader::
     order.VolumeTotalOriginal = orderIndication.volume_total_original();
 
     auto& openClose = orderIndication.comb_offset_flag();
-    if(openClose != "open" && openClose != "close")
+
+    if (openClose == "open")
+    {
+        order.CombOffsetFlag[0] = THOST_FTDC_OF_Open;
+    }
+    else if (openClose == "close")
+    {
+        order.CombOffsetFlag[0] = THOST_FTDC_OF_Close;
+    }
+    else if (openClose == "close_yesterday")
+    {
+        order.CombOffsetFlag[0] = THOST_FTDC_OF_CloseYesterday;
+    }
+    else if (openClose == "close_today")
+    {
+        order.CombOffsetFlag[0] = THOST_FTDC_OFEN_CloseToday;
+    }
+    else
     {
         ERROR_LOG("error comb_offset_flag [%s]",openClose.c_str());
         return false;
     }
-    order.CombOffsetFlag[0] = openClose == "open"? THOST_FTDC_OF_Open : THOST_FTDC_OF_Close;
 
     /*****************************************************************************/
     auto orderType = orderIndication.order_type();
