@@ -25,13 +25,13 @@ extern GlobalSem globalSem;
 namespace{
     void sendEail(const std::string& fileName, const std::string& instrumentId)
     {
-        INFO_LOG("order insert success, begin send emails");
+        // INFO_LOG("order insert success, begin send emails");
         auto& jsonCfg = utils::JsonConfig::getInstance();
         const auto& jsonCfgPath = jsonCfg.fileName;
         std::string command = jsonCfg.getConfig("emailbox", "command").get<std::string>();
         command += std::string(" " + jsonCfgPath + " " + fileName + " " + instrumentId);
         system(command.c_str());
-        INFO_LOG("exec [%s] ok",command.c_str());
+        // INFO_LOG("exec [%s] ok",command.c_str());
     }
 
     bool saveAttachment(const std::string& identity, std::string& fileName, std::string& instrumentId)
@@ -71,7 +71,7 @@ namespace{
         outfile << saveContent;
         outfile.close();
         instrumentId = orderContent.instrumentID;
-        INFO_LOG("save attachment ok");
+        // INFO_LOG("save attachment ok");
         return true;
     }
 }
@@ -443,7 +443,7 @@ void StrategyEvent::OrderInsertReqHandle(MsgStruct& msg)
 {
     strategy_trader::message reqMsg;
     reqMsg.ParseFromString(msg.pbMsg);
-    utils::printProtoMsg(reqMsg);
+    // utils::printProtoMsg(reqMsg);
 
     const auto& orderInsertReq = reqMsg.order_insert_req();
     OrderIdentify identity;
@@ -457,7 +457,7 @@ void StrategyEvent::OrderInsertReqHandle(MsgStruct& msg)
         return;
     }
 
-    INFO_LOG("identity[%s] insert begin",identity.identity.c_str());
+    // ("identity[%s] insert begin",identity.identity.c_str());
     auto& orderManage = traderSer.ROLE(OrderManage);
     std::string newOrderRef = utils::genOrderRef();
     if(! orderManage.addOrder(newOrderRef))

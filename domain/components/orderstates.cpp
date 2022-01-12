@@ -110,8 +110,8 @@ void OrderStates::showOrderStates(const std::string& key)
         PURE_LOG("%s", states.c_str());
         PURE_LOG("************************************************");
     }
-    INFO_LOG("showAllOrderStates end");
-    PURE_LOG("\n\n");
+    // INFO_LOG("showAllOrderStates end");
+    // PURE_LOG("\n\n");
 }
 
 size_t OrderStates::size()

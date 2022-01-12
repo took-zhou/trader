@@ -170,39 +170,39 @@ void TraderSpi::OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CTho
     else
     {
         PURE_LOG("<OnErrRtnOrderInsert>");
-        if (pInputOrder)
-        {
-            PURE_LOG("\tBrokerID [%s]", pInputOrder->BrokerID);
-            PURE_LOG("\tInvestorID [%s]", pInputOrder->InvestorID);
-            PURE_LOG("\tInstrumentID [%s]", pInputOrder->InstrumentID);
-            PURE_LOG("\tOrderRef [%s]", pInputOrder->OrderRef);
-            PURE_LOG("\tUserID [%s]", pInputOrder->UserID);
-            PURE_LOG("\tCombOffsetFlag [%s]", pInputOrder->CombOffsetFlag);
-            PURE_LOG("\tCombHedgeFlag [%s]", pInputOrder->CombHedgeFlag);
-            PURE_LOG("\tGTDDate [%s]", pInputOrder->GTDDate);
-            PURE_LOG("\tBusinessUnit [%s]", pInputOrder->BusinessUnit);
-            PURE_LOG("\tExchangeID [%s]", pInputOrder->ExchangeID);
-            PURE_LOG("\tInvestUnitID [%s]", pInputOrder->InvestUnitID);
-            PURE_LOG("\tAccountID [%s]", pInputOrder->AccountID);
-            PURE_LOG("\tCurrencyID [%s]", pInputOrder->CurrencyID);
-            PURE_LOG("\tClientID [%s]", pInputOrder->ClientID);
-            PURE_LOG("\tIPAddress [%s]", pInputOrder->IPAddress);
-            PURE_LOG("\tMacAddress [%s]", pInputOrder->MacAddress);
-            PURE_LOG("\tVolumeTotalOriginal [%d]", pInputOrder->VolumeTotalOriginal);
-            PURE_LOG("\tMinVolume [%d]", pInputOrder->MinVolume);
-            PURE_LOG("\tIsAutoSuspend [%d]", pInputOrder->IsAutoSuspend);
-            PURE_LOG("\tRequestID [%d]", pInputOrder->RequestID);
-            PURE_LOG("\tUserForceClose [%d]", pInputOrder->UserForceClose);
-            PURE_LOG("\tIsSwapOrder [%d]", pInputOrder->IsSwapOrder);
-            PURE_LOG("\tOrderPriceType [%c]", pInputOrder->OrderPriceType);
-            PURE_LOG("\tDirection [%c]", pInputOrder->Direction);
-            PURE_LOG("\tTimeCondition [%c]", pInputOrder->TimeCondition);
-            PURE_LOG("\tVolumeCondition [%c]", pInputOrder->VolumeCondition);
-            PURE_LOG("\tContingentCondition [%c]", pInputOrder->ContingentCondition);
-            PURE_LOG("\tForceCloseReason [%c]", pInputOrder->ForceCloseReason);
-            PURE_LOG("\tLimitPrice [%.8lf]", pInputOrder->LimitPrice);
-            PURE_LOG("\tStopPrice [%.8lf]", pInputOrder->StopPrice);
-        }
+        // if (pInputOrder)
+        // {
+            // PURE_LOG("\tBrokerID [%s]", pInputOrder->BrokerID);
+            // PURE_LOG("\tInvestorID [%s]", pInputOrder->InvestorID);
+            // PURE_LOG("\tInstrumentID [%s]", pInputOrder->InstrumentID);
+            // PURE_LOG("\tOrderRef [%s]", pInputOrder->OrderRef);
+            // PURE_LOG("\tUserID [%s]", pInputOrder->UserID);
+            // PURE_LOG("\tCombOffsetFlag [%s]", pInputOrder->CombOffsetFlag);
+            // PURE_LOG("\tCombHedgeFlag [%s]", pInputOrder->CombHedgeFlag);
+            // PURE_LOG("\tGTDDate [%s]", pInputOrder->GTDDate);
+            // PURE_LOG("\tBusinessUnit [%s]", pInputOrder->BusinessUnit);
+            // PURE_LOG("\tExchangeID [%s]", pInputOrder->ExchangeID);
+            // PURE_LOG("\tInvestUnitID [%s]", pInputOrder->InvestUnitID);
+            // PURE_LOG("\tAccountID [%s]", pInputOrder->AccountID);
+            // PURE_LOG("\tCurrencyID [%s]", pInputOrder->CurrencyID);
+            // PURE_LOG("\tClientID [%s]", pInputOrder->ClientID);
+            // PURE_LOG("\tIPAddress [%s]", pInputOrder->IPAddress);
+            // PURE_LOG("\tMacAddress [%s]", pInputOrder->MacAddress);
+            // PURE_LOG("\tVolumeTotalOriginal [%d]", pInputOrder->VolumeTotalOriginal);
+            // PURE_LOG("\tMinVolume [%d]", pInputOrder->MinVolume);
+            // PURE_LOG("\tIsAutoSuspend [%d]", pInputOrder->IsAutoSuspend);
+            // PURE_LOG("\tRequestID [%d]", pInputOrder->RequestID);
+            // PURE_LOG("\tUserForceClose [%d]", pInputOrder->UserForceClose);
+            // PURE_LOG("\tIsSwapOrder [%d]", pInputOrder->IsSwapOrder);
+            // PURE_LOG("\tOrderPriceType [%c]", pInputOrder->OrderPriceType);
+            // PURE_LOG("\tDirection [%c]", pInputOrder->Direction);
+            // PURE_LOG("\tTimeCondition [%c]", pInputOrder->TimeCondition);
+            // PURE_LOG("\tVolumeCondition [%c]", pInputOrder->VolumeCondition);
+            // PURE_LOG("\tContingentCondition [%c]", pInputOrder->ContingentCondition);
+            // PURE_LOG("\tForceCloseReason [%c]", pInputOrder->ForceCloseReason);
+            // PURE_LOG("\tLimitPrice [%.8lf]", pInputOrder->LimitPrice);
+            // PURE_LOG("\tStopPrice [%.8lf]", pInputOrder->StopPrice);
+        // }
         if (pRspInfo)
         {
             TThostFtdcErrorMsgType msg;
@@ -239,39 +239,39 @@ void TraderSpi::OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostF
     else
     {
         PURE_LOG("<OnRspOrderInsert>");
-        if (pInputOrder)
-        {
-            PURE_LOG("\tBrokerID [%s]", pInputOrder->BrokerID);
-            PURE_LOG("\tInvestorID [%s]", pInputOrder->InvestorID);
-            PURE_LOG("\tInstrumentID [%s]", pInputOrder->InstrumentID);
-            PURE_LOG("\tOrderRef [%s]", pInputOrder->OrderRef);
-            PURE_LOG("\tUserID [%s]", pInputOrder->UserID);
-            PURE_LOG("\tCombOffsetFlag [%s]", pInputOrder->CombOffsetFlag);
-            PURE_LOG("\tCombHedgeFlag [%s]", pInputOrder->CombHedgeFlag);
-            PURE_LOG("\tGTDDate [%s]", pInputOrder->GTDDate);
-            PURE_LOG("\tBusinessUnit [%s]", pInputOrder->BusinessUnit);
-            PURE_LOG("\tExchangeID [%s]", pInputOrder->ExchangeID);
-            PURE_LOG("\tInvestUnitID [%s]", pInputOrder->InvestUnitID);
-            PURE_LOG("\tAccountID [%s]", pInputOrder->AccountID);
-            PURE_LOG("\tCurrencyID [%s]", pInputOrder->CurrencyID);
-            PURE_LOG("\tClientID [%s]", pInputOrder->ClientID);
-            PURE_LOG("\tIPAddress [%s]", pInputOrder->IPAddress);
-            PURE_LOG("\tMacAddress [%s]", pInputOrder->MacAddress);
-            PURE_LOG("\tVolumeTotalOriginal [%d]", pInputOrder->VolumeTotalOriginal);
-            PURE_LOG("\tMinVolume [%d]", pInputOrder->MinVolume);
-            PURE_LOG("\tIsAutoSuspend [%d]", pInputOrder->IsAutoSuspend);
-            PURE_LOG("\tRequestID [%d]", pInputOrder->RequestID);
-            PURE_LOG("\tUserForceClose [%d]", pInputOrder->UserForceClose);
-            PURE_LOG("\tIsSwapOrder [%d]", pInputOrder->IsSwapOrder);
-            PURE_LOG("\tOrderPriceType [%c]", pInputOrder->OrderPriceType);
-            PURE_LOG("\tDirection [%c]", pInputOrder->Direction);
-            PURE_LOG("\tTimeCondition [%c]", pInputOrder->TimeCondition);
-            PURE_LOG("\tVolumeCondition [%c]", pInputOrder->VolumeCondition);
-            PURE_LOG("\tContingentCondition [%c]", pInputOrder->ContingentCondition);
-            PURE_LOG("\tForceCloseReason [%c]", pInputOrder->ForceCloseReason);
-            PURE_LOG("\tLimitPrice [%.8lf]", pInputOrder->LimitPrice);
-            PURE_LOG("\tStopPrice [%.8lf]", pInputOrder->StopPrice);
-        }
+        // if (pInputOrder)
+        // {
+            // PURE_LOG("\tBrokerID [%s]", pInputOrder->BrokerID);
+            // PURE_LOG("\tInvestorID [%s]", pInputOrder->InvestorID);
+            // PURE_LOG("\tInstrumentID [%s]", pInputOrder->InstrumentID);
+            // PURE_LOG("\tOrderRef [%s]", pInputOrder->OrderRef);
+            // PURE_LOG("\tUserID [%s]", pInputOrder->UserID);
+            // PURE_LOG("\tCombOffsetFlag [%s]", pInputOrder->CombOffsetFlag);
+            // PURE_LOG("\tCombHedgeFlag [%s]", pInputOrder->CombHedgeFlag);
+            // PURE_LOG("\tGTDDate [%s]", pInputOrder->GTDDate);
+            // PURE_LOG("\tBusinessUnit [%s]", pInputOrder->BusinessUnit);
+            // PURE_LOG("\tExchangeID [%s]", pInputOrder->ExchangeID);
+            // PURE_LOG("\tInvestUnitID [%s]", pInputOrder->InvestUnitID);
+            // PURE_LOG("\tAccountID [%s]", pInputOrder->AccountID);
+            // PURE_LOG("\tCurrencyID [%s]", pInputOrder->CurrencyID);
+            // PURE_LOG("\tClientID [%s]", pInputOrder->ClientID);
+            // PURE_LOG("\tIPAddress [%s]", pInputOrder->IPAddress);
+            // PURE_LOG("\tMacAddress [%s]", pInputOrder->MacAddress);
+            // PURE_LOG("\tVolumeTotalOriginal [%d]", pInputOrder->VolumeTotalOriginal);
+            // PURE_LOG("\tMinVolume [%d]", pInputOrder->MinVolume);
+            // PURE_LOG("\tIsAutoSuspend [%d]", pInputOrder->IsAutoSuspend);
+            // PURE_LOG("\tRequestID [%d]", pInputOrder->RequestID);
+            // PURE_LOG("\tUserForceClose [%d]", pInputOrder->UserForceClose);
+            // PURE_LOG("\tIsSwapOrder [%d]", pInputOrder->IsSwapOrder);
+            // PURE_LOG("\tOrderPriceType [%c]", pInputOrder->OrderPriceType);
+            // PURE_LOG("\tDirection [%c]", pInputOrder->Direction);
+            // PURE_LOG("\tTimeCondition [%c]", pInputOrder->TimeCondition);
+            // PURE_LOG("\tVolumeCondition [%c]", pInputOrder->VolumeCondition);
+            // PURE_LOG("\tContingentCondition [%c]", pInputOrder->ContingentCondition);
+            // PURE_LOG("\tForceCloseReason [%c]", pInputOrder->ForceCloseReason);
+            // PURE_LOG("\tLimitPrice [%.8lf]", pInputOrder->LimitPrice);
+            // PURE_LOG("\tStopPrice [%.8lf]", pInputOrder->StopPrice);
+        // }
         if (pRspInfo)
         {
             TThostFtdcErrorMsgType msg;
@@ -315,84 +315,84 @@ void TraderSpi::OnRtnOrder(CThostFtdcOrderField *pOrder)
         MSG_LOG("%s","******<OnRtnOrder>******");
         if (pOrder)
         {
-            PURE_LOG("\tBrokerID [%s]", pOrder->BrokerID);
-            PURE_LOG("\tInvestorID [%s]", pOrder->InvestorID);
-            PURE_LOG("\tInstrumentID [%s]", pOrder->InstrumentID);
+            // PURE_LOG("\tBrokerID [%s]", pOrder->BrokerID);
+            // PURE_LOG("\tInvestorID [%s]", pOrder->InvestorID);
+            // PURE_LOG("\tInstrumentID [%s]", pOrder->InstrumentID);
 
-            PURE_LOG("\tOrderRef [%s]", pOrder->OrderRef);
-            PURE_LOG("\tUserID [%s]", pOrder->UserID);
-            PURE_LOG("\tCombOffsetFlag [%s]", pOrder->CombOffsetFlag);
+            // PURE_LOG("\tOrderRef [%s]", pOrder->OrderRef);
+            // PURE_LOG("\tUserID [%s]", pOrder->UserID);
+            // PURE_LOG("\tCombOffsetFlag [%s]", pOrder->CombOffsetFlag);
 
-            PURE_LOG("\tCombHedgeFlag [%s]", pOrder->CombHedgeFlag);
-            PURE_LOG("\tGTDDate [%s]", pOrder->GTDDate);
-            PURE_LOG("\tBusinessUnit [%s]", pOrder->BusinessUnit);
-            PURE_LOG("\tOrderLocalID [%s]", pOrder->OrderLocalID);
-            PURE_LOG("\tExchangeID [%s]", pOrder->ExchangeID);
+            // PURE_LOG("\tCombHedgeFlag [%s]", pOrder->CombHedgeFlag);
+            // PURE_LOG("\tGTDDate [%s]", pOrder->GTDDate);
+            // PURE_LOG("\tBusinessUnit [%s]", pOrder->BusinessUnit);
+            // PURE_LOG("\tOrderLocalID [%s]", pOrder->OrderLocalID);
+            // PURE_LOG("\tExchangeID [%s]", pOrder->ExchangeID);
 
-            PURE_LOG("\tParticipantID [%s]", pOrder->ParticipantID);
-            PURE_LOG("\tClientID [%s]", pOrder->ClientID);
-            PURE_LOG("\tExchangeInstID [%s]", pOrder->ExchangeInstID);
-            PURE_LOG("\tTraderID [%s]", pOrder->TraderID);
-            PURE_LOG("\tTradingDay [%s]", pOrder->TradingDay);
+            // PURE_LOG("\tParticipantID [%s]", pOrder->ParticipantID);
+            // PURE_LOG("\tClientID [%s]", pOrder->ClientID);
+            // PURE_LOG("\tExchangeInstID [%s]", pOrder->ExchangeInstID);
+            // PURE_LOG("\tTraderID [%s]", pOrder->TraderID);
+            // PURE_LOG("\tTradingDay [%s]", pOrder->TradingDay);
 
-            PURE_LOG("\tOrderSysID [%s]", pOrder->OrderSysID);
+            // PURE_LOG("\tOrderSysID [%s]", pOrder->OrderSysID);
 
-            PURE_LOG("\tInsertDate [%s]", pOrder->InsertDate);
-            PURE_LOG("\tInsertTime [%s]", pOrder->InsertTime);
+            // PURE_LOG("\tInsertDate [%s]", pOrder->InsertDate);
+            // PURE_LOG("\tInsertTime [%s]", pOrder->InsertTime);
 
 
-            PURE_LOG("\tActiveTime [%s]", pOrder->ActiveTime);
-            PURE_LOG("\tSuspendTime [%s]", pOrder->SuspendTime);
-            PURE_LOG("\tUpdateTime [%s]", pOrder->UpdateTime);
-            PURE_LOG("\tCancelTime [%s]", pOrder->CancelTime);
-            PURE_LOG("\tActiveTraderID [%s]", pOrder->ActiveTraderID);
-            PURE_LOG("\tClearingPartID [%s]", pOrder->ClearingPartID);
-            PURE_LOG("\tUserProductInfo [%s]", pOrder->UserProductInfo);
+            // PURE_LOG("\tActiveTime [%s]", pOrder->ActiveTime);
+            // PURE_LOG("\tSuspendTime [%s]", pOrder->SuspendTime);
+            // PURE_LOG("\tUpdateTime [%s]", pOrder->UpdateTime);
+            // PURE_LOG("\tCancelTime [%s]", pOrder->CancelTime);
+            // PURE_LOG("\tActiveTraderID [%s]", pOrder->ActiveTraderID);
+            // PURE_LOG("\tClearingPartID [%s]", pOrder->ClearingPartID);
+            // PURE_LOG("\tUserProductInfo [%s]", pOrder->UserProductInfo);
 
             TThostFtdcErrorMsgType msg;
             utils::gbk2utf8(pOrder->StatusMsg, msg, sizeof(msg));
             PURE_LOG("\tStatusMsg [%s]", msg);
 
-            PURE_LOG("\tActiveUserID [%s]", pOrder->ActiveUserID);
-            PURE_LOG("\tRelativeOrderSysID [%s]", pOrder->RelativeOrderSysID);
-            PURE_LOG("\tBranchID [%s]", pOrder->BranchID);
-            PURE_LOG("\tInvestUnitID [%s]", pOrder->InvestUnitID);
-            PURE_LOG("\tAccountID [%s]", pOrder->AccountID);
-            PURE_LOG("\tCurrencyID [%s]", pOrder->CurrencyID);
-            PURE_LOG("\tIPAddress [%s]", pOrder->IPAddress);
-            PURE_LOG("\tMacAddress [%s]", pOrder->MacAddress);
-            PURE_LOG("\tVolumeTotalOriginal [%d]", pOrder->VolumeTotalOriginal);
+            // PURE_LOG("\tActiveUserID [%s]", pOrder->ActiveUserID);
+            // PURE_LOG("\tRelativeOrderSysID [%s]", pOrder->RelativeOrderSysID);
+            // PURE_LOG("\tBranchID [%s]", pOrder->BranchID);
+            // PURE_LOG("\tInvestUnitID [%s]", pOrder->InvestUnitID);
+            // PURE_LOG("\tAccountID [%s]", pOrder->AccountID);
+            // PURE_LOG("\tCurrencyID [%s]", pOrder->CurrencyID);
+            // PURE_LOG("\tIPAddress [%s]", pOrder->IPAddress);
+            // PURE_LOG("\tMacAddress [%s]", pOrder->MacAddress);
+            // PURE_LOG("\tVolumeTotalOriginal [%d]", pOrder->VolumeTotalOriginal);
 
-            PURE_LOG("\tMinVolume [%d]", pOrder->MinVolume);
-            PURE_LOG("\tIsAutoSuspend [%d]", pOrder->IsAutoSuspend);
-            PURE_LOG("\tRequestID [%d]", pOrder->RequestID);
-            PURE_LOG("\tInstallID [%d]", pOrder->InstallID);
-            PURE_LOG("\tNotifySequence [%d]", pOrder->NotifySequence);
-            PURE_LOG("\tSettlementID [%d]", pOrder->SettlementID);
-            PURE_LOG("\tVolumeTraded [%d]", pOrder->VolumeTraded);
-            PURE_LOG("\tVolumeTotal [%d]", pOrder->VolumeTotal);
-            PURE_LOG("\tSequenceNo [%d]", pOrder->SequenceNo);
-            PURE_LOG("\tFrontID [%d]", pOrder->FrontID);
-            PURE_LOG("\tSessionID [%d]", pOrder->SessionID);
+            // PURE_LOG("\tMinVolume [%d]", pOrder->MinVolume);
+            // PURE_LOG("\tIsAutoSuspend [%d]", pOrder->IsAutoSuspend);
+            // PURE_LOG("\tRequestID [%d]", pOrder->RequestID);
+            // PURE_LOG("\tInstallID [%d]", pOrder->InstallID);
+            // PURE_LOG("\tNotifySequence [%d]", pOrder->NotifySequence);
+            // PURE_LOG("\tSettlementID [%d]", pOrder->SettlementID);
+            // PURE_LOG("\tVolumeTraded [%d]", pOrder->VolumeTraded);
+            // PURE_LOG("\tVolumeTotal [%d]", pOrder->VolumeTotal);
+            // PURE_LOG("\tSequenceNo [%d]", pOrder->SequenceNo);
+            // PURE_LOG("\tFrontID [%d]", pOrder->FrontID);
+            // PURE_LOG("\tSessionID [%d]", pOrder->SessionID);
 
-            PURE_LOG("\tUserForceClose [%d]", pOrder->UserForceClose);
-            PURE_LOG("\tBrokerOrderSeq [%d]", pOrder->BrokerOrderSeq);
-            PURE_LOG("\tZCETotalTradedVolume [%d]", pOrder->ZCETotalTradedVolume);
-            PURE_LOG("\tIsSwapOrder [%d]", pOrder->IsSwapOrder);
-            PURE_LOG("\tOrderPriceType [%c]", pOrder->OrderPriceType);
-            PURE_LOG("\tDirection [%c]", pOrder->Direction);
+            // PURE_LOG("\tUserForceClose [%d]", pOrder->UserForceClose);
+            // PURE_LOG("\tBrokerOrderSeq [%d]", pOrder->BrokerOrderSeq);
+            // PURE_LOG("\tZCETotalTradedVolume [%d]", pOrder->ZCETotalTradedVolume);
+            // PURE_LOG("\tIsSwapOrder [%d]", pOrder->IsSwapOrder);
+            // PURE_LOG("\tOrderPriceType [%c]", pOrder->OrderPriceType);
+            // PURE_LOG("\tDirection [%c]", pOrder->Direction);
 
-            PURE_LOG("\tTimeCondition [%c]", pOrder->TimeCondition);
-            PURE_LOG("\tVolumeCondition [%c]", pOrder->VolumeCondition);
-            PURE_LOG("\tContingentCondition [%c]", pOrder->ContingentCondition);
-            PURE_LOG("\tForceCloseReason [%c]", pOrder->ForceCloseReason);
-            PURE_LOG("\tOrderSubmitStatus [%c]", pOrder->OrderSubmitStatus);
-            PURE_LOG("\tOrderSource [%c]", pOrder->OrderSource);
-            PURE_LOG("\tOrderStatus [%c]", pOrder->OrderStatus);
-            PURE_LOG("\tOrderType [%c]", pOrder->OrderType);
-            PURE_LOG("\tLimitPrice [%.8lf]", pOrder->LimitPrice);
+            // PURE_LOG("\tTimeCondition [%c]", pOrder->TimeCondition);
+            // PURE_LOG("\tVolumeCondition [%c]", pOrder->VolumeCondition);
+            // PURE_LOG("\tContingentCondition [%c]", pOrder->ContingentCondition);
+            // PURE_LOG("\tForceCloseReason [%c]", pOrder->ForceCloseReason);
+            // PURE_LOG("\tOrderSubmitStatus [%c]", pOrder->OrderSubmitStatus);
+            // PURE_LOG("\tOrderSource [%c]", pOrder->OrderSource);
+            // PURE_LOG("\tOrderStatus [%c]", pOrder->OrderStatus);
+            // PURE_LOG("\tOrderType [%c]", pOrder->OrderType);
+            // PURE_LOG("\tLimitPrice [%.8lf]", pOrder->LimitPrice);
 
-            PURE_LOG("\tStopPrice [%.8lf]", pOrder->StopPrice);
+            // PURE_LOG("\tStopPrice [%.8lf]", pOrder->StopPrice);
         }
         MSG_LOG("%s","******</OnRtnOrder>******");
     }
@@ -410,42 +410,42 @@ void TraderSpi::OnRtnOrder(CThostFtdcOrderField *pOrder)
 
 void TraderSpi::OnRtnTrade(CThostFtdcTradeField *pTrade)
 {
-    INFO_LOG("******<OnRtnTrade>******");
-    if (pTrade)
-    {
-        PURE_LOG("\tBrokerID [%s]", pTrade->BrokerID);
-        PURE_LOG("\tInvestorID [%s]", pTrade->InvestorID);
-        PURE_LOG("\tInstrumentID [%s]", pTrade->InstrumentID);
-        PURE_LOG("\tOrderRef [%s]", pTrade->OrderRef);
-        PURE_LOG("\tUserID [%s]", pTrade->UserID);
-        PURE_LOG("\tExchangeID [%s]", pTrade->ExchangeID);
-        PURE_LOG("\tTradeID [%s]", pTrade->TradeID);
-        PURE_LOG("\tOrderSysID [%s]", pTrade->OrderSysID);
-        PURE_LOG("\tParticipantID [%s]", pTrade->ParticipantID);
-        PURE_LOG("\tClientID [%s]", pTrade->ClientID);
-        PURE_LOG("\tExchangeInstID [%s]", pTrade->ExchangeInstID);
-        PURE_LOG("\tTradeDate [%s]", pTrade->TradeDate);
-        PURE_LOG("\tTradeTime [%s]", pTrade->TradeTime);
-        PURE_LOG("\tTraderID [%s]", pTrade->TraderID);
-        PURE_LOG("\tOrderLocalID [%s]", pTrade->OrderLocalID);
-        PURE_LOG("\tClearingPartID [%s]", pTrade->ClearingPartID);
-        PURE_LOG("\tBusinessUnit [%s]", pTrade->BusinessUnit);
-        PURE_LOG("\tTradingDay [%s]", pTrade->TradingDay);
-        PURE_LOG("\tInvestUnitID [%s]", pTrade->InvestUnitID);
-        PURE_LOG("\tVolume [%d]", pTrade->Volume);
-        PURE_LOG("\tSequenceNo [%d]", pTrade->SequenceNo);
-        PURE_LOG("\tSettlementID [%d]", pTrade->SettlementID);
-        PURE_LOG("\tBrokerOrderSeq [%d]", pTrade->BrokerOrderSeq);
-        PURE_LOG("\tDirection [%c]", pTrade->Direction);
-        PURE_LOG("\tTradingRole [%c]", pTrade->TradingRole);
-        PURE_LOG("\tOffsetFlag [%c]", pTrade->OffsetFlag);
-        PURE_LOG("\tHedgeFlag [%c]", pTrade->HedgeFlag);
-        PURE_LOG("\tTradeType [%c]", pTrade->TradeType);
-        PURE_LOG("\tPriceSource [%c]", pTrade->PriceSource);
-        PURE_LOG("\tTradeSource [%c]", pTrade->TradeSource);
-        PURE_LOG("\tPrice [%.8lf]", pTrade->Price);
-    }
-    INFO_LOG("******</OnRtnTrade>******");
+    // INFO_LOG("******<OnRtnTrade>******");
+    // if (pTrade)
+    // {
+    //     PURE_LOG("\tBrokerID [%s]", pTrade->BrokerID);
+    //     PURE_LOG("\tInvestorID [%s]", pTrade->InvestorID);
+    //     PURE_LOG("\tInstrumentID [%s]", pTrade->InstrumentID);
+    //     PURE_LOG("\tOrderRef [%s]", pTrade->OrderRef);
+    //     PURE_LOG("\tUserID [%s]", pTrade->UserID);
+    //     PURE_LOG("\tExchangeID [%s]", pTrade->ExchangeID);
+    //     PURE_LOG("\tTradeID [%s]", pTrade->TradeID);
+    //     PURE_LOG("\tOrderSysID [%s]", pTrade->OrderSysID);
+    //     PURE_LOG("\tParticipantID [%s]", pTrade->ParticipantID);
+    //     PURE_LOG("\tClientID [%s]", pTrade->ClientID);
+    //     PURE_LOG("\tExchangeInstID [%s]", pTrade->ExchangeInstID);
+    //     PURE_LOG("\tTradeDate [%s]", pTrade->TradeDate);
+    //     PURE_LOG("\tTradeTime [%s]", pTrade->TradeTime);
+    //     PURE_LOG("\tTraderID [%s]", pTrade->TraderID);
+    //     PURE_LOG("\tOrderLocalID [%s]", pTrade->OrderLocalID);
+    //     PURE_LOG("\tClearingPartID [%s]", pTrade->ClearingPartID);
+    //     PURE_LOG("\tBusinessUnit [%s]", pTrade->BusinessUnit);
+    //     PURE_LOG("\tTradingDay [%s]", pTrade->TradingDay);
+    //     PURE_LOG("\tInvestUnitID [%s]", pTrade->InvestUnitID);
+    //     PURE_LOG("\tVolume [%d]", pTrade->Volume);
+    //     PURE_LOG("\tSequenceNo [%d]", pTrade->SequenceNo);
+    //     PURE_LOG("\tSettlementID [%d]", pTrade->SettlementID);
+    //     PURE_LOG("\tBrokerOrderSeq [%d]", pTrade->BrokerOrderSeq);
+    //     PURE_LOG("\tDirection [%c]", pTrade->Direction);
+    //     PURE_LOG("\tTradingRole [%c]", pTrade->TradingRole);
+    //     PURE_LOG("\tOffsetFlag [%c]", pTrade->OffsetFlag);
+    //     PURE_LOG("\tHedgeFlag [%c]", pTrade->HedgeFlag);
+    //     PURE_LOG("\tTradeType [%c]", pTrade->TradeType);
+    //     PURE_LOG("\tPriceSource [%c]", pTrade->PriceSource);
+    //     PURE_LOG("\tTradeSource [%c]", pTrade->TradeSource);
+    //     PURE_LOG("\tPrice [%.8lf]", pTrade->Price);
+    // }
+    // INFO_LOG("******</OnRtnTrade>******");
 
     CThostFtdcTradeField* staticTradeField = new CThostFtdcTradeField;
     *staticTradeField = *pTrade;
@@ -459,58 +459,58 @@ void TraderSpi::OnRtnTrade(CThostFtdcTradeField *pTrade)
 void TraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
     PURE_LOG("<OnRspQryTradingAccount>");
-    if (pTradingAccount)
-    {
-        PURE_LOG("\tBrokerID [%s]", pTradingAccount->BrokerID);
-        PURE_LOG("\tAccountID [%s]", pTradingAccount->AccountID);
-        PURE_LOG("\tTradingDay [%s]", pTradingAccount->TradingDay);
-        PURE_LOG("\tCurrencyID [%s]", pTradingAccount->CurrencyID);
-        PURE_LOG("\tSettlementID [%d]", pTradingAccount->SettlementID);
-        PURE_LOG("\tBizType [%c]", pTradingAccount->BizType);
-        PURE_LOG("\tPreMortgage [%.8lf]", pTradingAccount->PreMortgage);
-        PURE_LOG("\tPreCredit [%.8lf]", pTradingAccount->PreCredit);
-        PURE_LOG("\tPreDeposit [%.8lf]", pTradingAccount->PreDeposit);
-        PURE_LOG("\tPreBalance [%.8lf]", pTradingAccount->PreBalance);
-        PURE_LOG("\tPreMargin [%.8lf]", pTradingAccount->PreMargin);
-        PURE_LOG("\tInterestBase [%.8lf]", pTradingAccount->InterestBase);
-        PURE_LOG("\tInterest [%.8lf]", pTradingAccount->Interest);
-        PURE_LOG("\tDeposit [%.8lf]", pTradingAccount->Deposit);
-        PURE_LOG("\tWithdraw [%.8lf]", pTradingAccount->Withdraw);
-        PURE_LOG("\tFrozenMargin [%.8lf]", pTradingAccount->FrozenMargin);
-        PURE_LOG("\tFrozenCash [%.8lf]", pTradingAccount->FrozenCash);
-        PURE_LOG("\tFrozenCommission [%.8lf]", pTradingAccount->FrozenCommission);
-        PURE_LOG("\tCurrMargin [%.8lf]", pTradingAccount->CurrMargin);
-        PURE_LOG("\tCashIn [%.8lf]", pTradingAccount->CashIn);
-        PURE_LOG("\tCommission [%.8lf]", pTradingAccount->Commission);
-        PURE_LOG("\tCloseProfit [%.8lf]", pTradingAccount->CloseProfit);
-        PURE_LOG("\tPositionProfit [%.8lf]", pTradingAccount->PositionProfit);
-        PURE_LOG("\tBalance [%.8lf]", pTradingAccount->Balance);
-        PURE_LOG("\tAvailable [%.8lf]", pTradingAccount->Available);
-        PURE_LOG("\tWithdrawQuota [%.8lf]", pTradingAccount->WithdrawQuota);
-        PURE_LOG("\tReserve [%.8lf]", pTradingAccount->Reserve);
-        PURE_LOG("\tCredit [%.8lf]", pTradingAccount->Credit);
-        PURE_LOG("\tMortgage [%.8lf]", pTradingAccount->Mortgage);
-        PURE_LOG("\tExchangeMargin [%.8lf]", pTradingAccount->ExchangeMargin);
-        PURE_LOG("\tDeliveryMargin [%.8lf]", pTradingAccount->DeliveryMargin);
-        PURE_LOG("\tExchangeDeliveryMargin [%.8lf]", pTradingAccount->ExchangeDeliveryMargin);
-        PURE_LOG("\tReserveBalance [%.8lf]", pTradingAccount->ReserveBalance);
-        PURE_LOG("\tPreFundMortgageIn [%.8lf]", pTradingAccount->PreFundMortgageIn);
-        PURE_LOG("\tPreFundMortgageOut [%.8lf]", pTradingAccount->PreFundMortgageOut);
-        PURE_LOG("\tFundMortgageIn [%.8lf]", pTradingAccount->FundMortgageIn);
-        PURE_LOG("\tFundMortgageOut [%.8lf]", pTradingAccount->FundMortgageOut);
-        PURE_LOG("\tFundMortgageAvailable [%.8lf]", pTradingAccount->FundMortgageAvailable);
-        PURE_LOG("\tMortgageableFund [%.8lf]", pTradingAccount->MortgageableFund);
-        PURE_LOG("\tSpecProductMargin [%.8lf]", pTradingAccount->SpecProductMargin);
-        PURE_LOG("\tSpecProductFrozenMargin [%.8lf]", pTradingAccount->SpecProductFrozenMargin);
-        PURE_LOG("\tSpecProductCommission [%.8lf]", pTradingAccount->SpecProductCommission);
-        PURE_LOG("\tSpecProductFrozenCommission [%.8lf]", pTradingAccount->SpecProductFrozenCommission);
-        PURE_LOG("\tSpecProductPositionProfit [%.8lf]", pTradingAccount->SpecProductPositionProfit);
-        PURE_LOG("\tSpecProductCloseProfit [%.8lf]", pTradingAccount->SpecProductCloseProfit);
-        PURE_LOG("\tSpecProductPositionProfitByAlg [%.8lf]", pTradingAccount->SpecProductPositionProfitByAlg);
-        PURE_LOG("\tSpecProductExchangeMargin [%.8lf]", pTradingAccount->SpecProductExchangeMargin);
-        PURE_LOG("\tFrozenSwap [%.8lf]", pTradingAccount->FrozenSwap);
-        PURE_LOG("\tRemainSwap [%.8lf]", pTradingAccount->RemainSwap);
-    }
+    // if (pTradingAccount)
+    // {
+    //     PURE_LOG("\tBrokerID [%s]", pTradingAccount->BrokerID);
+    //     PURE_LOG("\tAccountID [%s]", pTradingAccount->AccountID);
+    //     PURE_LOG("\tTradingDay [%s]", pTradingAccount->TradingDay);
+    //     PURE_LOG("\tCurrencyID [%s]", pTradingAccount->CurrencyID);
+    //     PURE_LOG("\tSettlementID [%d]", pTradingAccount->SettlementID);
+    //     PURE_LOG("\tBizType [%c]", pTradingAccount->BizType);
+    //     PURE_LOG("\tPreMortgage [%.8lf]", pTradingAccount->PreMortgage);
+    //     PURE_LOG("\tPreCredit [%.8lf]", pTradingAccount->PreCredit);
+    //     PURE_LOG("\tPreDeposit [%.8lf]", pTradingAccount->PreDeposit);
+    //     PURE_LOG("\tPreBalance [%.8lf]", pTradingAccount->PreBalance);
+    //     PURE_LOG("\tPreMargin [%.8lf]", pTradingAccount->PreMargin);
+    //     PURE_LOG("\tInterestBase [%.8lf]", pTradingAccount->InterestBase);
+    //     PURE_LOG("\tInterest [%.8lf]", pTradingAccount->Interest);
+    //     PURE_LOG("\tDeposit [%.8lf]", pTradingAccount->Deposit);
+    //     PURE_LOG("\tWithdraw [%.8lf]", pTradingAccount->Withdraw);
+    //     PURE_LOG("\tFrozenMargin [%.8lf]", pTradingAccount->FrozenMargin);
+    //     PURE_LOG("\tFrozenCash [%.8lf]", pTradingAccount->FrozenCash);
+    //     PURE_LOG("\tFrozenCommission [%.8lf]", pTradingAccount->FrozenCommission);
+    //     PURE_LOG("\tCurrMargin [%.8lf]", pTradingAccount->CurrMargin);
+    //     PURE_LOG("\tCashIn [%.8lf]", pTradingAccount->CashIn);
+    //     PURE_LOG("\tCommission [%.8lf]", pTradingAccount->Commission);
+    //     PURE_LOG("\tCloseProfit [%.8lf]", pTradingAccount->CloseProfit);
+    //     PURE_LOG("\tPositionProfit [%.8lf]", pTradingAccount->PositionProfit);
+    //     PURE_LOG("\tBalance [%.8lf]", pTradingAccount->Balance);
+    //     PURE_LOG("\tAvailable [%.8lf]", pTradingAccount->Available);
+    //     PURE_LOG("\tWithdrawQuota [%.8lf]", pTradingAccount->WithdrawQuota);
+    //     PURE_LOG("\tReserve [%.8lf]", pTradingAccount->Reserve);
+    //     PURE_LOG("\tCredit [%.8lf]", pTradingAccount->Credit);
+    //     PURE_LOG("\tMortgage [%.8lf]", pTradingAccount->Mortgage);
+    //     PURE_LOG("\tExchangeMargin [%.8lf]", pTradingAccount->ExchangeMargin);
+    //     PURE_LOG("\tDeliveryMargin [%.8lf]", pTradingAccount->DeliveryMargin);
+    //     PURE_LOG("\tExchangeDeliveryMargin [%.8lf]", pTradingAccount->ExchangeDeliveryMargin);
+    //     PURE_LOG("\tReserveBalance [%.8lf]", pTradingAccount->ReserveBalance);
+    //     PURE_LOG("\tPreFundMortgageIn [%.8lf]", pTradingAccount->PreFundMortgageIn);
+    //     PURE_LOG("\tPreFundMortgageOut [%.8lf]", pTradingAccount->PreFundMortgageOut);
+    //     PURE_LOG("\tFundMortgageIn [%.8lf]", pTradingAccount->FundMortgageIn);
+    //     PURE_LOG("\tFundMortgageOut [%.8lf]", pTradingAccount->FundMortgageOut);
+    //     PURE_LOG("\tFundMortgageAvailable [%.8lf]", pTradingAccount->FundMortgageAvailable);
+    //     PURE_LOG("\tMortgageableFund [%.8lf]", pTradingAccount->MortgageableFund);
+    //     PURE_LOG("\tSpecProductMargin [%.8lf]", pTradingAccount->SpecProductMargin);
+    //     PURE_LOG("\tSpecProductFrozenMargin [%.8lf]", pTradingAccount->SpecProductFrozenMargin);
+    //     PURE_LOG("\tSpecProductCommission [%.8lf]", pTradingAccount->SpecProductCommission);
+    //     PURE_LOG("\tSpecProductFrozenCommission [%.8lf]", pTradingAccount->SpecProductFrozenCommission);
+    //     PURE_LOG("\tSpecProductPositionProfit [%.8lf]", pTradingAccount->SpecProductPositionProfit);
+    //     PURE_LOG("\tSpecProductCloseProfit [%.8lf]", pTradingAccount->SpecProductCloseProfit);
+    //     PURE_LOG("\tSpecProductPositionProfitByAlg [%.8lf]", pTradingAccount->SpecProductPositionProfitByAlg);
+    //     PURE_LOG("\tSpecProductExchangeMargin [%.8lf]", pTradingAccount->SpecProductExchangeMargin);
+    //     PURE_LOG("\tFrozenSwap [%.8lf]", pTradingAccount->FrozenSwap);
+    //     PURE_LOG("\tRemainSwap [%.8lf]", pTradingAccount->RemainSwap);
+    // }
     if (pRspInfo)
     {
         TThostFtdcErrorMsgType msg;
@@ -572,26 +572,26 @@ void TraderSpi::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAct
     }
 
     PURE_LOG("<OnRspOrderAction>");
-    if (pInputOrderAction)
-    {
-        PURE_LOG("\tBrokerID [%s]", pInputOrderAction->BrokerID);
-        PURE_LOG("\tInvestorID [%s]", pInputOrderAction->InvestorID);
-        PURE_LOG("\tOrderRef [%s]", pInputOrderAction->OrderRef);
-        PURE_LOG("\tExchangeID [%s]", pInputOrderAction->ExchangeID);
-        PURE_LOG("\tOrderSysID [%s]", pInputOrderAction->OrderSysID);
-        PURE_LOG("\tUserID [%s]", pInputOrderAction->UserID);
-        PURE_LOG("\tInstrumentID [%s]", pInputOrderAction->InstrumentID);
-        PURE_LOG("\tInvestUnitID [%s]", pInputOrderAction->InvestUnitID);
-        PURE_LOG("\tIPAddress [%s]", pInputOrderAction->IPAddress);
-        PURE_LOG("\tMacAddress [%s]", pInputOrderAction->MacAddress);
-        PURE_LOG("\tOrderActionRef [%d]", pInputOrderAction->OrderActionRef);
-        PURE_LOG("\tRequestID [%d]", pInputOrderAction->RequestID);
-        PURE_LOG("\tFrontID [%d]", pInputOrderAction->FrontID);
-        PURE_LOG("\tSessionID [%d]", pInputOrderAction->SessionID);
-        PURE_LOG("\tVolumeChange [%d]", pInputOrderAction->VolumeChange);
-        PURE_LOG("\tActionFlag [%c]", pInputOrderAction->ActionFlag);
-        PURE_LOG("\tLimitPrice [%.8lf]", pInputOrderAction->LimitPrice);
-    }
+    // if (pInputOrderAction)
+    // {
+    //     PURE_LOG("\tBrokerID [%s]", pInputOrderAction->BrokerID);
+    //     PURE_LOG("\tInvestorID [%s]", pInputOrderAction->InvestorID);
+    //     PURE_LOG("\tOrderRef [%s]", pInputOrderAction->OrderRef);
+    //     PURE_LOG("\tExchangeID [%s]", pInputOrderAction->ExchangeID);
+    //     PURE_LOG("\tOrderSysID [%s]", pInputOrderAction->OrderSysID);
+    //     PURE_LOG("\tUserID [%s]", pInputOrderAction->UserID);
+    //     PURE_LOG("\tInstrumentID [%s]", pInputOrderAction->InstrumentID);
+    //     PURE_LOG("\tInvestUnitID [%s]", pInputOrderAction->InvestUnitID);
+    //     PURE_LOG("\tIPAddress [%s]", pInputOrderAction->IPAddress);
+    //     PURE_LOG("\tMacAddress [%s]", pInputOrderAction->MacAddress);
+    //     PURE_LOG("\tOrderActionRef [%d]", pInputOrderAction->OrderActionRef);
+    //     PURE_LOG("\tRequestID [%d]", pInputOrderAction->RequestID);
+    //     PURE_LOG("\tFrontID [%d]", pInputOrderAction->FrontID);
+    //     PURE_LOG("\tSessionID [%d]", pInputOrderAction->SessionID);
+    //     PURE_LOG("\tVolumeChange [%d]", pInputOrderAction->VolumeChange);
+    //     PURE_LOG("\tActionFlag [%c]", pInputOrderAction->ActionFlag);
+    //     PURE_LOG("\tLimitPrice [%.8lf]", pInputOrderAction->LimitPrice);
+    // }
     if (pRspInfo)
     {
         TThostFtdcErrorMsgType msg;
@@ -619,38 +619,38 @@ void TraderSpi::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAct
 void TraderSpi::OnErrRtnOrderAction(CThostFtdcOrderActionField *pOrderAction, CThostFtdcRspInfoField *pRspInfo)
 {
     PURE_LOG("<OnErrRtnOrderAction>");
-    if (pOrderAction)
-    {
-        PURE_LOG("\tBrokerID [%s]", pOrderAction->BrokerID);
-        PURE_LOG("\tInvestorID [%s]", pOrderAction->InvestorID);
-        PURE_LOG("\tOrderRef [%s]", pOrderAction->OrderRef);
-        PURE_LOG("\tExchangeID [%s]", pOrderAction->ExchangeID);
-        PURE_LOG("\tOrderSysID [%s]", pOrderAction->OrderSysID);
-        PURE_LOG("\tActionDate [%s]", pOrderAction->ActionDate);
-        PURE_LOG("\tActionTime [%s]", pOrderAction->ActionTime);
-        PURE_LOG("\tTraderID [%s]", pOrderAction->TraderID);
-        PURE_LOG("\tOrderLocalID [%s]", pOrderAction->OrderLocalID);
-        PURE_LOG("\tActionLocalID [%s]", pOrderAction->ActionLocalID);
-        PURE_LOG("\tParticipantID [%s]", pOrderAction->ParticipantID);
-        PURE_LOG("\tClientID [%s]", pOrderAction->ClientID);
-        PURE_LOG("\tBusinessUnit [%s]", pOrderAction->BusinessUnit);
-        PURE_LOG("\tUserID [%s]", pOrderAction->UserID);
-        PURE_LOG("\tStatusMsg [%s]", pOrderAction->StatusMsg);
-        PURE_LOG("\tInstrumentID [%s]", pOrderAction->InstrumentID);
-        PURE_LOG("\tBranchID [%s]", pOrderAction->BranchID);
-        PURE_LOG("\tInvestUnitID [%s]", pOrderAction->InvestUnitID);
-        PURE_LOG("\tIPAddress [%s]", pOrderAction->IPAddress);
-        PURE_LOG("\tMacAddress [%s]", pOrderAction->MacAddress);
-        PURE_LOG("\tOrderActionRef [%d]", pOrderAction->OrderActionRef);
-        PURE_LOG("\tRequestID [%d]", pOrderAction->RequestID);
-        PURE_LOG("\tFrontID [%d]", pOrderAction->FrontID);
-        PURE_LOG("\tSessionID [%d]", pOrderAction->SessionID);
-        PURE_LOG("\tVolumeChange [%d]", pOrderAction->VolumeChange);
-        PURE_LOG("\tInstallID [%d]", pOrderAction->InstallID);
-        PURE_LOG("\tActionFlag [%c]", pOrderAction->ActionFlag);
-        PURE_LOG("\tOrderActionStatus [%c]", pOrderAction->OrderActionStatus);
-        PURE_LOG("\tLimitPrice [%.8lf]", pOrderAction->LimitPrice);
-    }
+    // if (pOrderAction)
+    // {
+    //     PURE_LOG("\tBrokerID [%s]", pOrderAction->BrokerID);
+    //     PURE_LOG("\tInvestorID [%s]", pOrderAction->InvestorID);
+    //     PURE_LOG("\tOrderRef [%s]", pOrderAction->OrderRef);
+    //     PURE_LOG("\tExchangeID [%s]", pOrderAction->ExchangeID);
+    //     PURE_LOG("\tOrderSysID [%s]", pOrderAction->OrderSysID);
+    //     PURE_LOG("\tActionDate [%s]", pOrderAction->ActionDate);
+    //     PURE_LOG("\tActionTime [%s]", pOrderAction->ActionTime);
+    //     PURE_LOG("\tTraderID [%s]", pOrderAction->TraderID);
+    //     PURE_LOG("\tOrderLocalID [%s]", pOrderAction->OrderLocalID);
+    //     PURE_LOG("\tActionLocalID [%s]", pOrderAction->ActionLocalID);
+    //     PURE_LOG("\tParticipantID [%s]", pOrderAction->ParticipantID);
+    //     PURE_LOG("\tClientID [%s]", pOrderAction->ClientID);
+    //     PURE_LOG("\tBusinessUnit [%s]", pOrderAction->BusinessUnit);
+    //     PURE_LOG("\tUserID [%s]", pOrderAction->UserID);
+    //     PURE_LOG("\tStatusMsg [%s]", pOrderAction->StatusMsg);
+    //     PURE_LOG("\tInstrumentID [%s]", pOrderAction->InstrumentID);
+    //     PURE_LOG("\tBranchID [%s]", pOrderAction->BranchID);
+    //     PURE_LOG("\tInvestUnitID [%s]", pOrderAction->InvestUnitID);
+    //     PURE_LOG("\tIPAddress [%s]", pOrderAction->IPAddress);
+    //     PURE_LOG("\tMacAddress [%s]", pOrderAction->MacAddress);
+    //     PURE_LOG("\tOrderActionRef [%d]", pOrderAction->OrderActionRef);
+    //     PURE_LOG("\tRequestID [%d]", pOrderAction->RequestID);
+    //     PURE_LOG("\tFrontID [%d]", pOrderAction->FrontID);
+    //     PURE_LOG("\tSessionID [%d]", pOrderAction->SessionID);
+    //     PURE_LOG("\tVolumeChange [%d]", pOrderAction->VolumeChange);
+    //     PURE_LOG("\tInstallID [%d]", pOrderAction->InstallID);
+    //     PURE_LOG("\tActionFlag [%c]", pOrderAction->ActionFlag);
+    //     PURE_LOG("\tOrderActionStatus [%c]", pOrderAction->OrderActionStatus);
+    //     PURE_LOG("\tLimitPrice [%.8lf]", pOrderAction->LimitPrice);
+    // }
     if (pRspInfo)
     {
         TThostFtdcErrorMsgType msg;
@@ -675,21 +675,21 @@ void TraderSpi::OnErrRtnOrderAction(CThostFtdcOrderActionField *pOrderAction, CT
 void TraderSpi::OnRspQryInstrumentMarginRate(CThostFtdcInstrumentMarginRateField *pInstrumentMarginRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
     PURE_LOG("<OnRspQryInstrumentMarginRate>");
-    if (pInstrumentMarginRate)
-    {
-        PURE_LOG("\tInvestorRange [%d]", pInstrumentMarginRate->InvestorRange);
-        PURE_LOG("\tBrokerID [%s]", pInstrumentMarginRate->BrokerID);
-        PURE_LOG("\tInvestorID [%s]", pInstrumentMarginRate->InvestorID);
-        PURE_LOG("\tHedgeFlag [%d]", pInstrumentMarginRate->HedgeFlag);
-        PURE_LOG("\tLongMarginRatioByMoney [%.8lf]", pInstrumentMarginRate->LongMarginRatioByMoney);
-        PURE_LOG("\tLongMarginRatioByVolume [%.8lf]", pInstrumentMarginRate->LongMarginRatioByVolume);
-        PURE_LOG("\tShortMarginRatioByMoney [%.8lf]", pInstrumentMarginRate->ShortMarginRatioByMoney);
-        PURE_LOG("\tShortMarginRatioByVolume [%.8lf]", pInstrumentMarginRate->ShortMarginRatioByVolume);
-        PURE_LOG("\tIsRelative [%d]", pInstrumentMarginRate->IsRelative);
-        PURE_LOG("\tExchangeID [%s]", pInstrumentMarginRate->ExchangeID);
-        PURE_LOG("\tInvestUnitID [%s]", pInstrumentMarginRate->InvestUnitID);
-        PURE_LOG("\tInstrumentID [%s]", pInstrumentMarginRate->InstrumentID);
-    }
+    // if (pInstrumentMarginRate)
+    // {
+    //     PURE_LOG("\tInvestorRange [%d]", pInstrumentMarginRate->InvestorRange);
+    //     PURE_LOG("\tBrokerID [%s]", pInstrumentMarginRate->BrokerID);
+    //     PURE_LOG("\tInvestorID [%s]", pInstrumentMarginRate->InvestorID);
+    //     PURE_LOG("\tHedgeFlag [%d]", pInstrumentMarginRate->HedgeFlag);
+    //     PURE_LOG("\tLongMarginRatioByMoney [%.8lf]", pInstrumentMarginRate->LongMarginRatioByMoney);
+    //     PURE_LOG("\tLongMarginRatioByVolume [%.8lf]", pInstrumentMarginRate->LongMarginRatioByVolume);
+    //     PURE_LOG("\tShortMarginRatioByMoney [%.8lf]", pInstrumentMarginRate->ShortMarginRatioByMoney);
+    //     PURE_LOG("\tShortMarginRatioByVolume [%.8lf]", pInstrumentMarginRate->ShortMarginRatioByVolume);
+    //     PURE_LOG("\tIsRelative [%d]", pInstrumentMarginRate->IsRelative);
+    //     PURE_LOG("\tExchangeID [%s]", pInstrumentMarginRate->ExchangeID);
+    //     PURE_LOG("\tInvestUnitID [%s]", pInstrumentMarginRate->InvestUnitID);
+    //     PURE_LOG("\tInstrumentID [%s]", pInstrumentMarginRate->InstrumentID);
+    // }
     if (pRspInfo)
     {
         TThostFtdcErrorMsgType msg;
@@ -724,22 +724,22 @@ void TraderSpi::OnRspQryInstrumentMarginRate(CThostFtdcInstrumentMarginRateField
 void TraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionRateField *pInstrumentCommissionRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
     PURE_LOG("<OnRspQryInstrumentCommissionRate>");
-    if (pInstrumentCommissionRate)
-    {
-        PURE_LOG("\tInvestorRange [%d]", pInstrumentCommissionRate->InvestorRange);
-        PURE_LOG("\tBrokerID [%s]", pInstrumentCommissionRate->BrokerID);
-        PURE_LOG("\tInvestorID [%s]", pInstrumentCommissionRate->InvestorID);
-        PURE_LOG("\tOpenRatioByMoney [%.8lf]", pInstrumentCommissionRate->OpenRatioByMoney);
-        PURE_LOG("\tOpenRatioByVolume [%.8lf]", pInstrumentCommissionRate->OpenRatioByVolume);
-        PURE_LOG("\tCloseRatioByMoney [%.8lf]", pInstrumentCommissionRate->CloseRatioByMoney);
-        PURE_LOG("\tCloseRatioByVolume [%.8lf]", pInstrumentCommissionRate->CloseRatioByVolume);
-        PURE_LOG("\tCloseTodayRatioByMoney [%.8lf]", pInstrumentCommissionRate->CloseTodayRatioByMoney);
-        PURE_LOG("\tCloseTodayRatioByVolume [%.8lf]", pInstrumentCommissionRate->CloseTodayRatioByVolume);
-        PURE_LOG("\tExchangeID [%s]", pInstrumentCommissionRate->ExchangeID);
-        PURE_LOG("\tBizType [%d]", pInstrumentCommissionRate->BizType);
-        PURE_LOG("\tInvestUnitID [%s]", pInstrumentCommissionRate->InvestUnitID);
-        PURE_LOG("\tInstrumentID [%s]", pInstrumentCommissionRate->InstrumentID);
-    }
+    // if (pInstrumentCommissionRate)
+    // {
+    //     PURE_LOG("\tInvestorRange [%d]", pInstrumentCommissionRate->InvestorRange);
+    //     PURE_LOG("\tBrokerID [%s]", pInstrumentCommissionRate->BrokerID);
+    //     PURE_LOG("\tInvestorID [%s]", pInstrumentCommissionRate->InvestorID);
+    //     PURE_LOG("\tOpenRatioByMoney [%.8lf]", pInstrumentCommissionRate->OpenRatioByMoney);
+    //     PURE_LOG("\tOpenRatioByVolume [%.8lf]", pInstrumentCommissionRate->OpenRatioByVolume);
+    //     PURE_LOG("\tCloseRatioByMoney [%.8lf]", pInstrumentCommissionRate->CloseRatioByMoney);
+    //     PURE_LOG("\tCloseRatioByVolume [%.8lf]", pInstrumentCommissionRate->CloseRatioByVolume);
+    //     PURE_LOG("\tCloseTodayRatioByMoney [%.8lf]", pInstrumentCommissionRate->CloseTodayRatioByMoney);
+    //     PURE_LOG("\tCloseTodayRatioByVolume [%.8lf]", pInstrumentCommissionRate->CloseTodayRatioByVolume);
+    //     PURE_LOG("\tExchangeID [%s]", pInstrumentCommissionRate->ExchangeID);
+    //     PURE_LOG("\tBizType [%d]", pInstrumentCommissionRate->BizType);
+    //     PURE_LOG("\tInvestUnitID [%s]", pInstrumentCommissionRate->InvestUnitID);
+    //     PURE_LOG("\tInstrumentID [%s]", pInstrumentCommissionRate->InstrumentID);
+    // }
     if (pRspInfo)
     {
         TThostFtdcErrorMsgType msg;

@@ -90,7 +90,7 @@ bool OrderManage::addOrder(std::string orderKey)
     OrderContent* tmpOrder = new OrderContent();
 
     orderMaps.insert(std::pair<std::string, CThostFtdcInputOrderField*>(orderKey,tmpOrder));
-    INFO_LOG("add new order[%s] ok", orderKey.c_str());
+    // INFO_LOG("add new order[%s] ok", orderKey.c_str());
     return true;
 }
 
@@ -282,8 +282,8 @@ bool OrderManage::buildOrder(const std::string orderKey, const strategy_trader::
         ERROR_LOG("GetHostInfo error!");
     }
     strcpy(order.IPAddress,Ip.c_str());
-    INFO_LOG("fill order over! order is:");
-    printOrderInfo(order,"order");
+    // ("fill order over! order is:");
+    // printOrderInfo(order,"order");
 
     return true;
 }
@@ -390,8 +390,8 @@ bool OrderSave::saveSuccessOrderInsert(OrderContent& order)
 
 bool OrderSave::delOneRecordByOnRtnOrder(const OrderContent& orderContent)
 {
-    INFO_LOG("begin delOneRecordByOnRtnOrder, identity is[%s], orderRef is[%s], state[%s]",
-            orderContent.identityId.identity.c_str(),orderContent.orderRef.c_str(),orderContent.currentStateStr.c_str());
+    // INFO_LOG("begin delOneRecordByOnRtnOrder, identity is[%s], orderRef is[%s], state[%s]",
+    //         orderContent.identityId.identity.c_str(),orderContent.orderRef.c_str(),orderContent.currentStateStr.c_str());
 //    auto& jsonCfg = utils::JsonConfig::getInstance();
 //    std::string filePath = jsonCfg.getConfig("trader","DynmicSaveOrderFilePath").get<std::string>();
 //    if(!utils::isFileExist(filePath))
@@ -425,8 +425,8 @@ bool OrderSave::delOneRecordByOnRtnOrder(const OrderContent& orderContent)
 
 bool OrderSave::saveOnRtnOrderOrderState(const OrderContent& orderContent)
 {
-    INFO_LOG("begin saveOnRtnOrderOrderState, identity is[%s], orderRef is[%s], state[%s]",
-            orderContent.identityId.identity.c_str(),orderContent.orderRef.c_str(),orderContent.currentStateStr.c_str());
+    // INFO_LOG("begin saveOnRtnOrderOrderState, identity is[%s], orderRef is[%s], state[%s]",
+    //         orderContent.identityId.identity.c_str(),orderContent.orderRef.c_str(),orderContent.currentStateStr.c_str());
 //    auto& jsonCfg = utils::JsonConfig::getInstance();
 //    std::string filePath = jsonCfg.getConfig("trader","DynmicSaveOrderFilePath").get<std::string>();
 //    if(!utils::isFileExist(filePath))
@@ -504,6 +504,6 @@ bool OrderSave::saveOnRtnOrderOrderState(const OrderContent& orderContent)
 //        saveStream << setw(4) << saveContent << endl;
 //        saveStream.close();
 //    }
-    INFO_LOG("new state save ok, identity is[%s], orderRef is[%s]",orderContent.identityId.identity.c_str(),orderContent.orderRef.c_str());
+    // INFO_LOG("new state save ok, identity is[%s], orderRef is[%s]",orderContent.identityId.identity.c_str(),orderContent.orderRef.c_str());
     return true;
 }
