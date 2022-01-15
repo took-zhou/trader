@@ -51,7 +51,6 @@ void MarketEvent::handle(MsgStruct& msg)
     return;
 }
 
-
 void MarketEvent::QryInstrumentReqHandle(MsgStruct& msg)
 {
     market_trader::message reqMsg;
@@ -61,7 +60,7 @@ void MarketEvent::QryInstrumentReqHandle(MsgStruct& msg)
     if(!traderSer.ROLE(Trader).ROLE(CtpTraderApi).isLogIN)
     {
         ERROR_LOG("ctp not login!");
-        pubQryInstrumentRsq(INVALID_U32, true, false);
+        pubQryInstrumentRsq(nullptr, true, false);
         return;
     }
     auto& req = reqMsg.qry_instrument_req();
@@ -74,92 +73,33 @@ void MarketEvent::QryInstrumentReqHandle(MsgStruct& msg)
     traderApi->ReqQryInstrument();
 }
 
-void MarketEvent::pubQryInstrumentRsq(U32 mapKey, bool isFinish, bool result)
+void MarketEvent::pubQryInstrumentRsq(CThostFtdcInstrumentField *field, bool result, bool isFinish)
 {
     market_trader::message rsp;
     auto* qryInstruments = rsp.mutable_qry_instrument_rsp();
-    auto pubFunc = [](std::string strRsp){
-        std::string head = "market_trader.QryInstrumentRsq";
-        auto& recerSender = RecerSender::getInstance();
-        bool sendRes = recerSender.ROLE(Sender).ROLE(ProxySender).send(head.c_str(), strRsp.c_str());
-        if(!sendRes)
-        {
-            ERROR_LOG("send OrderInsertRsp error");
-            return;
-        }
-        return;
-    };
-    if(!result)
+
+    if (result == false)
     {
         qryInstruments->set_result(market_trader::Result::failed);
         qryInstruments->set_finish_flag(true);
-        std::string strRsp = rsp.SerializeAsString();
-        pubFunc(strRsp);
-        return;
     }
-    auto instrumentFieldList = ROLE(CtpEvent).qryRspsMap.at(mapKey);
-    U32 cnt{0};
-    U32 listSize = instrumentFieldList.partRspList.size();
-    for(U32 idx = 0; idx < listSize; idx++)
+    else
     {
-        if(cnt == 0)
-        {
-            rsp.Clear();
-            qryInstruments = rsp.mutable_qry_instrument_rsp();
-        }
-        auto& instrumentInfo = instrumentFieldList.partRspList.at(idx);
-        auto* instrumentData = qryInstruments->add_instrument_data_list();
-        instrumentData->set_instrumentid(instrumentInfo.InstrumentID);
-        instrumentData->set_exchangeid(instrumentInfo.ExchangeID);
-//        instrumentData->set_instrumentname(instrumentInfo.InstrumentName);
-//        instrumentData->set_exchangeinstid(instrumentInfo.ExchangeInstID);
-//        instrumentData->set_productid(instrumentInfo.ProductID);
-//        instrumentData->set_productclass(utils::charToString(instrumentInfo.ProductClass).c_str());
-//        instrumentData->set_deliveryyear(utils::intToString(instrumentInfo.DeliveryYear).c_str());
-//        instrumentData->set_deliverymonth(utils::intToString(instrumentInfo.DeliveryMonth).c_str());
-//        instrumentData->set_maxmarketordervolume(utils::intToString(instrumentInfo.MaxMarketOrderVolume).c_str());
-//        instrumentData->set_minmarketordervolume(utils::intToString(instrumentInfo.MinMarketOrderVolume).c_str());
-//        instrumentData->set_maxlimitordervolume(utils::intToString(instrumentInfo.MaxLimitOrderVolume).c_str());
-//        instrumentData->set_minlimitordervolume(utils::intToString(instrumentInfo.MinLimitOrderVolume).c_str());
-//        instrumentData->set_volumemultiple(utils::intToString(instrumentInfo.VolumeMultiple).c_str());
-        instrumentData->set_pricetick(utils::doubleToStringConvert(instrumentInfo.PriceTick).c_str());
-        instrumentData->set_createdate(instrumentInfo.CreateDate);
-        instrumentData->set_opendate(instrumentInfo.OpenDate);
-//        instrumentData->set_expiredate(instrumentInfo.ExpireDate);
-//        instrumentData->set_startdelivdate(instrumentInfo.StartDelivDate);
-//        instrumentData->set_enddelivdate(instrumentInfo.EndDelivDate);
-//        instrumentData->set_instlifephase(utils::charToString(instrumentInfo.InstLifePhase).c_str());
-        instrumentData->set_istrading(utils::intToString(instrumentInfo.IsTrading).c_str());
-//        instrumentData->set_positiontype(utils::charToString(instrumentInfo.PositionType).c_str());
-//        instrumentData->set_positiondatetype(utils::charToString(instrumentInfo.PositionDateType).c_str());
-//        instrumentData->set_longmarginratio(utils::doubleToStringConvert(instrumentInfo.LongMarginRatio).c_str());
-//        instrumentData->set_shortmarginratio(utils::doubleToStringConvert(instrumentInfo.ShortMarginRatio).c_str());
-//        instrumentData->set_maxmarginsidealgorithm(utils::charToString(instrumentInfo.MaxMarginSideAlgorithm).c_str());
-//        instrumentData->set_underlyinginstrid(instrumentInfo.UnderlyingInstrID);
-//        instrumentData->set_strikeprice(utils::doubleToStringConvert(instrumentInfo.StrikePrice).c_str());
-//        instrumentData->set_optionstype(utils::charToString(instrumentInfo.OptionsType).c_str());
-//        instrumentData->set_underlyingmultiple(utils::doubleToStringConvert(instrumentInfo.UnderlyingMultiple).c_str());
-//        instrumentData->set_combinationtype(utils::charToString(instrumentInfo.CombinationType).c_str());
-        cnt++;
-        if(cnt == MAX_INSTRUMENT_STATUS_SIZE)
-        {
-            qryInstruments->set_result(market_trader::Result::success);
-            bool isFinishFlag = (idx == listSize-1) ? true : false;
-            qryInstruments->set_finish_flag(isFinishFlag);
-            std::string strRsp = rsp.SerializeAsString();
-            pubFunc(strRsp);
-            //utils::printProtoMsg(rsp);
-            cnt = 0;
-        }
-        else if(idx == listSize-1)
-        {
-            qryInstruments->set_result(market_trader::Result::success);
-            qryInstruments->set_finish_flag(true);
-            std::string strRsp = rsp.SerializeAsString();
-            pubFunc(strRsp);
-            //utils::printProtoMsg(rsp);
-        }
-        usleep(WAITTIME_FOR_MARKET_HANDLE);
+        qryInstruments->set_instrument_id(field->InstrumentID);
+        qryInstruments->set_exchange_id(field->ExchangeID);
+        qryInstruments->set_price_tick(utils::doubleToStringConvert(field->PriceTick).c_str());
+        qryInstruments->set_result(market_trader::Result::success);
+        qryInstruments->set_finish_flag(isFinish);
+    }
+
+    std::string strRsp = rsp.SerializeAsString();
+    std::string head = "market_trader.QryInstrumentRsq";
+    auto& recerSender = RecerSender::getInstance();
+    bool sendRes = recerSender.ROLE(Sender).ROLE(ProxySender).send(head.c_str(), strRsp.c_str());
+
+    if (sendRes == false)
+    {
+        ERROR_LOG("send OrderInsertRsp error");
     }
     return;
 }

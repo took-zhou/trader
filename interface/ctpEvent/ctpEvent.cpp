@@ -411,86 +411,10 @@ void CtpEvent::OnErrRtnOrderInsertHandle(MsgStruct& msg)
 
 void CtpEvent::OnRspQryInstrumentHandle(MsgStruct& msg)
 {
-    U32 key{U32_MAX};
-    bool result = getNotFullRspMap(key);
-    if(! result)
+    if(strlen(msg.specialMsg.instrumentField.InstrumentID) <= 6 || msg.bIsLast == true)
     {
-        key = addNewRspsList();
+        ROLE(MarketEvent).pubQryInstrumentRsq(&msg.specialMsg.instrumentField, true, msg.bIsLast);
     }
-    auto& InstrumentStatusList = qryRspsMap.at(key);
-    //static std::vector<CThostFtdcInstrumentField> InstrumentStatusList;
-    CThostFtdcInstrumentField ctpRspField =msg.specialMsg.instrumentField;
-    //WARNING_LOG("OnRspQryInstrumentHandle ctpRspField.InstrumentID [%s]",ctpRspField.InstrumentID);
-    if(strlen(ctpRspField.InstrumentID) <= 6)
-    {
-        m.lock();
-        InstrumentStatusList.partRspList.push_back(ctpRspField);
-        m.unlock();
-    }
-    //delete (CThostFtdcInstrumentField*)msg.ctpMsg;
-    if(msg.bIsLast)
-    {
-        INFO_LOG("msg.bIsLast [%s]",msg.bIsLast?"true":"false");
-        InstrumentStatusList.isOk = true;
-        ROLE(MarketEvent).pubQryInstrumentRsq(key, msg.bIsLast);
-        delRspsList(key);
-        INFO_LOG("pub QryInstrumentRsq ok! bIsLast is [%s],mapKey[%u]", msg.bIsLast?"true":"false",key);
-    }
-}
-
-U32 CtpEvent::addNewRspsList()
-{
-    InstrumentQryTmp tmp;
-    U32 key = buildNewKey();
-    qryRspsMap.insert(std::pair<U32, InstrumentQryTmp>(key,tmp));
-    return key;
-}
-
-void CtpEvent::delRspsList(U32 key)
-{
-    auto iter = qryRspsMap.find(key);
-    if(iter == qryRspsMap.end())
-    {
-        return;
-    }
-    iter->second.partRspList.clear();
-    qryRspsMap.erase(key);
-}
-
-bool CtpEvent::getNotFullRspMap(U32& key)
-{
-    for(auto& iter : qryRspsMap)
-    {
-        if(iter.second.isOk == false)
-        {
-            key = iter.first;
-            return true;
-        }
-    }
-    return false;
-}
-
-U32 CtpEvent::buildNewKey()
-{
-    std::vector<U32> existKeys;
-    for(auto& iter : qryRspsMap)
-    {
-        existKeys.push_back(iter.first);
-    }
-    if(existKeys.size() == 0)
-    {
-        return 0;
-    }
-    auto maxKey = *(std::max_element(existKeys.begin(),existKeys.end()));
-    for(U32 i = 0; i < maxKey; i++)
-    {
-        if(qryRspsMap.find(i) != qryRspsMap.end())
-        {
-            continue;
-        }
-        return i;
-    }
-    return maxKey+1;
 }
 
 void CtpEvent::OnRspQryInstrumentMarginRateHandle(MsgStruct& msg)

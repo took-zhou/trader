@@ -51,7 +51,6 @@ struct CtpEvent
 
     USE_ROLE(MarketEvent);
     USE_ROLE(StrategyEvent);
-    std::map<U32,InstrumentQryTmp> qryRspsMap;
 private:
     U32 buildNewKey();
     bool getNotFullRspMap(U32& key);
