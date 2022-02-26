@@ -223,7 +223,7 @@ public:
     int ReqQryProduct(CThostFtdcQryProductField *pQryProduct, int nRequestID){};
 
     ///请求查询合约
-    int ReqQryInstrument();
+    int ReqQryInstrument(utils::InstrumtntID ins_exch);
     int ReqQryInstrument(CThostFtdcQryInstrumentField *pQryInstrument, int nRequestID){};
 
     ///请求查询行情

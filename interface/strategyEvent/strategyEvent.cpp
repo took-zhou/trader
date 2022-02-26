@@ -103,6 +103,7 @@ void StrategyEvent::regMsgFun()
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("OrderCancelReq",     [this](MsgStruct& msg){OrderCancelReqHandle(msg);}));
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("MarginRateReq",     [this](MsgStruct& msg){MarginRateReqHandle(msg);}));
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("CommissionRateReq",     [this](MsgStruct& msg){CommissionRateReqHandle(msg);}));
+    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("InstrumentReq",     [this](MsgStruct& msg){InstrumentReqHandle(msg);}));
 
     for(auto iter : msgFuncMap)
     {
@@ -703,7 +704,84 @@ void StrategyEvent::pubCommissionRateRsp(std::string identity, bool result, cons
     utils::printProtoMsg(rsp);
     if(!sendRes)
     {
-        ERROR_LOG("send OrderInsertRsp error");
+        ERROR_LOG("send CommissionRateRsp error");
+        return;
+    }
+    return;
+}
+
+void StrategyEvent::InstrumentReqHandle(MsgStruct& msg)
+{
+    strategy_trader::message reqMsg;
+    reqMsg.ParseFromString(msg.pbMsg);
+    utils::printProtoMsg(reqMsg);
+    auto identify = reqMsg.instrument_req().process_random_id();
+    auto& traderSer = TraderSevice::getInstance();
+    if(!traderSer.ROLE(Trader).ROLE(CtpTraderApi).isLogIN)
+    {
+        ERROR_LOG("ctp not login!");
+        pubInstrumentRsp(identify, false, "ctp_logout");
+        return;
+    }
+
+    traderSer.ROLE(Trader).ROLE(TmpStore).instrumentInfo.ProcessRandomId = identify;
+    utils::InstrumtntID ins_exch;
+    ins_exch.ins = reqMsg.instrument_req().instrument_info().instrument_id();
+    ins_exch.exch = reqMsg.instrument_req().instrument_info().exchange_id();
+    auto* traderApi = traderSer.ROLE(Trader).ROLE(CtpTraderApi).traderApi;
+
+    if (traderApi->ReqQryInstrument(ins_exch) != 0)
+    {
+        ERROR_LOG("req error!");
+        pubInstrumentRsp(identify, false, "req error");
+        return;
+    }
+
+    std::string semName = "trader_ReqQryInstrument_Single";
+    globalSem.waitSemBySemName(semName);
+    INFO_LOG("waitSemBySemName [%s] ok",semName.c_str());
+    globalSem.delOrderSem(semName);
+
+    if (traderSer.ROLE(Trader).ROLE(TmpStore).instrumentInfo.rsp_is_null == true)
+    {
+        pubInstrumentRsp(identify, false, "rsp is null");
+        return;
+    }
+
+    pubInstrumentRsp(identify, true);
+}
+
+void StrategyEvent::pubInstrumentRsp(std::string identity, bool result, const std::string& reason)
+{
+    strategy_trader::message rsp;
+    auto* instrumentRsp = rsp.mutable_instrument_rsp();
+    auto& traderSer = TraderSevice::getInstance();
+    instrumentRsp->set_result(result?strategy_trader::Result::success:strategy_trader::Result::failed);
+
+    if (result == true)
+    {
+        auto& instrumentInfo = traderSer.ROLE(Trader).ROLE(TmpStore).instrumentInfo;
+        instrumentRsp->set_is_trading(instrumentInfo.is_trading);
+        instrumentRsp->set_max_limit_order_volume(instrumentInfo.max_limit_order_volume);
+        instrumentRsp->set_max_market_order_volume(instrumentInfo.max_market_order_volume);
+        instrumentRsp->set_min_limit_order_volume(instrumentInfo.min_limit_order_volume);
+        instrumentRsp->set_min_market_order_volume(instrumentInfo.min_market_order_volume);
+        instrumentRsp->set_price_tick(instrumentInfo.price_tick);
+        instrumentRsp->set_volume_multiple(instrumentInfo.volume_multiple);
+    }
+    else
+    {
+        instrumentRsp->set_failedreason(reason);
+    }
+
+    std::string strRsp = rsp.SerializeAsString();
+    std::string head = "strategy_trader.InstrumentRsp." + identity;
+    auto& recerSender = RecerSender::getInstance();
+    bool sendRes = recerSender.ROLE(Sender).ROLE(ProxySender).send(head.c_str(), strRsp.c_str());
+    utils::printProtoMsg(rsp);
+    if(!sendRes)
+    {
+        ERROR_LOG("send InstrumentRsp error");
         return;
     }
     return;

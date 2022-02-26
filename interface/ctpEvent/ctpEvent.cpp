@@ -411,9 +411,50 @@ void CtpEvent::OnErrRtnOrderInsertHandle(MsgStruct& msg)
 
 void CtpEvent::OnRspQryInstrumentHandle(MsgStruct& msg)
 {
-    if(strlen(msg.specialMsg.instrumentField.InstrumentID) <= 6 || msg.bIsLast == true)
+    CThostFtdcInstrumentField* instrumentField = static_cast<CThostFtdcInstrumentField*>(msg.ctpMsg);
+
+    if (globalSem.existSem("trader_ReqQryInstrument_ALL"))
     {
-        ROLE(MarketEvent).pubQryInstrumentRsq(&msg.specialMsg.instrumentField, true, msg.bIsLast);
+        if (instrumentField)
+        {
+            if(strlen(instrumentField->InstrumentID) <= 6 || msg.bIsLast == true)
+            {
+                ROLE(MarketEvent).pubQryInstrumentRsp(instrumentField, true, msg.bIsLast);
+                delete instrumentField;
+            }
+
+            if (msg.bIsLast == true)
+            {
+                // 这个信号量比较特殊，不需要post wait操作，直接删除
+                globalSem.delOrderSem("trader_ReqQryInstrument_ALL");
+            }
+        }
+    }
+    else if (globalSem.existSem("trader_ReqQryInstrument_Single"))
+    {
+        auto& traderSer = TraderSevice::getInstance();
+        auto& instrumentInfo = traderSer.ROLE(Trader).ROLE(TmpStore).instrumentInfo ;
+
+        if (instrumentField)
+        {
+            instrumentInfo.is_trading = instrumentField->IsTrading;
+            instrumentInfo.max_limit_order_volume = instrumentField->MaxLimitOrderVolume;
+            instrumentInfo.max_market_order_volume = instrumentField->MaxMarketOrderVolume;
+            instrumentInfo.min_limit_order_volume = instrumentField->MinLimitOrderVolume;
+            instrumentInfo.min_market_order_volume = instrumentField->MinMarketOrderVolume;
+            instrumentInfo.price_tick = utils::doubleToStringConvert(instrumentField->PriceTick);
+            instrumentInfo.volume_multiple = utils::doubleToStringConvert(instrumentField->VolumeMultiple);
+            instrumentInfo.rsp_is_null = false;
+            delete instrumentField;
+        }
+        else
+        {
+            instrumentInfo.rsp_is_null = true;
+        }
+
+        std::string semName = "trader_ReqQryInstrument_Single";
+        globalSem.postSemBySemName(semName);
+        INFO_LOG("post sem of [%s]", semName.c_str());
     }
 }
 

@@ -35,6 +35,9 @@ struct StrategyEvent
     void CommissionRateReqHandle(MsgStruct& msg);
     void pubCommissionRateRsp(std::string identity, bool result, const std::string& reason = "success");
 
+    void InstrumentReqHandle(MsgStruct& msg);
+    void pubInstrumentRsp(std::string identity, bool result, const std::string& reason = "success");
+
     std::map<std::string, std::function<void(MsgStruct& msg)>> msgFuncMap;
 };
 

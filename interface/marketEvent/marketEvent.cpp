@@ -15,6 +15,7 @@
 #include "trader/infra/recerSender.h"
 #include "trader/interface/ctpEvent/ctpEvent.h"
 #include "common/self/basetype.h"
+#include "common/self/utils.h"
 
 constexpr U32 MAX_INSTRUMENT_STATUS_SIZE = 5;
 constexpr U32 WAITTIME_FOR_MARKET_HANDLE = 10000;
@@ -60,7 +61,7 @@ void MarketEvent::QryInstrumentReqHandle(MsgStruct& msg)
     if(!traderSer.ROLE(Trader).ROLE(CtpTraderApi).isLogIN)
     {
         ERROR_LOG("ctp not login!");
-        pubQryInstrumentRsq(nullptr, true, false);
+        pubQryInstrumentRsp(nullptr, true, false);
         return;
     }
     auto& req = reqMsg.qry_instrument_req();
@@ -70,10 +71,14 @@ void MarketEvent::QryInstrumentReqHandle(MsgStruct& msg)
         return;
     }
     auto* traderApi = traderSer.ROLE(Trader).ROLE(CtpTraderApi).traderApi;
-    traderApi->ReqQryInstrument();
+
+    utils::InstrumtntID ins_exch;
+    ins_exch.exch = "";
+    ins_exch.ins = "";
+    traderApi->ReqQryInstrument(ins_exch);
 }
 
-void MarketEvent::pubQryInstrumentRsq(CThostFtdcInstrumentField *field, bool result, bool isFinish)
+void MarketEvent::pubQryInstrumentRsp(CThostFtdcInstrumentField *field, bool result, bool isFinish)
 {
     market_trader::message rsp;
     auto* qryInstruments = rsp.mutable_qry_instrument_rsp();
@@ -93,7 +98,7 @@ void MarketEvent::pubQryInstrumentRsq(CThostFtdcInstrumentField *field, bool res
     }
 
     std::string strRsp = rsp.SerializeAsString();
-    std::string head = "market_trader.QryInstrumentRsq";
+    std::string head = "market_trader.QryInstrumentRsp";
     auto& recerSender = RecerSender::getInstance();
     bool sendRes = recerSender.ROLE(Sender).ROLE(ProxySender).send(head.c_str(), strRsp.c_str());
 

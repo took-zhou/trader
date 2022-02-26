@@ -27,11 +27,6 @@ enum struct EventType
     INVALID             = 5
 };
 
-struct SpecialMsg
-{
-    CThostFtdcInstrumentField instrumentField;
-};
-
 struct MsgStruct
 {
     std::string sessionName{""};
@@ -41,7 +36,6 @@ struct MsgStruct
     void* ctpMsgInfo{nullptr};
     bool bIsLast{false};
 
-    SpecialMsg specialMsg;
     bool isValid()
     {
         return sessionName != std::string("") and msgName != std::string("");

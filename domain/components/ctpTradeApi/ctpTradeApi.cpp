@@ -22,13 +22,22 @@
 extern GlobalSem globalSem;
 
 
-int CtpTraderBaseApi::ReqQryInstrument()
+int CtpTraderBaseApi::ReqQryInstrument(utils::InstrumtntID ins_exch)
 {
     CThostFtdcQryInstrumentField requestMsg{0};
-    std::strcpy(requestMsg.ExchangeID, "");
-    std::strcpy(requestMsg.InstrumentID, "");
+    std::strcpy(requestMsg.ExchangeID, ins_exch.exch.c_str());
+    std::strcpy(requestMsg.InstrumentID, ins_exch.ins.c_str());
 
-    std::string semName = "trader_ReqQryInstrument";
+    std::string semName = "";
+    if (ins_exch.exch == "" && ins_exch.ins == "")
+    {
+        semName = "trader_ReqQryInstrument_ALL";
+    }
+    else
+    {
+        semName = "trader_ReqQryInstrument_Single";
+    }
+
     globalSem.addOrderSem(semName);
     int result = m_pApi->ReqQryInstrument(&requestMsg, requestIdBuildAlg());
     INFO_LOG("ReqQryInstrument send result is [%d]",result);

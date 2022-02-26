@@ -544,18 +544,26 @@ void TraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAc
 
 void TraderSpi::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-    if(pInstrument ==nullptr)
+    if (pInstrument)
     {
-        ERROR_LOG("pInstrument == nullptr");
-        return;
+        CThostFtdcInstrumentField* staticInstrumentField = new CThostFtdcInstrumentField;
+        *staticInstrumentField = *pInstrument;
+        MsgStruct msgStruct;
+        msgStruct.sessionName = "ctp";
+        msgStruct.msgName = "OnRspQryInstrument";
+        msgStruct.ctpMsg = static_cast<void*>(staticInstrumentField);
+        msgStruct.bIsLast = bIsLast;
+        ctpMsgChan << msgStruct;
     }
-
-    MsgStruct msgStruct;
-    msgStruct.sessionName = "ctp";
-    msgStruct.msgName = "OnRspQryInstrument";
-    msgStruct.specialMsg.instrumentField =*pInstrument;
-    msgStruct.bIsLast = bIsLast;
-    ctpMsgChan << msgStruct;
+    else
+    {
+        MsgStruct msgStruct;
+        msgStruct.sessionName = "ctp";
+        msgStruct.msgName = "OnRspQryInstrument";
+        msgStruct.ctpMsg = nullptr;
+        msgStruct.bIsLast = bIsLast;
+        ctpMsgChan << msgStruct;
+    }
 }
 
 void TraderSpi::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)

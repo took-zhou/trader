@@ -84,11 +84,25 @@ struct CommissionRate
     std::string CloseTodayRatioByVolume {""};                 ///平今手续费
 };
 
+struct InstrumentInfo
+{
+    bool rsp_is_null                        {false};              //请求是否空标志
+    std::string ProcessRandomId             {""};                 ///请求进程标识
+    std::string  price_tick                 {""};
+    int  max_market_order_volume   {0};
+    int  min_market_order_volume   {0};
+    int  max_limit_order_volume    {0};
+    int  min_limit_order_volume    {0};
+    std::string  volume_multiple            {""};
+    int is_trading                         {0};
+};
+
 struct TmpStore
 {
     AccountInfo accountInfo;
     MarginRate marginRate;
     CommissionRate commissionRate;
+    InstrumentInfo instrumentInfo;
 };
 
 
