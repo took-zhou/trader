@@ -417,11 +417,8 @@ void CtpEvent::OnRspQryInstrumentHandle(MsgStruct& msg)
     {
         if (instrumentField)
         {
-            if(strlen(instrumentField->InstrumentID) <= 6 || msg.bIsLast == true)
-            {
-                ROLE(MarketEvent).pubQryInstrumentRsp(instrumentField, true, msg.bIsLast);
-                delete instrumentField;
-            }
+            ROLE(MarketEvent).pubQryInstrumentRsp(instrumentField, true, msg.bIsLast);
+            delete instrumentField;
 
             if (msg.bIsLast == true)
             {
