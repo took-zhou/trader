@@ -302,6 +302,10 @@ bool CtpTraderApi::init()
     const std::string frontaddr = jsonCfg.getDeepConfig("users", username, "FrontAddr").get<std::string>();
 
     traderApi->RegisterFront(const_cast<char *>(frontaddr.c_str()));  //注册前置地址
+
+    std::string compile_time = utils::GetCompileTime();
+    INFO_LOG("program last build at %s.", compile_time.c_str());
+
     return true;
 }
 
