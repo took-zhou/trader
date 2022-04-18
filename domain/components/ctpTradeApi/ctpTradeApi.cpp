@@ -303,10 +303,6 @@ bool CtpTraderApi::init()
 
     traderApi->RegisterFront(const_cast<char *>(frontaddr.c_str()));  //注册前置地址
 
-    std::string compile_time = utils::GetCompileTime();
-    jsonCfg.writeConfig("market", "version", compile_time);
-    INFO_LOG("program last build at %s.", compile_time.c_str());
-
     return true;
 }
 
