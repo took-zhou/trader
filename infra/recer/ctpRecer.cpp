@@ -311,7 +311,7 @@ void TraderSpi::OnRtnOrder(CThostFtdcOrderField *pOrder)
     }
     else
     {
-        MSG_LOG("%s","******<OnRtnOrder>******");
+        // MSG_LOG("%s","******<OnRtnOrder>******");
         if (pOrder)
         {
             // PURE_LOG("\tBrokerID [%s]", pOrder->BrokerID);
@@ -348,9 +348,9 @@ void TraderSpi::OnRtnOrder(CThostFtdcOrderField *pOrder)
             // PURE_LOG("\tClearingPartID [%s]", pOrder->ClearingPartID);
             // PURE_LOG("\tUserProductInfo [%s]", pOrder->UserProductInfo);
 
-            TThostFtdcErrorMsgType msg;
-            utils::gbk2utf8(pOrder->StatusMsg, msg, sizeof(msg));
-            PURE_LOG("\tStatusMsg [%s]", msg);
+            // TThostFtdcErrorMsgType msg;
+            // utils::gbk2utf8(pOrder->StatusMsg, msg, sizeof(msg));
+            // PURE_LOG("\tStatusMsg [%s]", msg);
 
             // PURE_LOG("\tActiveUserID [%s]", pOrder->ActiveUserID);
             // PURE_LOG("\tRelativeOrderSysID [%s]", pOrder->RelativeOrderSysID);
@@ -393,7 +393,7 @@ void TraderSpi::OnRtnOrder(CThostFtdcOrderField *pOrder)
 
             // PURE_LOG("\tStopPrice [%.8lf]", pOrder->StopPrice);
         }
-        MSG_LOG("%s","******</OnRtnOrder>******");
+        // MSG_LOG("%s","******</OnRtnOrder>******");
     }
 
 

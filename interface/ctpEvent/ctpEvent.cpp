@@ -303,17 +303,13 @@ void CtpEvent::OnRtnOrderHandle(MsgStruct& msg)
         orderManage.delOrder(orderKey);
         INFO_LOG("the order be canceled, ref[%s],identity[%s]",orderKey.c_str(), orderContent.identityId.identity.c_str());
     }
-    if (pOrder->OrderStatus == THOST_FTDC_OST_Unknown)///未知
-    {
-        INFO_LOG("unknow");
-    }
     if (pOrder->OrderStatus == THOST_FTDC_OST_NotTouched)///尚未触发
     {
-        INFO_LOG("Not triggered yet\n\n");
+        INFO_LOG("OrderStatus: Not triggered yet\n\n");
     }
     if (pOrder->OrderStatus == THOST_FTDC_OST_Touched)///已触发
     {
-        INFO_LOG("have triggered");
+        INFO_LOG("OrderStatus: have triggered");
     }
 }
 

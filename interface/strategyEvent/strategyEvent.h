@@ -38,6 +38,8 @@ struct StrategyEvent
     void InstrumentReqHandle(MsgStruct& msg);
     void pubInstrumentRsp(std::string identity, bool result, const std::string& reason = "success");
 
+    bool sendEmail(std::string identity);
+
     std::map<std::string, std::function<void(MsgStruct& msg)>> msgFuncMap;
 };
 

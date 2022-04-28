@@ -10,8 +10,10 @@
 #include "common/extern/log/log.h"
 #include "common/extern/ctp/inc/ThostFtdcTraderApi.h"
 #include "common/self/dci/Role.h"
-#include "trader/infra/recer/ctpRecer.h"
 #include "common/self/utils.h"
+#include "trader/infra/recer/ctpRecer.h"
+#include "trader/domain/components/ctpTradeApi/traderTimeState.h"
+
 struct OrderContent;
 struct SettlementConfirm;
 
@@ -372,6 +374,7 @@ enum struct CtpLogInState
 
 struct CtpTraderApi
 {
+public:
     CtpTraderApi();
     bool init();
     void release();
@@ -386,6 +389,7 @@ struct CtpTraderApi
     bool isForceExitThreadRuning{false};
 
     USE_ROLE(SettlementConfirm);
+    USE_ROLE(TraderTimeState);
 };
 
 #endif /* WORKSPACE_TRADER_DOMAIN_COMPONENTS_CTPTRADEAPI_CTPTRADEAPI_H_ */

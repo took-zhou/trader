@@ -28,6 +28,7 @@ void TraderEvent::regSessionFunc()
     sessionFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct msg)>>(std::string("trader_trader"),         [this](MsgStruct msg){ROLE(SelfEvent).handle(msg);}));
     sessionFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct msg)>>(std::string("interactor_trader"),     [this](MsgStruct msg){ROLE(InteractEvent).handle(msg);}));
     sessionFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct msg)>>(std::string("ctp"),                   [this](MsgStruct msg){ROLE(CtpEvent).handle(msg);}));
+    sessionFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct msg)>>(std::string("ctpview_trader"),        [this](MsgStruct msg){ROLE(CtpviewEvent).handle(msg);}));
 
     for(auto iter : sessionFuncMap)
     {
@@ -44,6 +45,7 @@ bool TraderEvent::init()
     ROLE(SelfEvent).init();
     ROLE(InteractEvent).init();
     ROLE(CtpEvent).init();
+    ROLE(CtpviewEvent).init();
     return true;
 }
 
