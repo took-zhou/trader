@@ -2,6 +2,7 @@
  * proxyRecer.cpp
  *      Author: Administrator
  */
+#include <map>
 
 #include "trader/infra/recer/proxyRecer.h"
 #include "trader/infra/zmqBase.h"
@@ -9,8 +10,6 @@
 #include "common/extern/log/log.h"
 #include "common/extern/libgo/libgo/libgo.h"
 #include "common/self/utils.h"
-
-#include <map>
 
 extern MsgStruct NilMsgStruct;
 extern std::map<std::string, EventType> TitleToEvent;
@@ -40,7 +39,29 @@ void ProxyRecer::init()
         zmqBase.SubscribeTopic(topic.c_str());
     }
 
-    INFO_LOG("sub topics ok");
+    queryTopicList.clear();
+    orderTopicList.clear();
+
+    queryTopicList.push_back("strategy_trader.AccountStatusReq");
+    queryTopicList.push_back("strategy_trader.MarginRateReq");
+    queryTopicList.push_back("strategy_trader.CommissionRateReq");
+    queryTopicList.push_back("strategy_trader.InstrumentReq");
+    queryTopicList.push_back("market_trader.QryInstrumentReq");
+
+    orderTopicList.push_back("strategy_trader.OrderInsertReq");
+    orderTopicList.push_back("strategy_trader.OrderCancelReq");
+
+    auto routine1 = [&](){
+        query_information_routine(zmqBase.context);
+    };
+    std::thread(routine1).detach();
+
+    auto routin2 = [&](){
+        order_routine(zmqBase.context);
+    };
+    std::thread(routin2).detach();
+
+    INFO_LOG("init proxyRecer ok");
 }
 
 bool ProxyRecer::checkSessionAndTitle(std::vector<std::string>& sessionAndTitle)
@@ -60,53 +81,92 @@ bool ProxyRecer::isTopicInSubTopics(std::string title)
     return false;
 }
 
-MsgStruct ProxyRecer::receMsg()
+void * ProxyRecer::query_information_routine(void *context)
 {
-    static MsgStruct NilMsgStruct;
     MsgStruct msg;
-    auto& zmqBase = ZmqBase::getInstance();
-    auto receiver = zmqBase.receiver;
+
+    void *receiver = zmq_socket(context, ZMQ_SUB);
+    zmq_connect (receiver, "inproc://workers");
     if(receiver == nullptr)
     {
         ERROR_LOG("receiver is nullptr");
-    }
-    INFO_LOG("prepare recv titleChar");
-    char* recContent = s_recv(receiver);
-    std::string content = std::string(recContent);
-    auto spacePos = content.find_first_of(" ");
-    auto title = content.substr(0, spacePos);
-    auto pbMsg = content.substr(spacePos+1);
-    if(! isTopicInSubTopics(title))
-    {
-        return NilMsgStruct;
-    }
-    INFO_LOG("recv msg, topic is[%s]",title.c_str());
-    std::string tmpEventName = std::string(title);
-    std::vector<std::string> sessionAndTitle = utils::splitString(tmpEventName, std::string("."));
-    if(sessionAndTitle.size() != 2)
-    {
-        return NilMsgStruct;
+        return NULL;
     }
 
-    if(! checkSessionAndTitle(sessionAndTitle))
+    for(auto& topic : queryTopicList)
     {
-        return NilMsgStruct;
+        zmq_setsockopt(receiver, ZMQ_SUBSCRIBE, topic.c_str(), strlen(topic.c_str()));
     }
-    std::string session = sessionAndTitle.at(0);
-    std::string msgTitle = sessionAndTitle.at(1);
 
-    msg.sessionName = session;
-    msg.msgName = msgTitle;
-    msg.pbMsg = pbMsg;
-
-    if (strstr(msgTitle.c_str(), "Order") == NULL)
+    while (1)
     {
+        char* recContent = s_recv(receiver);
+        std::string content = std::string(recContent);
+        auto spacePos = content.find_first_of(" ");
+        auto title = content.substr(0, spacePos);
+        auto pbMsg = content.substr(spacePos + 1);
+
+        // INFO_LOG("recv msg, topic is[%s]",title.c_str());
+        std::string tmpEventName = std::string(title);
+        std::vector<std::string> sessionAndTitle = utils::splitString(tmpEventName, std::string("."));
+        if (sessionAndTitle.size() != 2)
+        {
+            ERROR_LOG("receiver content is error!");
+            return NULL;
+        }
+        std::string session = sessionAndTitle.at(0);
+        std::string msgTitle = sessionAndTitle.at(1);
+
+        msg.sessionName = session;
+        msg.msgName = msgTitle;
+        msg.pbMsg = pbMsg;
+
         queryMsgChan << msg;
     }
-    else
+    return NULL;
+}
+
+void * ProxyRecer::order_routine(void *context)
+{
+    MsgStruct msg;
+
+    void *receiver = zmq_socket(context, ZMQ_SUB);
+    zmq_connect (receiver, "inproc://workers");
+    if(receiver == nullptr)
     {
-        orderMsgChan << msg;
+        ERROR_LOG("receiver is nullptr");
+        return NULL;
     }
 
-    return msg;
+    for(auto& topic : orderTopicList)
+    {
+        zmq_setsockopt(receiver, ZMQ_SUBSCRIBE, topic.c_str(), strlen(topic.c_str()));
+    }
+
+    while (1)
+    {
+        char* recContent = s_recv(receiver);
+        std::string content = std::string(recContent);
+        auto spacePos = content.find_first_of(" ");
+        auto title = content.substr(0, spacePos);
+        auto pbMsg = content.substr(spacePos + 1);
+
+        // INFO_LOG("recv msg, topic is[%s]",title.c_str());
+        std::string tmpEventName = std::string(title);
+        std::vector<std::string> sessionAndTitle = utils::splitString(tmpEventName, std::string("."));
+        if (sessionAndTitle.size() != 2)
+        {
+            ERROR_LOG("receiver content is error!");
+            return NULL;
+        }
+        std::string session = sessionAndTitle.at(0);
+        std::string msgTitle = sessionAndTitle.at(1);
+
+        msg.sessionName = session;
+        msg.msgName = msgTitle;
+        msg.pbMsg = pbMsg;
+
+        orderMsgChan << msg;
+    }
+    return NULL;
 }

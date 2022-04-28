@@ -4,14 +4,13 @@
  *  Created on: 2020年10月23日
  *      Author: Administrator
  */
-
-
 #include "trader/interface/selfEvent/selfEvent.h"
 #include "common/extern/log/log.h"
 #include "trader/infra/define.h"
 #include "common/self/utils.h"
 #include "common/self/protobuf/trader-trader.pb.h"
 #include "common/extern/google/protobuf/text_format.h"
+
 bool SelfEvent::init()
 {
     regMsgFun();
@@ -50,5 +49,4 @@ void SelfEvent::HeartBeatHandle(MsgStruct& msg)
     static trader_trader::message reqMsg;
     reqMsg.ParseFromString(msg.pbMsg);
     utils::printProtoMsg(reqMsg);
-
 }

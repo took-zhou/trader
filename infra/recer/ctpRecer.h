@@ -398,6 +398,7 @@ public:
     ///银行发起变更银行账号通知
     void OnRtnChangeAccountByBank(CThostFtdcChangeAccountField *pChangeAccount){};
 
+    int reConnect = 0;
 };
 
 

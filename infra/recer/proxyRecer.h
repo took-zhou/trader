@@ -15,11 +15,13 @@ struct ZmqBase;
 struct ProxyRecer
 {
     void init();
-    MsgStruct receMsg();
+    void * query_information_routine(void *context);
+    void * order_routine(void *context);
     bool checkSessionAndTitle(std::vector<std::string>& sessionAndTitle);
     bool isTopicInSubTopics(std::string);
-//    ZmqBase* zmq{nullptr};
     std::vector<std::string> topicList;
+    std::vector<std::string> queryTopicList;
+    std::vector<std::string> orderTopicList;
 };
 
 

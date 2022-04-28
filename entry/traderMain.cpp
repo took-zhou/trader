@@ -47,13 +47,6 @@ int main(int argc, char* agrv[])
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
-    auto& innerZmq = InnerZmq::getInstance();
-    while(not innerZmq.init())
-    {
-        ERROR_LOG("innerZmq init failed");
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    }
-
     INFO_LOG("begin init traderSer");
     //初始化ctpTrader
     auto& traderSer = TraderSevice::getInstance();

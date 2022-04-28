@@ -16,6 +16,7 @@
 #include "trader/infra/recer/ctpRecer.h"
 #include "trader/infra/recer/interactRecer.h"
 #include "trader/infra/recer/proxyRecer.h"
+#include "trader/infra/zmqBase.h"
 
 #include "common/extern/log/log.h"
 
@@ -70,6 +71,14 @@ struct RecerSender: Recer
         ROLE(Sender).init();
         return true;
     }
+
+    bool run()
+    {
+        // Turn on the accept proxy, called at the end of the main process
+        auto& zmqBase = ZmqBase::getInstance();
+        zmq_proxy (zmqBase.receiver, zmqBase.workers, NULL);
+    }
+
     IMPL_ROLE(Recer);
     IMPL_ROLE(Sender);
 };

@@ -29,6 +29,7 @@ struct ZmqBase
     void* context  {nullptr};
     void* receiver {nullptr};
     void* publisher{nullptr};
+    void* workers{nullptr};
 };
 
 

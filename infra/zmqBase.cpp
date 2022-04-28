@@ -21,31 +21,41 @@ constexpr U32 WAITTIME_FOR_ZMQ_INIT = 1;
 
 bool ZmqBase::init()
 {
+    auto& jsonCfg = utils::JsonConfig::getInstance();
+    std::string sub_netStr = jsonCfg.getConfig("common", "SubAddPort").get<std::string>();
+    std::string pub_netStr = jsonCfg.getConfig("common", "PubAddPort").get<std::string>();
+
     context = zmq_ctx_new();
     receiver = zmq_socket(context, ZMQ_SUB);
     publisher = zmq_socket(context, ZMQ_PUB);
-    auto& jsonCfg = utils::JsonConfig::getInstance();
-    std::string netStr = jsonCfg.getConfig("common", "SubAddPort").get<std::string>();
-    int result = zmq_connect(receiver, netStr.c_str());
-    sleep(WAITTIME_FOR_ZMQ_INIT);
-    INFO_LOG("result = %d",result);
-    if(result != 0)
-    {
-        ERROR_LOG("receiver connect to %s failed",netStr.c_str());
-        return false;
-    }
-    netStr = jsonCfg.getConfig("common", "PubAddPort").get<std::string>();
 
-    result = zmq_connect(publisher, netStr.c_str());
-    INFO_LOG("result = %d",result);
-    if(result != 0)
+    int result = zmq_connect(receiver, sub_netStr.c_str());
+    sleep(WAITTIME_FOR_ZMQ_INIT);
+    if (result != 0)
     {
-        ERROR_LOG("publisher connect to %s failed",netStr.c_str());
+        ERROR_LOG("receiver connect to %s failed",sub_netStr.c_str());
         return false;
     }
+
+    result = zmq_connect(publisher, pub_netStr.c_str());
+    if (result != 0)
+    {
+        ERROR_LOG("publisher connect to %s failed",pub_netStr.c_str());
+        return false;
+    }
+
+    workers = zmq_socket(context, ZMQ_PUB);
+    result = zmq_bind(workers, "inproc://workers");
+    if (result != 0)
+    {
+        ERROR_LOG("workers bind inproc://workers failed");
+        return false;
+    }
+
     INFO_LOG("zmq init ok");
     return true;
 }
+
 
 void ZmqBase::SubscribeTopic(const char* topicStr)
 {

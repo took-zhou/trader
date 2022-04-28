@@ -49,26 +49,13 @@ bool TraderEvent::init()
 
 bool TraderEvent::run()
 {
-    co::Scheduler* sched = co::Scheduler::Create();
-    auto& recerSender = RecerSender::getInstance();
-    INFO_LOG("go into run");
-    auto proxyRecRun = [&](){
-        while(1)
-        {
-            INFO_LOG("proxyRecRun while");
-            recerSender.ROLE(Recer).ROLE(ProxyRecer).receMsg();
-        }
-    };
-    INFO_LOG("proxyRecRun prepare ok");
-    std::thread(proxyRecRun).detach();   // zmq 在libgo的携程里会跑死，单独拎出来一个线程。
-
     auto orderRecRun = [&](){
         MsgStruct msg;
         while(1)
         {
             //INFO_LOG("orderRecRun while");
             orderMsgChan >> msg;
-            //INFO_LOG("hai*************msg name[%s]",msg.msgName.c_str());
+            INFO_LOG("orderRecRun*************msg name[%s]",msg.msgName.c_str());
             if(! msg.isValid())
             {
                 ERROR_LOG(" invalid msg, session is [%s], msgName is [%s]",msg.sessionName.c_str(), msg.msgName.c_str());
@@ -94,7 +81,7 @@ bool TraderEvent::run()
         {
             //INFO_LOG("queryRecRun while");
             queryMsgChan >> msg;
-            //INFO_LOG("hai*************msg name[%s]",msg.msgName.c_str());
+            INFO_LOG("queryRecRun*************msg name[%s]",msg.msgName.c_str());
             if(! msg.isValid())
             {
                 ERROR_LOG(" invalid msg, session is [%s], msgName is [%s]",msg.sessionName.c_str(), msg.msgName.c_str());
@@ -141,9 +128,8 @@ bool TraderEvent::run()
     INFO_LOG("ctpRecRun prepare ok");
     std::thread(ctpRecRun).detach();
 
-    while (1)
-    {
-        usleep(MAIN_THREAD_WAIT_TIME);
-    }
+    auto& recerSender = RecerSender::getInstance();
+    recerSender.run();
+
     return true;
 }

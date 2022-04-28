@@ -252,7 +252,7 @@ int CtpTraderBaseApi::ReqQryInstrumentCommissionRate(utils::InstrumtntID ins_exc
     strcpy(commissonRateField.ExchangeID, ins_exch.exch.c_str());
     strcpy(commissonRateField.InstrumentID, ins_exch.ins.c_str());
 
-    int result = m_pApi->ReqQryInstrumentCommissionRate(&commissonRateField, requestIdBuildAlg());
+    int result = 0;//m_pApi->ReqQryInstrumentCommissionRate(&commissonRateField, requestIdBuildAlg());
     INFO_LOG("ReqQryInstrumentCommissionRate send result is [%d]",result);
 
     if (result == 0)
@@ -470,11 +470,6 @@ namespace {
     void logOutReqTimeOutFunc()
     {
         INFO_LOG("begin loglout timeout func");
-        std::string semName = "trader_logOut";
-        globalSem.postSemBySemName(semName);
-        INFO_LOG("force sem_pose sem_logout exec ok");
-        auto& timerPool = TimeoutTimerPool::getInstance();
-        timerPool.delTimerByName(FORCE_LOG_OUT_TIMER);
     }
 }
 
@@ -559,12 +554,14 @@ bool CtpTraderApi::logIn()
 void CtpTraderApi::logOut()
 {
     traderApi->ReqUserLogout();
-    auto& timerPool = TimeoutTimerPool::getInstance();
-    timerPool.addTimer(FORCE_LOG_OUT_TIMER, logOutReqTimeOutFunc,FORCE_LOGOUT_TIME_OUT);
+
     std::string semName = "trader_logOut";
-    globalSem.waitSemBySemName(semName);
+    if (globalSem.waitSemBySemName(semName, 10) != 0)
+    {
+        logOutReqTimeOutFunc();
+    }
     globalSem.delOrderSem(semName);
-    timerPool.killTimerByName(FORCE_LOG_OUT_TIMER);
+
     release();
     INFO_LOG("ctp log out ok!");
     isLogIN = false;

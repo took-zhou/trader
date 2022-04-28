@@ -4,19 +4,15 @@
  *  Created on: 2020年10月23日
  *      Author: Administrator
  */
-
 #include "trader/infra/recer/ctpRecer.h"
+#include "trader/infra/define.h"
 #include "common/extern/log/log.h"
 #include "common/self/utils.h"
 #include "common/extern/libgo/libgo/libgo.h"
-#include "trader/infra/define.h"
 #include "common/self/fileUtil.h"
-
-//#include <mutex>
 #include "common/self/semaphorePart.h"
+
 extern GlobalSem globalSem;
-
-
 extern co_chan<MsgStruct> ctpMsgChan;
 
 //std::mutex m;
@@ -24,9 +20,13 @@ extern co_chan<MsgStruct> ctpMsgChan;
 void TraderSpi::OnFrontConnected()
 {
     INFO_LOG("get OnFrontConnected rsp from ctp");
-    std::string semName = "trader_init";
-    globalSem.postSemBySemName(semName);
-    INFO_LOG("post sem of [%s]",semName.c_str());
+    INFO_LOG("reConnect:%d.", reConnect);
+    if (reConnect++ == 0)
+    {
+        std::string semName = "trader_init";
+        globalSem.postSemBySemName(semName);
+        INFO_LOG("post sem of [%s]",semName.c_str());
+    }
 }
 
 void TraderSpi::OnRspAuthenticate(CThostFtdcRspAuthenticateField *pRspAuthenticateField, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
@@ -227,7 +227,6 @@ void TraderSpi::OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CTho
 
 void TraderSpi::OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-
     auto& jsonCfg = utils::JsonConfig::getInstance();
     const std::string username = jsonCfg.getConfig("common","user").get<std::string>();
     const std::string investorID = jsonCfg.getDeepConfig("users", username, "InvestorID").get<std::string>();
@@ -458,7 +457,7 @@ void TraderSpi::OnRtnTrade(CThostFtdcTradeField *pTrade)
 
 void TraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-    PURE_LOG("<OnRspQryTradingAccount>");
+    // PURE_LOG("<OnRspQryTradingAccount>");
     // if (pTradingAccount)
     // {
     //     PURE_LOG("\tBrokerID [%s]", pTradingAccount->BrokerID);
@@ -518,9 +517,9 @@ void TraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAc
         PURE_LOG("\tErrorMsg [%s]", msg);
         PURE_LOG("\tErrorID [%d]", pRspInfo->ErrorID);
     }
-    PURE_LOG("\tnRequestID [%d]", nRequestID);
-    PURE_LOG("\tbIsLast [%d]", bIsLast);
-    PURE_LOG("</OnRspQryTradingAccount>");
+    // PURE_LOG("\tnRequestID [%d]", nRequestID);
+    // PURE_LOG("\tbIsLast [%d]", bIsLast);
+    // PURE_LOG("</OnRspQryTradingAccount>");
 
     if (pTradingAccount)
     {
@@ -682,7 +681,7 @@ void TraderSpi::OnErrRtnOrderAction(CThostFtdcOrderActionField *pOrderAction, CT
 
 void TraderSpi::OnRspQryInstrumentMarginRate(CThostFtdcInstrumentMarginRateField *pInstrumentMarginRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-    PURE_LOG("<OnRspQryInstrumentMarginRate>");
+    // PURE_LOG("<OnRspQryInstrumentMarginRate>");
     // if (pInstrumentMarginRate)
     // {
     //     PURE_LOG("\tInvestorRange [%d]", pInstrumentMarginRate->InvestorRange);
@@ -705,9 +704,9 @@ void TraderSpi::OnRspQryInstrumentMarginRate(CThostFtdcInstrumentMarginRateField
         PURE_LOG("\tErrorMsg [%s]", msg);
         PURE_LOG("\tErrorID [%d]", pRspInfo->ErrorID);
     }
-    PURE_LOG("\tnRequestID [%d]", nRequestID);
-    PURE_LOG("\tbIsLast [%d]", bIsLast);
-    PURE_LOG("</OnRspQryInstrumentMarginRate>");
+    // PURE_LOG("\tnRequestID [%d]", nRequestID);
+    // PURE_LOG("\tbIsLast [%d]", bIsLast);
+    // PURE_LOG("</OnRspQryInstrumentMarginRate>");
 
     if (pInstrumentMarginRate)
     {
@@ -731,7 +730,7 @@ void TraderSpi::OnRspQryInstrumentMarginRate(CThostFtdcInstrumentMarginRateField
 
 void TraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionRateField *pInstrumentCommissionRate, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-    PURE_LOG("<OnRspQryInstrumentCommissionRate>");
+    // PURE_LOG("<OnRspQryInstrumentCommissionRate>");
     // if (pInstrumentCommissionRate)
     // {
     //     PURE_LOG("\tInvestorRange [%d]", pInstrumentCommissionRate->InvestorRange);
@@ -755,9 +754,9 @@ void TraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionR
         PURE_LOG("\tErrorMsg [%s]", msg);
         PURE_LOG("\tErrorID [%d]", pRspInfo->ErrorID);
     }
-    PURE_LOG("\tnRequestID [%d]", nRequestID);
-    PURE_LOG("\tbIsLast [%d]", bIsLast);
-    PURE_LOG("</OnRspQryInstrumentCommissionRate>");
+    // PURE_LOG("\tnRequestID [%d]", nRequestID);
+    // PURE_LOG("\tbIsLast [%d]", bIsLast);
+    // PURE_LOG("</OnRspQryInstrumentCommissionRate>");
 
     if (pInstrumentCommissionRate)
     {

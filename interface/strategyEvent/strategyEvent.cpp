@@ -185,7 +185,7 @@ void StrategyEvent::AccountStatusReqHandle(MsgStruct& msg)
 {
     strategy_trader::message reqMsg;
     reqMsg.ParseFromString(msg.pbMsg);
-    utils::printProtoMsg(reqMsg);
+    // utils::printProtoMsg(reqMsg);
     auto reqInfo = reqMsg.account_status_req();
     int field  = reqInfo.field();
     auto identify = reqInfo.process_random_id();
@@ -208,7 +208,13 @@ void StrategyEvent::AccountStatusReqHandle(MsgStruct& msg)
     }
 
     std::string semName = "trader_ReqQryTradingAccount";
-    globalSem.waitSemBySemName(semName);
+    if (globalSem.waitSemBySemName(semName, 10) != 0)
+    {
+        ERROR_LOG("req timeout!");
+        pubAccountStatusRsp(identify, field, false, "req timeout");
+        globalSem.delOrderSem(semName);
+        return;
+    }
     INFO_LOG("waitSemBySemName [%s] ok",semName.c_str());
     globalSem.delOrderSem(semName);
 
@@ -564,7 +570,7 @@ void StrategyEvent::MarginRateReqHandle(MsgStruct& msg)
 {
     strategy_trader::message reqMsg;
     reqMsg.ParseFromString(msg.pbMsg);
-    utils::printProtoMsg(reqMsg);
+    // utils::printProtoMsg(reqMsg);
     auto identify = reqMsg.margin_rate_req().process_random_id();
     auto& traderSer = TraderSevice::getInstance();
     if(!traderSer.ROLE(Trader).ROLE(CtpTraderApi).isLogIN)
@@ -588,7 +594,13 @@ void StrategyEvent::MarginRateReqHandle(MsgStruct& msg)
     }
 
     std::string semName = "margin_rate";
-    globalSem.waitSemBySemName(semName);
+    if (globalSem.waitSemBySemName(semName, 10) != 0)
+    {
+        ERROR_LOG("req timeout!");
+        pubMarginRateRsp(identify, false, "req timeout");
+        globalSem.delOrderSem(semName);
+        return;
+    }
     INFO_LOG("waitSemBySemName [%s] ok",semName.c_str());
     globalSem.delOrderSem(semName);
 
@@ -638,7 +650,7 @@ void StrategyEvent::CommissionRateReqHandle(MsgStruct& msg)
 {
     strategy_trader::message reqMsg;
     reqMsg.ParseFromString(msg.pbMsg);
-    utils::printProtoMsg(reqMsg);
+    // utils::printProtoMsg(reqMsg);
     auto identify = reqMsg.commission_rate_req().process_random_id();
     auto& traderSer = TraderSevice::getInstance();
     if(!traderSer.ROLE(Trader).ROLE(CtpTraderApi).isLogIN)
@@ -662,7 +674,13 @@ void StrategyEvent::CommissionRateReqHandle(MsgStruct& msg)
     }
 
     std::string semName = "commission_rate";
-    globalSem.waitSemBySemName(semName);
+    if (globalSem.waitSemBySemName(semName, 10) != 0)
+    {
+        ERROR_LOG("req timeout!");
+        pubCommissionRateRsp(identify, false, "req timeout");
+        globalSem.delOrderSem(semName);
+        return;
+    }
     INFO_LOG("waitSemBySemName [%s] ok",semName.c_str());
     globalSem.delOrderSem(semName);
 
@@ -714,7 +732,7 @@ void StrategyEvent::InstrumentReqHandle(MsgStruct& msg)
 {
     strategy_trader::message reqMsg;
     reqMsg.ParseFromString(msg.pbMsg);
-    utils::printProtoMsg(reqMsg);
+    // utils::printProtoMsg(reqMsg);
     auto identify = reqMsg.instrument_req().process_random_id();
     auto& traderSer = TraderSevice::getInstance();
     if(!traderSer.ROLE(Trader).ROLE(CtpTraderApi).isLogIN)
@@ -738,7 +756,13 @@ void StrategyEvent::InstrumentReqHandle(MsgStruct& msg)
     }
 
     std::string semName = "trader_ReqQryInstrument_Single";
-    globalSem.waitSemBySemName(semName);
+    if (globalSem.waitSemBySemName(semName, 10) != 0)
+    {
+        ERROR_LOG("req timeout!");
+        pubInstrumentRsp(identify, false, "req timeout");
+        globalSem.delOrderSem(semName);
+        return;
+    }
     INFO_LOG("waitSemBySemName [%s] ok",semName.c_str());
     globalSem.delOrderSem(semName);
 
