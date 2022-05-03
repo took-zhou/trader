@@ -29,18 +29,18 @@ bool ZmqBase::init()
     receiver = zmq_socket(context, ZMQ_SUB);
     publisher = zmq_socket(context, ZMQ_PUB);
 
-    int result = zmq_connect(receiver, sub_netStr.c_str());
+    int result = zmq_connect(receiver, "tcp://eth0:8100");
     sleep(WAITTIME_FOR_ZMQ_INIT);
     if (result != 0)
     {
-        ERROR_LOG("receiver connect to %s failed",sub_netStr.c_str());
+        ERROR_LOG("receiver connect to tcp://eth0:8100 failed");
         return false;
     }
 
-    result = zmq_connect(publisher, pub_netStr.c_str());
+    result = zmq_connect(publisher, "tcp://eth0:5556");
     if (result != 0)
     {
-        ERROR_LOG("publisher connect to %s failed",pub_netStr.c_str());
+        ERROR_LOG("publisher connect to tcp://eth0:5556 failed");
         return false;
     }
 
