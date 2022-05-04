@@ -4,16 +4,16 @@
  *  Created on: 2020年10月23日
  *      Author: Administrator
  */
-
-#include "trader/infra/zmqBase.h"
-#include "common/self/fileUtil.h"
-#include "common/extern/libzmq/include/zhelpers.h"
-#include "common/extern/log/log.h"
-#include "common/self/basetype.h"
-
 #include <string>
 #include <sstream>
 #include <unistd.h>
+
+#include "trader/infra/zmqBase.h"
+#include "common/self/fileUtil.h"
+#include "common/self/utils.h"
+#include "common/extern/libzmq/include/zhelpers.h"
+#include "common/extern/log/log.h"
+#include "common/self/basetype.h"
 
 using json = nlohmann::json;
 
@@ -21,26 +21,26 @@ constexpr U32 WAITTIME_FOR_ZMQ_INIT = 1;
 
 bool ZmqBase::init()
 {
-    auto& jsonCfg = utils::JsonConfig::getInstance();
-    std::string sub_netStr = jsonCfg.getConfig("common", "SubAddPort").get<std::string>();
-    std::string pub_netStr = jsonCfg.getConfig("common", "PubAddPort").get<std::string>();
-
     context = zmq_ctx_new();
     receiver = zmq_socket(context, ZMQ_SUB);
     publisher = zmq_socket(context, ZMQ_PUB);
 
-    int result = zmq_connect(receiver, "tcp://eth0:8100");
+    string local_ip;
+    utils::get_local_ip(local_ip);
+    string sub_ipaddport = "tcp://" + local_ip + ":8100";
+    int result = zmq_connect(receiver, sub_ipaddport.c_str());
     sleep(WAITTIME_FOR_ZMQ_INIT);
     if (result != 0)
     {
-        ERROR_LOG("receiver connect to tcp://eth0:8100 failed");
+        ERROR_LOG("receiver connect to %s failed", sub_ipaddport.c_str());
         return false;
     }
 
-    result = zmq_connect(publisher, "tcp://eth0:5556");
+    string pub_ipaddport = "tcp://" + local_ip + ":5556";
+    result = zmq_connect(publisher, pub_ipaddport.c_str());
     if (result != 0)
     {
-        ERROR_LOG("publisher connect to tcp://eth0:5556 failed");
+        ERROR_LOG("publisher connect to %s failed", pub_ipaddport.c_str());
         return false;
     }
 
