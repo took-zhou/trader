@@ -207,6 +207,7 @@ void TraderTimeState::set_time_state(int command)
     }
     else if (command == ctpview_trader::LoginControl_Command_reserve)
     {
+        rtDW.is_active_TraderTimeState = 0U;
         time_state = RESERVE;
     }
 }
