@@ -68,6 +68,7 @@ U32 TraderTimeState::isDuringNightLoginTime(void)
     {
         out = 1U;
     }
+
     return out;
 }
 
@@ -97,7 +98,7 @@ void TraderTimeState::step()
         switch (rtDW.is_TraderTimeState)
         {
             case IN_day_login:
-                if (input.now_mins == input.day_logout_mins)
+                if (input.now_mins == input.day_logout_mins || time_state == LOGOUT_TIME)
                 {
                     rtDW.is_TraderTimeState = IN_day_logout;
                     output.status = LOGOUT_TIME;
@@ -105,14 +106,14 @@ void TraderTimeState::step()
                 break;
 
             case IN_day_logout:
-                if ((strcmp(input.loginTime, "day") != 0) && (input.now_mins == input.night_login_mins))
+                if ((strcmp(input.loginTime, "day") != 0) && (input.now_mins == input.night_login_mins || time_state == LOGIN_TIME))
                 {
                     rtDW.is_TraderTimeState = IN_night_login;
                     output.status = LOGIN_TIME;
                 }
                 else
                 {
-                    if ((strcmp(input.loginTime, "day") == 0) && (input.now_mins == input.day_login_mins))
+                    if ((strcmp(input.loginTime, "day") == 0) && (input.now_mins == input.day_login_mins || time_state == LOGIN_TIME))
                     {
                         rtDW.is_TraderTimeState = IN_day_login;
                         output.status = LOGIN_TIME;
@@ -147,7 +148,7 @@ void TraderTimeState::step()
                 break;
 
             case IN_night_login:
-                if (input.now_mins == input.night_logout_mins)
+                if (input.now_mins == input.night_logout_mins || time_state == LOGOUT_TIME)
                 {
                     rtDW.is_TraderTimeState = IN_night_logout;
                     output.status = LOGOUT_TIME;
@@ -155,14 +156,14 @@ void TraderTimeState::step()
                 break;
 
             default:
-                if ((strcmp(input.loginTime, "night") != 0) && (input.now_mins == input.day_login_mins))
+                if ((strcmp(input.loginTime, "night") != 0) && (input.now_mins == input.day_login_mins || time_state == LOGIN_TIME))
                 {
                     rtDW.is_TraderTimeState = IN_day_login;
                     output.status = LOGIN_TIME;
                 }
                 else
                 {
-                    if ((strcmp(input.loginTime, "night") == 0) && (input.now_mins == input.night_login_mins))
+                    if ((strcmp(input.loginTime, "night") == 0) && (input.now_mins == input.night_login_mins || time_state == LOGIN_TIME))
                     {
                         rtDW.is_TraderTimeState = IN_night_login;
                         output.status = LOGIN_TIME;
@@ -185,11 +186,6 @@ void TraderTimeState::update(void)
         input.now_mins= timenow->tm_hour*60 + timenow->tm_min;
 
         step();
-
-        if (time_state != RESERVE)
-        {
-            output.status = time_state;
-        }
 
         sleep(1);
     }
