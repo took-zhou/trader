@@ -20,6 +20,7 @@ struct CtpviewEvent
     void regMsgFun();
 
     void LoginControlHandle(MsgStruct& msg);
+    void BugInjectionHandle(MsgStruct& msg);
 
     std::map<std::string, std::function<void(MsgStruct& msg)>> msgFuncMap;
 };

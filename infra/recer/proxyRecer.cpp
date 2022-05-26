@@ -34,6 +34,7 @@ void ProxyRecer::init()
     topicList.push_back("market_trader.QryInstrumentReq");
 
     topicList.push_back("ctpview_trader.LoginControl");
+    topicList.push_back("ctpview_trader.BugInjection");
 
     auto& zmqBase = ZmqBase::getInstance();
     for(auto& topic : topicList)
@@ -50,6 +51,7 @@ void ProxyRecer::init()
     queryTopicList.push_back("strategy_trader.InstrumentReq");
     queryTopicList.push_back("market_trader.QryInstrumentReq");
     queryTopicList.push_back("ctpview_trader.LoginControl");
+    queryTopicList.push_back("ctpview_trader.BugInjection");
 
     orderTopicList.push_back("strategy_trader.OrderInsertReq");
     orderTopicList.push_back("strategy_trader.OrderCancelReq");

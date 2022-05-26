@@ -21,6 +21,7 @@ void CtpviewEvent::regMsgFun()
     int cnt = 0;
     msgFuncMap.clear();
     msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("LoginControl", [this](MsgStruct& msg){LoginControlHandle(msg);}));
+    msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct& msg)>>("BugInjection", [this](MsgStruct& msg){BugInjectionHandle(msg);}));
 
     for(auto iter : msgFuncMap)
     {
@@ -51,4 +52,23 @@ void CtpviewEvent::LoginControlHandle(MsgStruct& msg)
     auto& traderSer = TraderSevice::getInstance();
 
     traderSer.ROLE(Trader).ROLE(TraderTimeState).set_time_state(command);
+}
+
+void CtpviewEvent::BugInjectionHandle(MsgStruct& msg)
+{
+    ctpview_trader::message bug_injection;
+    bug_injection.ParseFromString(msg.pbMsg);
+
+    auto injection = bug_injection.bug_injection();
+
+    ctpview_trader::BugInjection_InjectionType type = injection.type();
+    INFO_LOG("set bug injection type: %d", type);
+
+    if (type == ctpview_trader::BugInjection_InjectionType_double_free)
+    {
+        char *ptr = (char *)malloc(1);
+        *ptr = 'a';
+        free(ptr);
+        free(ptr);
+    }
 }
