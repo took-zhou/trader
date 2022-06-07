@@ -6,5 +6,3 @@
  */
 
 #include "trader/domain/traderService.h"
-
-

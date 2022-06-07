@@ -7,57 +7,54 @@
 
 #ifndef WORKSPACE_TRADER_INTERFACE_CTPEVENT_H_
 #define WORKSPACE_TRADER_INTERFACE_CTPEVENT_H_
-#include <map>
 #include <functional>
+#include <map>
 #include <string>
 #include <vector>
-#include "common/self/dci/Role.h"
-#include "common/self/basetype.h"
 #include "common/extern/ctp/inc/ThostFtdcTraderApi.h"
+#include "common/self/basetype.h"
+#include "common/self/dci/Role.h"
 struct MsgStruct;
 struct MarketEvent;
 struct StrategyEvent;
-struct InstrumentQryTmp
-{
-    bool isOk{false};
-    std::vector<CThostFtdcInstrumentField> partRspList;
+struct InstrumentQryTmp {
+  bool isOk{false};
+  std::vector<CThostFtdcInstrumentField> partRspList;
 };
 
-struct CtpEvent
-{
-    bool init();
+struct CtpEvent {
+  bool init();
 
-    void handle(MsgStruct& msg);
-    void regMsgFun();
+  void handle(MsgStruct &msg);
+  void regMsgFun();
 
-    void OnRspSettlementInfoConfirmHandle(MsgStruct& msg);
-    void OnRspUserLoginHandle(MsgStruct& msg);
-    void OnRspAuthenticateHandle(MsgStruct& msg);
+  void OnRspSettlementInfoConfirmHandle(MsgStruct &msg);
+  void OnRspUserLoginHandle(MsgStruct &msg);
+  void OnRspAuthenticateHandle(MsgStruct &msg);
 
-    void OnErrRtnOrderInsertHandle(MsgStruct& msg);
-    void OnRspOrderInsertHandle(MsgStruct& msg);
-    void OnRtnOrderHandle(MsgStruct& msg);
-    void OnRtnTradeHandle(MsgStruct& msg);
+  void OnErrRtnOrderInsertHandle(MsgStruct &msg);
+  void OnRspOrderInsertHandle(MsgStruct &msg);
+  void OnRtnOrderHandle(MsgStruct &msg);
+  void OnRtnTradeHandle(MsgStruct &msg);
 
-    void OnRspQryTradingAccountHandle(MsgStruct& msg);
-    void OnRspQryInstrumentHandle(MsgStruct& msg);
+  void OnRspQryTradingAccountHandle(MsgStruct &msg);
+  void OnRspQryInstrumentHandle(MsgStruct &msg);
 
-    void OnRspOrderActionHandle(MsgStruct& msg);
-    void OnErrRtnOrderActionHandle(MsgStruct& msg);
+  void OnRspOrderActionHandle(MsgStruct &msg);
+  void OnErrRtnOrderActionHandle(MsgStruct &msg);
 
-    void OnRspQryInstrumentMarginRateHandle(MsgStruct& msg);
-    void OnRspQryInstrumentCommissionRateHandle(MsgStruct& msg);
-    std::map<std::string, std::function<void(MsgStruct& msg)>> msgFuncMap;
+  void OnRspQryInstrumentMarginRateHandle(MsgStruct &msg);
+  void OnRspQryInstrumentCommissionRateHandle(MsgStruct &msg);
+  std::map<std::string, std::function<void(MsgStruct &msg)>> msgFuncMap;
 
-    USE_ROLE(MarketEvent);
-    USE_ROLE(StrategyEvent);
-private:
-    U32 buildNewKey();
-    bool getNotFullRspMap(U32& key);
-    U32 addNewRspsList();
-    void delRspsList(U32 key);
+  USE_ROLE(MarketEvent);
+  USE_ROLE(StrategyEvent);
+
+ private:
+  U32 buildNewKey();
+  bool getNotFullRspMap(U32 &key);
+  U32 addNewRspsList();
+  void delRspsList(U32 key);
 };
-
-
 
 #endif /* WORKSPACE_TRADER_INTERFACE_CTPEVENT_H_ */

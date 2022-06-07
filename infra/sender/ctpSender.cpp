@@ -5,6 +5,4 @@
  *      Author: Administrator
  */
 
-
 #include "trader/infra/sender/ctpSender.h"
-

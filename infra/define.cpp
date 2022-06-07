@@ -6,8 +6,8 @@
  */
 #include <map>
 
-#include "trader/infra/define.h"
 #include "common/extern/libgo/libgo/libgo.h"
+#include "trader/infra/define.h"
 
 std::map<std::string, EventType> TitleToEvent;
 

@@ -8,21 +8,19 @@
 #ifndef WORKSPACE_TRADER_INTERFACE_SELFEVENT_H_
 #define WORKSPACE_TRADER_INTERFACE_SELFEVENT_H_
 
-#include <map>
 #include <functional>
+#include <map>
 #include <string>
 struct MsgStruct;
 
-struct SelfEvent
-{
-    bool init();
-    void handle(MsgStruct& msg);
-    void regMsgFun();
+struct SelfEvent {
+  bool init();
+  void handle(MsgStruct &msg);
+  void regMsgFun();
 
-    void HeartBeatHandle(MsgStruct& msg);
+  void HeartBeatHandle(MsgStruct &msg);
 
-    std::map<std::string, std::function<void(MsgStruct& msg)>> msgFuncMap;
+  std::map<std::string, std::function<void(MsgStruct &msg)>> msgFuncMap;
 };
-
 
 #endif /* WORKSPACE_TRADER_INTERFACE_SELFEVENT_H_ */

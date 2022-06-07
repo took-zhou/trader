@@ -5,6 +5,3 @@
  *      Author: Administrator
  */
 #include "trader/infra/recer/interactRecer.h"
-
-
-

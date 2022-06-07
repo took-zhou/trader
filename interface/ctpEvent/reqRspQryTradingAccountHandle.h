@@ -10,11 +10,9 @@
 
 struct CThostFtdcTradingAccountField;
 
-struct ReqRspQryTradingAccountHandle
-{
-    void reqQryTradingAccountHandle();
-    void onRspQryTradingAccountHandle(CThostFtdcTradingAccountField& rsp);
-
+struct ReqRspQryTradingAccountHandle {
+  void reqQryTradingAccountHandle();
+  void onRspQryTradingAccountHandle(CThostFtdcTradingAccountField &rsp);
 };
 
 #endif /* WORKSPACE_TRADE_CTP_EVENT_REQRSPQRYTRADINGACCOUNTHANDLE_H_ */

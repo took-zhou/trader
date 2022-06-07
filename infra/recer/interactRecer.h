@@ -12,18 +12,12 @@
 
 struct ZmqBase;
 
-struct InteractRecer
-{
-    bool init(){
-        return true;
-    };
+struct InteractRecer {
+  bool init() { return true; };
 
-    MsgStruct rece();
+  MsgStruct rece();
 
-    ZmqBase* zmq{nullptr};
-
+  ZmqBase *zmq{nullptr};
 };
-
-
 
 #endif /* WORKSPACE_TRADER_INFRA_INTERACTRECER_H_ */

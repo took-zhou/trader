@@ -6,20 +6,13 @@
  */
 #include "trader/interface/ctpEvent/reqRspQryTradingAccountHandle.h"
 
+#include <string>
 #include "common/extern/ctp/inc/ThostFtdcUserApiStruct.h"
 #include "common/extern/json/json.h"
-#include <string>
 #include "common/self/define.h"
 
 using json = nlohmann::json;
 
-void ReqRspQryTradingAccountHandle::reqQryTradingAccountHandle()
-{
+void ReqRspQryTradingAccountHandle::reqQryTradingAccountHandle() {}
 
-}
-
-void ReqRspQryTradingAccountHandle::onRspQryTradingAccountHandle(CThostFtdcTradingAccountField& rsp)
-{
-
-
-}
+void ReqRspQryTradingAccountHandle::onRspQryTradingAccountHandle(CThostFtdcTradingAccountField &rsp) {}
