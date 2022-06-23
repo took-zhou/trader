@@ -62,7 +62,7 @@ void StrategyEvent::OrderCancelReqHandle(MsgStruct &msg) {
   IdentifyId.prid = orderCancelReq.process_random_id();
   IdentifyId.identity = orderCancelReq.identity();
   auto &traderSer = TraderSevice::getInstance();
-  if (traderSer.ROLE(Trader).ROLE(CtpTraderApi).getTraderLoginState() == LOGIN_STATE) {
+  if (traderSer.ROLE(Trader).ROLE(CtpTraderApi).getTraderLoginState() != LOGIN_STATE) {
     ERROR_LOG("ctp not login!");
     pubOrderCancelRsp(IdentifyId, false, "ctp_logout");
     return;
@@ -121,7 +121,7 @@ void StrategyEvent::AccountStatusReqHandle(MsgStruct &msg) {
   int field = reqInfo.field();
   auto identify = reqInfo.process_random_id();
   auto &traderSer = TraderSevice::getInstance();
-  if (traderSer.ROLE(Trader).ROLE(CtpTraderApi).getTraderLoginState() == LOGIN_STATE) {
+  if (traderSer.ROLE(Trader).ROLE(CtpTraderApi).getTraderLoginState() != LOGIN_STATE) {
     ERROR_LOG("ctp not login!");
     pubAccountStatusRsp(identify, field, false, "ctp_logout");
     return;
@@ -332,7 +332,7 @@ void StrategyEvent::OrderInsertReqHandle(MsgStruct &msg) {
   identity.identity = orderInsertReq.identity();
   identity.prid = orderInsertReq.process_random_id();
   auto &traderSer = TraderSevice::getInstance();
-  if (traderSer.ROLE(Trader).ROLE(CtpTraderApi).getTraderLoginState() == LOGIN_STATE) {
+  if (traderSer.ROLE(Trader).ROLE(CtpTraderApi).getTraderLoginState() != LOGIN_STATE) {
     ERROR_LOG("ctp not login!");
     pubOrderInsertRsp(identity, false, ORDER_BUILD_ERROR);
     return;
@@ -430,7 +430,7 @@ void StrategyEvent::MarginRateReqHandle(MsgStruct &msg) {
   // utils::printProtoMsg(reqMsg);
   auto identify = reqMsg.margin_rate_req().process_random_id();
   auto &traderSer = TraderSevice::getInstance();
-  if (traderSer.ROLE(Trader).ROLE(CtpTraderApi).getTraderLoginState() == LOGIN_STATE) {
+  if (traderSer.ROLE(Trader).ROLE(CtpTraderApi).getTraderLoginState() != LOGIN_STATE) {
     ERROR_LOG("ctp not login!");
     pubMarginRateRsp(identify, false, "ctp_logout");
     return;
@@ -501,7 +501,7 @@ void StrategyEvent::CommissionRateReqHandle(MsgStruct &msg) {
   // utils::printProtoMsg(reqMsg);
   auto identify = reqMsg.commission_rate_req().process_random_id();
   auto &traderSer = TraderSevice::getInstance();
-  if (traderSer.ROLE(Trader).ROLE(CtpTraderApi).getTraderLoginState() == LOGIN_STATE) {
+  if (traderSer.ROLE(Trader).ROLE(CtpTraderApi).getTraderLoginState() != LOGIN_STATE) {
     ERROR_LOG("ctp not login!");
     pubCommissionRateRsp(identify, false, "ctp_logout");
     return;
@@ -574,7 +574,7 @@ void StrategyEvent::InstrumentReqHandle(MsgStruct &msg) {
   // utils::printProtoMsg(reqMsg);
   auto identify = reqMsg.instrument_req().process_random_id();
   auto &traderSer = TraderSevice::getInstance();
-  if (traderSer.ROLE(Trader).ROLE(CtpTraderApi).getTraderLoginState() == LOGIN_STATE) {
+  if (traderSer.ROLE(Trader).ROLE(CtpTraderApi).getTraderLoginState() != LOGIN_STATE) {
     ERROR_LOG("ctp not login!");
     pubInstrumentRsp(identify, false, "ctp_logout");
     return;
