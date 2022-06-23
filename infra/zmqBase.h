@@ -10,7 +10,6 @@
 
 #include <string>
 #include "common/extern/libzmq/include/zmq.hpp"
-#include "common/self/getconfig.h"
 
 struct ZmqBase {
   ZmqBase() {}

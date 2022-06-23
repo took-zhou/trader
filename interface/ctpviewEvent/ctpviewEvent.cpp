@@ -15,15 +15,14 @@ bool CtpviewEvent::init() {
 
   return true;
 }
+
 void CtpviewEvent::regMsgFun() {
   int cnt = 0;
   msgFuncMap.clear();
-  msgFuncMap.insert(
-      std::pair<std::string, std::function<void(MsgStruct & msg)>>("LoginControl", [this](MsgStruct &msg) { LoginControlHandle(msg); }));
-  msgFuncMap.insert(
-      std::pair<std::string, std::function<void(MsgStruct & msg)>>("BugInjection", [this](MsgStruct &msg) { BugInjectionHandle(msg); }));
+  msgFuncMap["LoginControl"] = [this](MsgStruct &msg) { LoginControlHandle(msg); };
+  msgFuncMap["BugInjection"] = [this](MsgStruct &msg) { BugInjectionHandle(msg); };
 
-  for (auto iter : msgFuncMap) {
+  for (auto &iter : msgFuncMap) {
     INFO_LOG("msgFuncMap[%d] key is [%s]", cnt, iter.first.c_str());
     cnt++;
   }

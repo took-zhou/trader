@@ -369,7 +369,7 @@ class CtpTraderBaseApi : public CThostFtdcTraderApi {
   int ReqQryCombPromotionParam(CThostFtdcQryCombPromotionParamField *pQryCombPromotionParam, int nRequestID){};
 };
 
-enum struct CtpLogInState { Prepare_State = 0, InitFailed_State = 1, Connected_State = 2, Invalid_State = 3 };
+enum TRADER_LOGIN_STATE { ERROR_STATE = 0, LOGIN_STATE = 1, LOGOUT_STATE = 2 };
 
 struct CtpTraderApi {
  public:
@@ -378,16 +378,20 @@ struct CtpTraderApi {
   void release();
   bool logIn();
   void logOut();
-  CtpLogInState getCtpLogInState();
+
   void runLogInAndLogOutAlg();
+
+  // 获取market登录登出状态
+  TRADER_LOGIN_STATE getTraderLoginState(void);
   CtpTraderBaseApi *traderApi{nullptr};
-  TraderSpi traderSpi;
-  bool isLogIN{false};
-  bool isLogInThreadRunning{false};
-  bool isForceExitThreadRuning{false};
 
   USE_ROLE(SettlementConfirm);
   USE_ROLE(TraderTimeState);
+
+ private:
+  TRADER_LOGIN_STATE login_state = LOGOUT_STATE;
+
+  TraderSpi traderSpi;
 };
 
 #endif /* WORKSPACE_TRADER_DOMAIN_COMPONENTS_CTPTRADEAPI_CTPTRADEAPI_H_ */

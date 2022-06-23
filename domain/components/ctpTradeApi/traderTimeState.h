@@ -15,12 +15,10 @@ typedef struct {
 
 typedef struct {
   U32 now_mins;
-  char loginTime[256];
   U32 day_login_mins;
   U32 day_logout_mins;
   U32 night_login_mins;
   U32 night_logout_mins;
-  char loginMode[256];
 } PARAM_INPUT;
 
 typedef struct {
@@ -36,9 +34,6 @@ class TraderTimeState {
   PARAM_INPUT input;
 
   STATE_OUTPUT output;
-
-  // model initialize function
-  void initialize();
 
   // model step function
   void step();
@@ -64,7 +59,6 @@ class TraderTimeState {
   U32 isDuringNightLogoutTime(void);
   U32 isDuringDayLoginTime(void);
   U32 isDuringNightLoginTime(void);
-  void determineLoginMode(void);
 
   MARKET_TIME_STATE time_state = RESERVE;
 };

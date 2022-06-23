@@ -4,11 +4,9 @@
  *  Created on: 2020年10月23日
  *      Author: Administrator
  */
-
 #ifndef WORKSPACE_TRADER_DOMAIN_TRADERSERVICE_H_
 #define WORKSPACE_TRADER_DOMAIN_TRADERSERVICE_H_
 
-#include "common/self/timer.h"
 #include "trader/domain/components/trader.h"
 
 struct TraderSevice : Trader {
@@ -20,7 +18,6 @@ struct TraderSevice : Trader {
     return instance;
   }
 
-  TimeoutTimerPool &getTimeoutTimerPool();
   IMPL_ROLE(Trader);
 };
 

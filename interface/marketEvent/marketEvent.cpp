@@ -26,10 +26,9 @@ bool MarketEvent::init() {
 void MarketEvent::regMsgFun() {
   int cnt = 0;
   msgFuncMap.clear();
-  msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct & msg)>>("QryInstrumentReq",
-                                                                                 [this](MsgStruct &msg) { QryInstrumentReqHandle(msg); }));
+  msgFuncMap["QryInstrumentReq"] = [this](MsgStruct &msg) { QryInstrumentReqHandle(msg); };
 
-  for (auto iter : msgFuncMap) {
+  for (auto &iter : msgFuncMap) {
     INFO_LOG("msgFuncMap[%d] key is [%s]", cnt, iter.first.c_str());
     cnt++;
   }
@@ -50,7 +49,7 @@ void MarketEvent::QryInstrumentReqHandle(MsgStruct &msg) {
   reqMsg.ParseFromString(msg.pbMsg);
   utils::printProtoMsg(reqMsg);
   auto &traderSer = TraderSevice::getInstance();
-  if (!traderSer.ROLE(Trader).ROLE(CtpTraderApi).isLogIN) {
+  if (traderSer.ROLE(Trader).ROLE(CtpTraderApi).getTraderLoginState() == LOGIN_STATE) {
     ERROR_LOG("ctp not login!");
     pubQryInstrumentRsp(nullptr, true, false);
     return;

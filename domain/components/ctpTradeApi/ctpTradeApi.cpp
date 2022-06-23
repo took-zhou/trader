@@ -253,6 +253,7 @@ void CtpTraderBaseApi::Init() {
 }
 
 bool CtpTraderApi::init() {
+  bool out = false;
   INFO_LOG("begin CtpTraderApi init");
 
   traderApi = new CtpTraderBaseApi;  //新建tradeAPI
@@ -260,7 +261,6 @@ bool CtpTraderApi::init() {
   const std::string conPath = jsonCfg.getConfig("trader", "ConPath").get<std::string>();
   utils::creatFolder(conPath);
   traderApi->CreateFtdcTraderApi(conPath.c_str());  //设置.con的保存位置
-  //        CSimpleHandler sh(pUserApi);     //初始化回调类
   traderSpi = TraderSpi();
 
   traderApi->RegisterSpi(&traderSpi);                  //注册回调类
@@ -272,89 +272,70 @@ bool CtpTraderApi::init() {
 
   traderApi->RegisterFront(const_cast<char *>(frontaddr.c_str()));  //注册前置地址
 
-  return true;
+  traderApi->Init();  // connect to ctp
+  std::string semName = "trader_init";
+
+  if (globalSem.waitSemBySemName(semName, 10)) {
+    out = false;
+    login_state = ERROR_STATE;
+    ERROR_LOG("%s", "trader init fail.");
+  } else {
+    out = true;
+    INFO_LOG("%s", "trader init ok.");
+  }
+  globalSem.delOrderSem(semName);
+
+  return out;
 }
 
 void CtpTraderApi::release() {
+  INFO_LOG("Is going to release traderApi.");
   traderApi->Release();
   delete traderApi;
   traderApi = nullptr;
 }
 
 bool CtpTraderApi::logIn() {
-  init();
-  auto ctpLoginFunc = [this] {
-    this->isLogInThreadRunning = true;
-    traderApi->Init();  // connect to ctp
-    std::string semName = "trader_init";
-    globalSem.waitSemBySemName(semName);
-    globalSem.delOrderSem(semName);
-    if (this->isForceExitThreadRuning) {
-      INFO_LOG("%s", "login thread force exit");
-      this->isForceExitThreadRuning = false;
-      INFO_LOG("%s", "isForceExitThreadRuning set to false");
-      this->isLogInThreadRunning = false;
-      INFO_LOG("%s", "isLogInThreadRunning force set to false");
-      return;
-    }
-    INFO_LOG("%s", "ctp init ok");
+  traderApi->ReqAuthenticate();
 
-    traderApi->ReqAuthenticate();
-    semName = "trader_reqAuthenticate";
-    globalSem.waitSemBySemName(semName);
-    globalSem.delOrderSem(semName);
-    if (this->isForceExitThreadRuning) {
-      INFO_LOG("%s", "login thread force exit");
-      this->isForceExitThreadRuning = false;
-      INFO_LOG("%s", "isForceExitThreadRuning set to false");
-      this->isLogInThreadRunning = false;
-      INFO_LOG("%s", "isLogInThreadRunning force set to false");
-      return;
-    }
-    INFO_LOG("ReqAuthenticate ok");
+  std::string semName = "trader_reqAuthenticate";
+  globalSem.waitSemBySemName(semName);
+  globalSem.delOrderSem(semName);
 
-    traderApi->ReqUserLogin();
-    semName = "trader_logIn";
-    globalSem.waitSemBySemName(semName);
-    globalSem.delOrderSem(semName);
-    if (this->isForceExitThreadRuning) {
-      INFO_LOG("%s", "login thread force exit");
-      this->isForceExitThreadRuning = false;
-      INFO_LOG("%s", "isForceExitThreadRuning set to false");
-      this->isLogInThreadRunning = false;
-      INFO_LOG("%s", "isLogInThreadRunning force set to false");
-      return;
-    }
-    INFO_LOG("login ctp ok!");
-    this->isLogIN = true;
-    std::string tradingDay = traderApi->GetTradingDay();
-    INFO_LOG("trading day:%s", tradingDay.c_str());
-    while (true) {
-      if (this->ROLE(SettlementConfirm).confirm(tradingDay)) {
-        INFO_LOG("SettlementConfirm confirm success!");
-        break;
-      }
-      ERROR_LOG("SettlementConfirm confirm failed, try again!");
-      std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    }
+  INFO_LOG("ReqAuthenticate ok");
 
-    this->isLogInThreadRunning = false;
-    INFO_LOG("%s", "isLogInThreadRunning set to false normally");
-  };
-  std::thread(ctpLoginFunc).detach();
+  traderApi->ReqUserLogin();
+  semName = "trader_logIn";
+  globalSem.waitSemBySemName(semName);
+  globalSem.delOrderSem(semName);
+
+  INFO_LOG("login ctp ok!");
+
+  std::string tradingDay = traderApi->GetTradingDay();
+  INFO_LOG("trading day:%s", tradingDay.c_str());
+  if (this->ROLE(SettlementConfirm).confirm(tradingDay)) {
+    INFO_LOG("SettlementConfirm confirm success!");
+  } else {
+    ERROR_LOG("SettlementConfirm confirm fail!");
+  }
+
+  login_state = LOGIN_STATE;
   return true;
 }
 
 void CtpTraderApi::logOut() {
-  traderApi->ReqUserLogout();
+  if (traderApi != nullptr) {
+    traderApi->ReqUserLogout();
 
-  std::string semName = "trader_logOut";
-  globalSem.waitSemBySemName(semName, 10);
-  globalSem.delOrderSem(semName);
+    std::string semName = "trader_logOut";
+    globalSem.waitSemBySemName(semName, 10);
+    globalSem.delOrderSem(semName);
 
-  release();
-  INFO_LOG("ctp log out ok!");
-  isLogIN = false;
+    release();
+    INFO_LOG("ctp log out ok!");
+  }
+
+  login_state = LOGOUT_STATE;
 }
 
 CtpTraderApi::CtpTraderApi() {
@@ -362,89 +343,19 @@ CtpTraderApi::CtpTraderApi() {
   // traderApi = &ctpTraderBaseApi;
 }
 
-CtpLogInState CtpTraderApi::getCtpLogInState() {
-  if (!isLogInThreadRunning && !isLogIN) {
-    return CtpLogInState::Prepare_State;
-  } else if (isLogInThreadRunning && !isLogIN) {
-    return CtpLogInState::InitFailed_State;
-  } else if (!isLogInThreadRunning && isLogIN) {
-    return CtpLogInState::Connected_State;
-  } else {
-    return CtpLogInState::Invalid_State;
-  }
-}
+TRADER_LOGIN_STATE CtpTraderApi::getTraderLoginState(void) { return login_state; }
 
 void CtpTraderApi::runLogInAndLogOutAlg() {
-  INFO_LOG("start login and logout control thread");
-  auto ctpLogInState = this->getCtpLogInState();
-  if (ROLE(TraderTimeState).output.status == LOGIN_TIME &&
-      ((ctpLogInState == CtpLogInState::Connected_State) || (ctpLogInState == CtpLogInState::Invalid_State))) {
-    WARNING_LOG("during trade time, log in......");
-    while (true) {
-      if (!this->logIn()) {
-        ERROR_LOG("log in failed, try after 5s");
-        std::this_thread::sleep_for(std::chrono::milliseconds(5 * 1000));
-        continue;
+  while (1) {
+    if (ROLE(TraderTimeState).output.status == LOGIN_TIME && login_state == LOGOUT_STATE) {
+      if (this->init()) {
+        this->logIn();
+      } else {
+        this->release();
       }
-      break;
-    }
-  }
-  std::this_thread::sleep_for(std::chrono::milliseconds(5 * 1000));
-  WARNING_LOG("begin while loop");
-  while (true) {
-    ctpLogInState = this->getCtpLogInState();
-    if (ctpLogInState == CtpLogInState::Invalid_State) {
-      ERROR_LOG(
-          "Error CtpLogInState [Invalid_State],code has bug or waiting "
-          "SettlementConfirm response");
-    }
-    if (ROLE(TraderTimeState).output.status == LOGIN_TIME &&
-        ((ctpLogInState == CtpLogInState::Connected_State) || (ctpLogInState == CtpLogInState::InitFailed_State))) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-      continue;
-    }
-    if (ROLE(TraderTimeState).output.status == LOGIN_TIME && (ctpLogInState == CtpLogInState::Prepare_State)) {
-      WARNING_LOG("during trade time, need to log in");
-      while (true) {
-        if (!this->logIn()) {
-          ERROR_LOG("log in failed, try after 5s");
-          sleep(5);
-          continue;
-        }
-        break;
-      }
-    }
-    if (ROLE(TraderTimeState).output.status == LOGOUT_TIME && (ctpLogInState == CtpLogInState::Connected_State)) {
-      INFO_LOG("trade time over, need to logout");
+    } else if (ROLE(TraderTimeState).output.status == LOGOUT_TIME && login_state != LOGOUT_STATE) {
       this->logOut();
-      continue;
     }
-    if (ROLE(TraderTimeState).output.status == LOGOUT_TIME && (ctpLogInState == CtpLogInState::InitFailed_State)) {
-      INFO_LOG("%s", "init failed and trading time over, need to logout");
-      this->isForceExitThreadRuning = true;
-      if (globalSem.existSem("trader_init")) {
-        globalSem.postSemBySemName("trader_init");
-      }
-      if (globalSem.existSem("trader_reqAuthenticate")) {
-        globalSem.postSemBySemName("trader_reqAuthenticate");
-      }
-      if (globalSem.existSem("trader_logIn")) {
-        globalSem.postSemBySemName("trader_logIn");
-      }
-      std::this_thread::sleep_for(std::chrono::milliseconds(500));
-      this->logOut();
-      continue;
-    }
-    if (ROLE(TraderTimeState).output.status == LOGOUT_TIME && (ctpLogInState == CtpLogInState::Prepare_State)) {
-      WARNING_LOG(
-          "not during trade  time! and will relogin when time is "
-          "right... please wait!");
-      while (ROLE(TraderTimeState).output.status == LOGOUT_TIME) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-      }
-      WARNING_LOG("return to trade  time!");
-      continue;
-    }
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(1000ms);
   }
 }

@@ -29,34 +29,22 @@ bool CtpEvent::init() {
 void CtpEvent::regMsgFun() {
   int cnt = 0;
   msgFuncMap.clear();
-  msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct & msg)>>(
-      "OnRspSettlementInfoConfirm", [this](MsgStruct &msg) { OnRspSettlementInfoConfirmHandle(msg); }));
-  msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct & msg)>>("OnRspUserLogin",
-                                                                                 [this](MsgStruct &msg) { OnRspUserLoginHandle(msg); }));
-  msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct & msg)>>("OnRspAuthenticate",
-                                                                                 [this](MsgStruct &msg) { OnRspAuthenticateHandle(msg); }));
-  msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct & msg)>>(
-      "OnErrRtnOrderInsert", [this](MsgStruct &msg) { OnErrRtnOrderInsertHandle(msg); }));
-  msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct & msg)>>("OnRspOrderInsert",
-                                                                                 [this](MsgStruct &msg) { OnRspOrderInsertHandle(msg); }));
-  msgFuncMap.insert(
-      std::pair<std::string, std::function<void(MsgStruct & msg)>>("OnRtnOrder", [this](MsgStruct &msg) { OnRtnOrderHandle(msg); }));
-  msgFuncMap.insert(
-      std::pair<std::string, std::function<void(MsgStruct & msg)>>("OnRtnTrade", [this](MsgStruct &msg) { OnRtnTradeHandle(msg); }));
-  msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct & msg)>>(
-      "OnRspQryTradingAccount", [this](MsgStruct &msg) { OnRspQryTradingAccountHandle(msg); }));
-  msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct & msg)>>(
-      "OnRspQryInstrument", [this](MsgStruct &msg) { OnRspQryInstrumentHandle(msg); }));
-  msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct & msg)>>("OnRspOrderAction",
-                                                                                 [this](MsgStruct &msg) { OnRspOrderActionHandle(msg); }));
-  msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct & msg)>>(
-      "OnErrRtnOrderAction", [this](MsgStruct &msg) { OnErrRtnOrderActionHandle(msg); }));
-  msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct & msg)>>(
-      "OnRspQryInstrumentMarginRate", [this](MsgStruct &msg) { OnRspQryInstrumentMarginRateHandle(msg); }));
-  msgFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct & msg)>>(
-      "OnRspQryInstrumentCommissionRate", [this](MsgStruct &msg) { OnRspQryInstrumentCommissionRateHandle(msg); }));
+  msgFuncMap["OnRspSettlementInfoConfirm"] = [this](MsgStruct &msg) { OnRspSettlementInfoConfirmHandle(msg); };
+  msgFuncMap["OnRspUserLogin"] = [this](MsgStruct &msg) { OnRspUserLoginHandle(msg); };
+  msgFuncMap["OnRspSettlementInfoConfirm"] = [this](MsgStruct &msg) { OnRspSettlementInfoConfirmHandle(msg); };
+  msgFuncMap["OnRspAuthenticate"] = [this](MsgStruct &msg) { OnRspAuthenticateHandle(msg); };
+  msgFuncMap["OnErrRtnOrderInsert"] = [this](MsgStruct &msg) { OnErrRtnOrderInsertHandle(msg); };
+  msgFuncMap["OnRspOrderInsert"] = [this](MsgStruct &msg) { OnRspOrderInsertHandle(msg); };
+  msgFuncMap["OnRtnOrder"] = [this](MsgStruct &msg) { OnRtnOrderHandle(msg); };
+  msgFuncMap["OnRtnTrade"] = [this](MsgStruct &msg) { OnRtnTradeHandle(msg); };
+  msgFuncMap["OnRspQryTradingAccount"] = [this](MsgStruct &msg) { OnRspQryTradingAccountHandle(msg); };
+  msgFuncMap["OnRspQryInstrument"] = [this](MsgStruct &msg) { OnRspQryInstrumentHandle(msg); };
+  msgFuncMap["OnRspOrderAction"] = [this](MsgStruct &msg) { OnRspOrderActionHandle(msg); };
+  msgFuncMap["OnErrRtnOrderAction"] = [this](MsgStruct &msg) { OnErrRtnOrderActionHandle(msg); };
+  msgFuncMap["OnRspQryInstrumentMarginRate"] = [this](MsgStruct &msg) { OnRspQryInstrumentMarginRateHandle(msg); };
+  msgFuncMap["OnRspQryInstrumentCommissionRate"] = [this](MsgStruct &msg) { OnRspQryInstrumentCommissionRateHandle(msg); };
 
-  for (auto iter : msgFuncMap) {
+  for (auto &iter : msgFuncMap) {
     INFO_LOG("msgFuncMap[%d] key is [%s]", cnt, iter.first.c_str());
     cnt++;
   }

@@ -22,20 +22,14 @@ constexpr U32 RSP_HANDLE_THREAD_WAIT_TIME = 1000000;
 void TraderEvent::regSessionFunc() {
   int cnt = 0;
   sessionFuncMap.clear();
-  sessionFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct msg)>>(
-      std::string("market_trader"), [this](MsgStruct msg) { ROLE(MarketEvent).handle(msg); }));
-  sessionFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct msg)>>(
-      std::string("strategy_trader"), [this](MsgStruct msg) { ROLE(StrategyEvent).handle(msg); }));
-  sessionFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct msg)>>(std::string("trader_trader"),
-                                                                                   [this](MsgStruct msg) { ROLE(SelfEvent).handle(msg); }));
-  sessionFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct msg)>>(
-      std::string("interactor_trader"), [this](MsgStruct msg) { ROLE(InteractEvent).handle(msg); }));
-  sessionFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct msg)>>(std::string("ctp"),
-                                                                                   [this](MsgStruct msg) { ROLE(CtpEvent).handle(msg); }));
-  sessionFuncMap.insert(std::pair<std::string, std::function<void(MsgStruct msg)>>(
-      std::string("ctpview_trader"), [this](MsgStruct msg) { ROLE(CtpviewEvent).handle(msg); }));
+  sessionFuncMap["market_trader"] = [this](MsgStruct msg) { ROLE(MarketEvent).handle(msg); };
+  sessionFuncMap["strategy_trader"] = [this](MsgStruct msg) { ROLE(StrategyEvent).handle(msg); };
+  sessionFuncMap["trader_trader"] = [this](MsgStruct msg) { ROLE(SelfEvent).handle(msg); };
+  sessionFuncMap["interactor_trader"] = [this](MsgStruct msg) { ROLE(InteractEvent).handle(msg); };
+  sessionFuncMap["ctp"] = [this](MsgStruct msg) { ROLE(CtpEvent).handle(msg); };
+  sessionFuncMap["ctpview_trader"] = [this](MsgStruct msg) { ROLE(CtpviewEvent).handle(msg); };
 
-  for (auto iter : sessionFuncMap) {
+  for (auto &iter : sessionFuncMap) {
     INFO_LOG("sessionFuncMap[%d] key is [%s]", cnt, iter.first.c_str());
     cnt++;
   }
