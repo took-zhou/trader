@@ -42,5 +42,4 @@ void SelfEvent::regMsgFun() {
 void SelfEvent::HeartBeatHandle(MsgStruct &msg) {
   static trader_trader::message reqMsg;
   reqMsg.ParseFromString(msg.pbMsg);
-  utils::printProtoMsg(reqMsg);
 }

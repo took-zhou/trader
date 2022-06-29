@@ -48,14 +48,14 @@ void CtpTraderBaseApi::RegisterSpi(CThostFtdcTraderSpi *pSpi) {
   INFO_LOG("RegisterSpi ok");
 }
 
-int CtpTraderBaseApi::ReqOrderAction(OrderContent &orderContent, char actionFlag) {
+int CtpTraderBaseApi::ReqOrderAction(OrderContent *orderContent, char actionFlag) {
   CThostFtdcInputOrderActionField orderActionReq{0};
-  strcpy(orderActionReq.OrderRef, orderContent.orderRef.c_str());
-  orderActionReq.FrontID = orderContent.frontId;
-  orderActionReq.SessionID = orderContent.sessionId;
-  strcpy(orderActionReq.InstrumentID, orderContent.instrumentID.c_str());
-  strcpy(orderActionReq.InvestorID, orderContent.investorId.c_str());
-  strcpy(orderActionReq.UserID, orderContent.userId.c_str());
+  strcpy(orderActionReq.OrderRef, orderContent->orderRef.c_str());
+  orderActionReq.FrontID = orderContent->frontId;
+  orderActionReq.SessionID = orderContent->sessionId;
+  strcpy(orderActionReq.InstrumentID, orderContent->instrumentID.c_str());
+  strcpy(orderActionReq.InvestorID, orderContent->investorId.c_str());
+  strcpy(orderActionReq.UserID, orderContent->userId.c_str());
   orderActionReq.ActionFlag = actionFlag;
   int result = m_pApi->ReqOrderAction(&orderActionReq, requestIdBuildAlg());
   INFO_LOG("ReqOrderAction send result is [%d]", result);

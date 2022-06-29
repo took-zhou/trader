@@ -30,7 +30,6 @@ struct CtpEvent {
 
   void OnRspSettlementInfoConfirmHandle(MsgStruct &msg);
   void OnRspUserLoginHandle(MsgStruct &msg);
-  void OnRspAuthenticateHandle(MsgStruct &msg);
 
   void OnErrRtnOrderInsertHandle(MsgStruct &msg);
   void OnRspOrderInsertHandle(MsgStruct &msg);

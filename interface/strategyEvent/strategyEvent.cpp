@@ -10,8 +10,6 @@
 #include "common/self/fileUtil.h"
 #include "common/self/protobuf/strategy-trader.pb.h"
 #include "common/self/utils.h"
-#include "trader/domain/components/InsertResult.h"
-#include "trader/domain/components/orderstates.h"
 #include "trader/domain/traderService.h"
 #include "trader/infra/define.h"
 #include "trader/infra/recerSender.h"
@@ -55,7 +53,6 @@ void StrategyEvent::regMsgFun() {
 void StrategyEvent::OrderCancelReqHandle(MsgStruct &msg) {
   strategy_trader::message reqMsg;
   reqMsg.ParseFromString(msg.pbMsg);
-  utils::printProtoMsg(reqMsg);
 
   auto &orderCancelReq = reqMsg.order_cancel_req();
   OrderIdentify IdentifyId;
@@ -68,55 +65,44 @@ void StrategyEvent::OrderCancelReqHandle(MsgStruct &msg) {
     return;
   }
   auto &orderManage = traderSer.ROLE(OrderManage);
-  auto &orderContent = orderManage.getOrderCOntentByIdentityId(IdentifyId.identity);
-  if (!orderContent.isValid()) {
-    std::string reason = "invalidOrderIdentityId";
-    pubOrderCancelRsp(IdentifyId, false, reason);
-    return;
+  for (auto &item : orderManage.orderMaps) {
+    if (item.second->identityId.identity == IdentifyId.identity) {
+      item.second->activeCancleIndication = true;
+      auto *traderApi = traderSer.ROLE(Trader).ROLE(CtpTraderApi).traderApi;
+      traderApi->ReqOrderAction(item.second);
+      break;
+    }
   }
-
-  orderContent.activeCancleIndication = true;
-  auto *traderApi = traderSer.ROLE(Trader).ROLE(CtpTraderApi).traderApi;
-  CThostFtdcInputOrderActionField orderActionReq;
-
-  traderApi->ReqOrderAction(orderContent);
 }
 
 void StrategyEvent::pubOrderCancelRsp(OrderIdentify identityId, bool result, const std::string &reason) {
   auto &traderSer = TraderSevice::getInstance();
   auto &orderManage = traderSer.ROLE(OrderManage);
-  auto &orderContent = orderManage.getOrderCOntentByIdentityId(identityId.identity);
-  if (!orderContent.isValid()) {
-    ERROR_LOG("invalid order, identityId[%s]", identityId.identity.c_str());
-    return;
-  }
-  if (orderContent.isFlowFinish) {
-    INFO_LOG("flow has finished identityId[%s]", identityId.identity.c_str());
-    return;
-  }
-  orderContent.isFlowFinish = true;
-  strategy_trader::message rspMsg;
-  auto *orderCancelRsp = rspMsg.mutable_order_cancel_rsp();
-  orderCancelRsp->set_identity(identityId.identity);
-  orderCancelRsp->set_result(result ? strategy_trader::Result::success : strategy_trader::Result::failed);
-  orderCancelRsp->set_failedreason(reason);
+  for (auto &item : orderManage.orderMaps) {
+    if (item.second->identityId.identity == identityId.identity) {
+      if (item.second->isFlowFinish) {
+        INFO_LOG("flow has finished identityId[%s]", identityId.identity.c_str());
+      } else {
+        item.second->isFlowFinish = true;
+        strategy_trader::message rspMsg;
+        auto *orderCancelRsp = rspMsg.mutable_order_cancel_rsp();
+        orderCancelRsp->set_identity(identityId.identity);
+        orderCancelRsp->set_result(result ? strategy_trader::Result::success : strategy_trader::Result::failed);
+        orderCancelRsp->set_failedreason(reason);
 
-  std::string strRsp = rspMsg.SerializeAsString();
-  std::string head = "strategy_trader.OrderCancelRsp";
-  auto &recerSender = RecerSender::getInstance();
-  bool sendRes = recerSender.ROLE(Sender).ROLE(ProxySender).send(head.c_str(), strRsp.c_str());
-  utils::printProtoMsg(rspMsg);
-  if (!sendRes) {
-    ERROR_LOG("send OrderCancelRsp error");
-    return;
+        std::string strRsp = rspMsg.SerializeAsString();
+        std::string head = "strategy_trader.OrderCancelRsp";
+        auto &recerSender = RecerSender::getInstance();
+        bool sendRes = recerSender.ROLE(Sender).ROLE(ProxySender).send(head.c_str(), strRsp.c_str());
+      }
+      break;
+    }
   }
-  return;
 }
 
 void StrategyEvent::AccountStatusReqHandle(MsgStruct &msg) {
   strategy_trader::message reqMsg;
   reqMsg.ParseFromString(msg.pbMsg);
-  // utils::printProtoMsg(reqMsg);
   auto reqInfo = reqMsg.account_status_req();
   int field = reqInfo.field();
   auto identify = reqInfo.process_random_id();
@@ -314,7 +300,6 @@ void StrategyEvent::pubAccountStatusRsp(std::string identity, int field, bool re
   std::string head = "strategy_trader.AccountStatusRsp." + identity;
   auto &recerSender = RecerSender::getInstance();
   bool sendRes = recerSender.ROLE(Sender).ROLE(ProxySender).send(head.c_str(), strRsp.c_str());
-  utils::printProtoMsg(rsp);
   if (!sendRes) {
     ERROR_LOG("send OrderInsertRsp error");
     return;
@@ -323,9 +308,11 @@ void StrategyEvent::pubAccountStatusRsp(std::string identity, int field, bool re
 }
 
 void StrategyEvent::OrderInsertReqHandle(MsgStruct &msg) {
+#ifdef BENCH_TEST
+  ScopedTimer t("OrderInsertReqHandle");
+#endif
   strategy_trader::message reqMsg;
   reqMsg.ParseFromString(msg.pbMsg);
-  // utils::printProtoMsg(reqMsg);
 
   const auto &orderInsertReq = reqMsg.order_insert_req();
   OrderIdentify identity;
@@ -338,35 +325,37 @@ void StrategyEvent::OrderInsertReqHandle(MsgStruct &msg) {
     return;
   }
 
-  // ("identity[%s] insert begin",identity.identity.c_str());
+  traderSer.ROLE(Trader).ROLE(TmpStore).logingInfo.OrderRef++;
+  std::string newOrderRef = utils::longintToString(traderSer.ROLE(Trader).ROLE(TmpStore).logingInfo.OrderRef);
+
   auto &orderManage = traderSer.ROLE(OrderManage);
-  std::string newOrderRef = utils::genOrderRef();
   if (!orderManage.addOrder(newOrderRef)) {
     ERROR_LOG("add order [%s] to OrderManage error", newOrderRef.c_str());
     pubOrderInsertRsp(identity, false, ORDER_BUILD_ERROR);
     return;
   }
 
-  if (!orderManage.buildOrder(newOrderRef, orderInsertReq)) {
+  CThostFtdcInputOrderField newOrder;
+  if (!orderManage.buildOrder(newOrderRef, orderInsertReq, newOrder)) {
     ERROR_LOG("build order failed, the orderRef is [%s]", newOrderRef.c_str());
     pubOrderInsertRsp(identity, false, ORDER_BUILD_ERROR);
     orderManage.delOrder(newOrderRef);
     return;
   }
 
-  auto &orderContent = orderManage.getOrderContent(newOrderRef);
-  orderContent.orderRef = newOrderRef;
-  orderContent.identityId.prid = identity.prid;
-  orderContent.identityId.identity = identity.identity;
-  orderContent.instrumentID = orderContent.ROLE(CThostFtdcInputOrderField).InstrumentID;
-  orderContent.investorId = orderContent.ROLE(CThostFtdcInputOrderField).InvestorID;
-  orderContent.userId = orderContent.ROLE(CThostFtdcInputOrderField).UserID;
-  auto *traderApi = traderSer.ROLE(Trader).ROLE(CtpTraderApi).traderApi;
-  auto &ctpRspResultMonitor = InsertResult::getInstance();
-  ctpRspResultMonitor.addResultMonitor(newOrderRef);
-  auto *newOrder = orderManage.getOrder(newOrderRef);
-  traderApi->ReqOrderInsert(newOrder);
+  auto &orderContent = orderManage.orderMaps.at(newOrderRef);
+  orderContent->orderRef = newOrderRef;
+  orderContent->identityId.prid = identity.prid;
+  orderContent->identityId.identity = identity.identity;
+  orderContent->instrumentID = newOrder.InstrumentID;
+  orderContent->investorId = newOrder.InvestorID;
+  orderContent->userId = newOrder.UserID;
+  orderContent->total_volume = newOrder.VolumeTotalOriginal;
+  orderContent->left_volume = newOrder.VolumeTotalOriginal;
+  orderContent->limit_price = newOrder.LimitPrice;
 
+  auto *traderApi = traderSer.ROLE(Trader).ROLE(CtpTraderApi).traderApi;
+  traderApi->ReqOrderInsert(&newOrder);
   return;
 }
 
@@ -384,13 +373,14 @@ void StrategyEvent::pubOrderInsertRsp(OrderIdentify identity, bool result, std::
     }
     auto &traderSer = TraderSevice::getInstance();
     auto &orderManage = traderSer.ROLE(OrderManage);
-    auto &orderContent = orderManage.getOrderCOntentByIdentityId(identity.identity);
-    if (!orderContent.isValid()) {
-      ERROR_LOG("OnRtnTrade can not find order in local, identity[%s]", identity.identity.c_str());
-      return;
+
+    for (auto &item : orderManage.orderMaps) {
+      if (item.second->identityId.identity == identity.identity) {
+        succInfo->set_orderprice(utils::doubleToStringConvert(item.second->tradedOrder.price));
+        succInfo->set_ordervolume(item.second->tradedOrder.volume);
+      }
+      break;
     }
-    succInfo->set_orderprice(utils::doubleToStringConvert(orderContent.tradedOrder.price));
-    succInfo->set_ordervolume(orderContent.tradedOrder.volume);
   }
 
   if (!result) {
@@ -409,13 +399,9 @@ void StrategyEvent::pubOrderInsertRsp(OrderIdentify identity, bool result, std::
   std::string head = "strategy_trader.OrderInsertRsp." + identity.prid;
   auto &recerSender = RecerSender::getInstance();
   bool sendRes = recerSender.ROLE(Sender).ROLE(ProxySender).send(head.c_str(), strRsp.c_str());
-  utils::printProtoMsg(rsp);
   if (!sendRes) {
     ERROR_LOG("send OrderInsertRsp error");
   }
-
-  auto &orderStates = OrderStates::getInstance();
-  orderStates.showAllOrderStates();
 
   if (result) {
     sendEmail(identity.identity);
@@ -427,7 +413,6 @@ void StrategyEvent::pubOrderInsertRsp(OrderIdentify identity, bool result, std::
 void StrategyEvent::MarginRateReqHandle(MsgStruct &msg) {
   strategy_trader::message reqMsg;
   reqMsg.ParseFromString(msg.pbMsg);
-  // utils::printProtoMsg(reqMsg);
   auto identify = reqMsg.margin_rate_req().process_random_id();
   auto &traderSer = TraderSevice::getInstance();
   if (traderSer.ROLE(Trader).ROLE(CtpTraderApi).getTraderLoginState() != LOGIN_STATE) {
@@ -487,7 +472,6 @@ void StrategyEvent::pubMarginRateRsp(std::string identity, bool result, const st
   std::string head = "strategy_trader.MarginRateRsp." + identity;
   auto &recerSender = RecerSender::getInstance();
   bool sendRes = recerSender.ROLE(Sender).ROLE(ProxySender).send(head.c_str(), strRsp.c_str());
-  utils::printProtoMsg(rsp);
   if (!sendRes) {
     ERROR_LOG("send OrderInsertRsp error");
     return;
@@ -498,7 +482,6 @@ void StrategyEvent::pubMarginRateRsp(std::string identity, bool result, const st
 void StrategyEvent::CommissionRateReqHandle(MsgStruct &msg) {
   strategy_trader::message reqMsg;
   reqMsg.ParseFromString(msg.pbMsg);
-  // utils::printProtoMsg(reqMsg);
   auto identify = reqMsg.commission_rate_req().process_random_id();
   auto &traderSer = TraderSevice::getInstance();
   if (traderSer.ROLE(Trader).ROLE(CtpTraderApi).getTraderLoginState() != LOGIN_STATE) {
@@ -560,7 +543,6 @@ void StrategyEvent::pubCommissionRateRsp(std::string identity, bool result, cons
   std::string head = "strategy_trader.CommissionRateRsp." + identity;
   auto &recerSender = RecerSender::getInstance();
   bool sendRes = recerSender.ROLE(Sender).ROLE(ProxySender).send(head.c_str(), strRsp.c_str());
-  utils::printProtoMsg(rsp);
   if (!sendRes) {
     ERROR_LOG("send CommissionRateRsp error");
     return;
@@ -571,7 +553,6 @@ void StrategyEvent::pubCommissionRateRsp(std::string identity, bool result, cons
 void StrategyEvent::InstrumentReqHandle(MsgStruct &msg) {
   strategy_trader::message reqMsg;
   reqMsg.ParseFromString(msg.pbMsg);
-  // utils::printProtoMsg(reqMsg);
   auto identify = reqMsg.instrument_req().process_random_id();
   auto &traderSer = TraderSevice::getInstance();
   if (traderSer.ROLE(Trader).ROLE(CtpTraderApi).getTraderLoginState() != LOGIN_STATE) {
@@ -634,7 +615,6 @@ void StrategyEvent::pubInstrumentRsp(std::string identity, bool result, const st
   std::string head = "strategy_trader.InstrumentRsp." + identity;
   auto &recerSender = RecerSender::getInstance();
   bool sendRes = recerSender.ROLE(Sender).ROLE(ProxySender).send(head.c_str(), strRsp.c_str());
-  utils::printProtoMsg(rsp);
   if (!sendRes) {
     ERROR_LOG("send InstrumentRsp error");
     return;
@@ -645,28 +625,28 @@ void StrategyEvent::pubInstrumentRsp(std::string identity, bool result, const st
 bool StrategyEvent::sendEmail(std::string identity) {
   const auto &traderSer = TraderSevice::getInstance();
   auto &orderManage = traderSer.ROLE(OrderManage);
-  const auto &orderContent = orderManage.getOrderCOntentByIdentityId(identity);
-  if (!orderContent.isValid()) {
-    ERROR_LOG("saveAttachment can not find order in local, identity[%s]", identity.c_str());
-    return false;
+
+  for (auto &item : orderManage.orderMaps) {
+    if (item.second->identityId.identity == identity) {
+      std::string subjectContent = "";
+      subjectContent += item.second->instrumentID + "成交通知";
+
+      std::string saveContent = "";
+      saveContent += "账户: " + item.second->userId + "\n";
+      saveContent += "合约: " + item.second->instrumentID + "\n";
+      saveContent += "下单价格: " + utils::doubleToStringConvert(item.second->limit_price) + "\n";
+      saveContent += "成交价格: " + utils::doubleToStringConvert(item.second->tradedOrder.price) + "\n";
+      saveContent += "成交日期: " + item.second->tradedOrder.date + "\n";
+      saveContent += "成交时间: " + item.second->tradedOrder.time + "\n";
+      std::string direction = (item.second->tradedOrder.direction == "0") ? "BUY" : "SELL";
+      saveContent += "方向: " + direction + "\n";
+      saveContent += "下单数量: " + utils::intToString(item.second->total_volume) + "\n";
+      saveContent += "本批成交数量: " + utils::intToString(item.second->tradedOrder.volume) + "\n";
+
+      auto &recerSender = RecerSender::getInstance();
+      recerSender.ROLE(Sender).ROLE(EmailSender).send(subjectContent.c_str(), saveContent.c_str());
+      break;
+    }
   }
-
-  std::string subjectContent = "";
-  subjectContent += orderContent.instrumentID + "成交通知";
-
-  std::string saveContent = "";
-  saveContent += "账户: " + orderContent.userId + "\n";
-  saveContent += "合约: " + orderContent.instrumentID + "\n";
-  saveContent += "下单价格: " + utils::doubleToStringConvert(orderContent.LimitPrice) + "\n";
-  saveContent += "成交价格: " + utils::doubleToStringConvert(orderContent.tradedOrder.price) + "\n";
-  saveContent += "成交日期: " + orderContent.tradedOrder.date + "\n";
-  saveContent += "成交时间: " + orderContent.tradedOrder.time + "\n";
-  std::string direction = (orderContent.tradedOrder.direction == "0") ? "BUY" : "SELL";
-  saveContent += "方向: " + direction + "\n";
-  saveContent += "下单数量: " + utils::intToString(orderContent.VolumeTotalOriginal) + "\n";
-  saveContent += "本批成交数量: " + utils::intToString(orderContent.tradedOrder.volume) + "\n";
-
-  auto &recerSender = RecerSender::getInstance();
-  recerSender.ROLE(Sender).ROLE(EmailSender).send(subjectContent.c_str(), saveContent.c_str());
   return true;
 }

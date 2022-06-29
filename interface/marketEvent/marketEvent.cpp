@@ -47,7 +47,6 @@ void MarketEvent::handle(MsgStruct &msg) {
 void MarketEvent::QryInstrumentReqHandle(MsgStruct &msg) {
   market_trader::message reqMsg;
   reqMsg.ParseFromString(msg.pbMsg);
-  utils::printProtoMsg(reqMsg);
   auto &traderSer = TraderSevice::getInstance();
   if (traderSer.ROLE(Trader).ROLE(CtpTraderApi).getTraderLoginState() != LOGIN_STATE) {
     ERROR_LOG("ctp not login!");

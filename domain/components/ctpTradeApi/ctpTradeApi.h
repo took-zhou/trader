@@ -152,7 +152,7 @@ class CtpTraderBaseApi : public CThostFtdcTraderApi {
   int ReqParkedOrderAction(CThostFtdcParkedOrderActionField *pParkedOrderAction, int nRequestID){};
 
   ///报单操作请求
-  int ReqOrderAction(OrderContent &orderContent, char actionFlag = THOST_FTDC_AF_Delete);
+  int ReqOrderAction(OrderContent *rderContent, char actionFlag = THOST_FTDC_AF_Delete);
   int ReqOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, int nRequestID){};
 
   ///查询最大报单数量请求

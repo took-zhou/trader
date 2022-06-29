@@ -93,11 +93,18 @@ struct InstrumentInfo {
   int is_trading{0};
 };
 
+struct LoginInfo {
+  int FrontID;
+  int SessionID;
+  long unsigned int OrderRef;
+};
+
 struct TmpStore {
   AccountInfo accountInfo;
   MarginRate marginRate;
   CommissionRate commissionRate;
   InstrumentInfo instrumentInfo;
+  LoginInfo logingInfo;
 };
 
 #endif /* WORKSPACE_TRADER_DOMAIN_COMPONENTS_TMPSTORE_H_ */

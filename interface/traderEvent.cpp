@@ -7,6 +7,7 @@
 
 #include "trader/interface/traderEvent.h"
 #include "common/extern/libgo/libgo/libgo.h"
+#include "common/self/semaphorePart.h"
 #include "trader/domain/traderService.h"
 #include "trader/infra/recerSender.h"
 
@@ -16,6 +17,7 @@
 extern co_chan<MsgStruct> ctpMsgChan;
 extern co_chan<MsgStruct> orderMsgChan;
 extern co_chan<MsgStruct> queryMsgChan;
+extern GlobalSem globalSem;
 constexpr U32 MAIN_THREAD_WAIT_TIME = 100000;
 constexpr U32 RSP_HANDLE_THREAD_WAIT_TIME = 1000000;
 
@@ -106,6 +108,8 @@ bool TraderEvent::run() {
       } else {
         ERROR_LOG("can not find[%s] in sessionFuncMap", msg.sessionName.c_str());
       }
+
+      globalSem.postSemBySemName(msg.msgName);
     }
   };
   INFO_LOG("ctpRecRun prepare ok");
