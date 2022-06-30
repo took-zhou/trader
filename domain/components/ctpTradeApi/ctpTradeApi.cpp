@@ -79,8 +79,6 @@ int CtpTraderBaseApi::ReqSettlementInfoConfirm() {
 }
 
 int CtpTraderBaseApi::ReqOrderInsert(CThostFtdcInputOrderField *pInputOrder) {
-  std::string semName = "trader_ReqOrderInsert" + std::string(pInputOrder->OrderRef);
-  globalSem.addOrderSem(semName);
   int result = m_pApi->ReqOrderInsert(pInputOrder, requestIdBuildAlg());
   INFO_LOG("ReqOrderInsert send result is [%d], orderRef is[%s]", result, pInputOrder->OrderRef);
   return result;
