@@ -326,7 +326,7 @@ void StrategyEvent::OrderInsertReqHandle(MsgStruct &msg) {
   }
 
   traderSer.ROLE(Trader).ROLE(TmpStore).logingInfo.OrderRef++;
-  std::string newOrderRef = utils::longintToString(traderSer.ROLE(Trader).ROLE(TmpStore).logingInfo.OrderRef);
+  std::string newOrderRef = utils::unsignedlongintToString(traderSer.ROLE(Trader).ROLE(TmpStore).logingInfo.OrderRef);
 
   auto &orderManage = traderSer.ROLE(OrderManage);
   if (!orderManage.addOrder(newOrderRef)) {

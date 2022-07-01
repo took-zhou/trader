@@ -252,7 +252,7 @@ void CtpEvent::OnRspUserLoginHandle(MsgStruct &msg) {
   auto &logingInfo = traderSer.ROLE(Trader).ROLE(TmpStore).logingInfo;
   logingInfo.FrontID = pMsg->FrontID;
   logingInfo.SessionID = pMsg->SessionID;
-  logingInfo.OrderRef = (unsigned long int)(logingInfo.SessionID % 1000000) * 1000000;
+  logingInfo.OrderRef = (unsigned long int)((unsigned int)logingInfo.SessionID % 1000000) * 1000000;
 
   std::string semName = "trader_logIn";
   globalSem.postSemBySemName(semName);
