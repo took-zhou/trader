@@ -104,12 +104,11 @@ void StrategyEvent::AccountStatusReqHandle(MsgStruct &msg) {
   strategy_trader::message reqMsg;
   reqMsg.ParseFromString(msg.pbMsg);
   auto reqInfo = reqMsg.account_status_req();
-  int field = reqInfo.field();
   auto identify = reqInfo.process_random_id();
   auto &traderSer = TraderSevice::getInstance();
   if (traderSer.ROLE(Trader).ROLE(CtpTraderApi).getTraderLoginState() != LOGIN_STATE) {
     ERROR_LOG("ctp not login!");
-    pubAccountStatusRsp(identify, field, false, "ctp_logout");
+    pubAccountStatusRsp(identify, false, "ctp_logout");
     return;
   }
 
@@ -119,14 +118,14 @@ void StrategyEvent::AccountStatusReqHandle(MsgStruct &msg) {
   std::string semName = "trader_ReqQryTradingAccount";
   if (traderApi->ReqQryTradingAccount() != 0) {
     ERROR_LOG("req error!");
-    pubAccountStatusRsp(identify, field, false, "req error");
+    pubAccountStatusRsp(identify, false, "req error");
     globalSem.delOrderSem(semName);
     return;
   }
 
   if (globalSem.waitSemBySemName(semName, 10) != 0) {
     ERROR_LOG("req timeout!");
-    pubAccountStatusRsp(identify, field, false, "req timeout");
+    pubAccountStatusRsp(identify, false, "req timeout");
     globalSem.delOrderSem(semName);
     return;
   }
@@ -134,164 +133,22 @@ void StrategyEvent::AccountStatusReqHandle(MsgStruct &msg) {
   globalSem.delOrderSem(semName);
 
   if (traderSer.ROLE(Trader).ROLE(TmpStore).accountInfo.rsp_is_null == true) {
-    pubAccountStatusRsp(identify, field, false, "rsp is null");
+    pubAccountStatusRsp(identify, false, "rsp is null");
     return;
   }
-  pubAccountStatusRsp(identify, field, true);
+  pubAccountStatusRsp(identify, true);
 }
 
-void StrategyEvent::pubAccountStatusRsp(std::string identity, int field, bool result, const std::string &reason) {
+void StrategyEvent::pubAccountStatusRsp(const std::string &identity, bool result, const std::string &reason) {
   strategy_trader::message rsp;
   auto *accountRsp = rsp.mutable_account_status_rsp();
   auto &traderSer = TraderSevice::getInstance();
   accountRsp->set_result(result ? strategy_trader::Result::success : strategy_trader::Result::failed);
-  accountRsp->set_field_name((strategy_trader::AccountFiledReq)field);
 
   if (result == true) {
     auto &tmpAccountInfo = traderSer.ROLE(Trader).ROLE(TmpStore).accountInfo;
-    auto *filedContent = accountRsp->mutable_filed_content();
 
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::Available) {
-      filedContent->set_available(tmpAccountInfo.Available);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::Balance) {
-      filedContent->set_balance(tmpAccountInfo.Balance);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::BizType) {
-      filedContent->set_biztype(tmpAccountInfo.BizType);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::CashIn) {
-      filedContent->set_cashin(tmpAccountInfo.CashIn);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::CloseProfit) {
-      filedContent->set_closeprofit(tmpAccountInfo.CloseProfit);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::Commission) {
-      filedContent->set_commission(tmpAccountInfo.Commission);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::Credit) {
-      filedContent->set_credit(tmpAccountInfo.Credit);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::CurrMargin) {
-      filedContent->set_currmargin(tmpAccountInfo.CurrMargin);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::CurrencyID) {
-      filedContent->set_currencyid(tmpAccountInfo.CurrencyID);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::DeliveryMargin) {
-      filedContent->set_deliverymargin(tmpAccountInfo.DeliveryMargin);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::Deposit) {
-      filedContent->set_deposit(tmpAccountInfo.Deposit);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::ExchangeDeliveryMargin) {
-      filedContent->set_exchangedeliverymargin(tmpAccountInfo.ExchangeDeliveryMargin);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::ExchangeMargin) {
-      filedContent->set_exchangemargin(tmpAccountInfo.ExchangeMargin);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::FrozenCash) {
-      filedContent->set_frozencash(tmpAccountInfo.FrozenCash);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::FrozenCommission) {
-      filedContent->set_frozencommission(tmpAccountInfo.FrozenCommission);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::FrozenMargin) {
-      filedContent->set_frozenmargin(tmpAccountInfo.FrozenMargin);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::FrozenSwap) {
-      filedContent->set_frozenswap(tmpAccountInfo.FrozenSwap);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::FundMortgageAvailable) {
-      filedContent->set_fundmortgageavailable(tmpAccountInfo.FundMortgageAvailable);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::FundMortgageIn) {
-      filedContent->set_fundmortgagein(tmpAccountInfo.FundMortgageIn);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::FundMortgageOut) {
-      filedContent->set_fundmortgageout(tmpAccountInfo.FundMortgageOut);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::Interest) {
-      filedContent->set_interest(tmpAccountInfo.Interest);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::InterestBase) {
-      filedContent->set_interestbase(tmpAccountInfo.InterestBase);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::Mortgage) {
-      filedContent->set_mortgage(tmpAccountInfo.Mortgage);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::MortgageableFund) {
-      filedContent->set_mortgageablefund(tmpAccountInfo.MortgageableFund);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::PositionProfit) {
-      filedContent->set_positionprofit(tmpAccountInfo.PositionProfit);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::PreBalance) {
-      filedContent->set_prebalance(tmpAccountInfo.PreBalance);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::PreCredit) {
-      filedContent->set_precredit(tmpAccountInfo.PreCredit);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::PreDeposit) {
-      filedContent->set_predeposit(tmpAccountInfo.PreDeposit);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::PreFundMortgageIn) {
-      filedContent->set_prefundmortgagein(tmpAccountInfo.PreFundMortgageIn);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::PreFundMortgageOut) {
-      filedContent->set_prefundmortgageout(tmpAccountInfo.PreFundMortgageOut);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::PreMargin) {
-      filedContent->set_premargin(tmpAccountInfo.PreMargin);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::PreMortgage) {
-      filedContent->set_premortgage(tmpAccountInfo.PreMortgage);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::RemainSwap) {
-      filedContent->set_remainswap(tmpAccountInfo.RemainSwap);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::Reserve) {
-      filedContent->set_reserve(tmpAccountInfo.Reserve);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::ReserveBalance) {
-      filedContent->set_reservebalance(tmpAccountInfo.ReserveBalance);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::SettlementID) {
-      filedContent->set_settlementid(tmpAccountInfo.SettlementID);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::SpecProductCloseProfit) {
-      filedContent->set_specproductcloseprofit(tmpAccountInfo.SpecProductCloseProfit);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::SpecProductCommission) {
-      filedContent->set_specproductcommission(tmpAccountInfo.SpecProductCommission);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::SpecProductExchangeMargin) {
-      filedContent->set_specproductexchangemargin(tmpAccountInfo.SpecProductExchangeMargin);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::SpecProductFrozenCommission) {
-      filedContent->set_specproductfrozencommission(tmpAccountInfo.SpecProductFrozenCommission);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::SpecProductFrozenMargin) {
-      filedContent->set_specproductfrozenmargin(tmpAccountInfo.SpecProductFrozenMargin);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::SpecProductMargin) {
-      filedContent->set_specproductmargin(tmpAccountInfo.SpecProductMargin);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::SpecProductPositionProfit) {
-      filedContent->set_specproductpositionprofit(tmpAccountInfo.SpecProductPositionProfit);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::SpecProductPositionProfitByAlg) {
-      filedContent->set_specproductpositionprofitbyalg(tmpAccountInfo.SpecProductPositionProfitByAlg);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::TradingDay) {
-      filedContent->set_tradingday(tmpAccountInfo.TradingDay);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::Withdraw) {
-      filedContent->set_withdraw(tmpAccountInfo.Withdraw);
-    }
-    if (field == strategy_trader::AccountFiledReq::AllInfo || field == strategy_trader::AccountFiledReq::WithdrawQuota) {
-      filedContent->set_withdrawquota(tmpAccountInfo.WithdrawQuota);
-    }
+    accountRsp->set_available(tmpAccountInfo.Available);
   } else {
     accountRsp->set_failedreason(reason);
   }
@@ -452,7 +309,7 @@ void StrategyEvent::MarginRateReqHandle(MsgStruct &msg) {
   pubMarginRateRsp(identify, true);
 }
 
-void StrategyEvent::pubMarginRateRsp(std::string identity, bool result, const std::string &reason) {
+void StrategyEvent::pubMarginRateRsp(const std::string &identity, bool result, const std::string &reason) {
   strategy_trader::message rsp;
   auto *marginRateRsp = rsp.mutable_margin_rate_rsp();
   auto &traderSer = TraderSevice::getInstance();
@@ -521,7 +378,7 @@ void StrategyEvent::CommissionRateReqHandle(MsgStruct &msg) {
   pubCommissionRateRsp(identify, true);
 }
 
-void StrategyEvent::pubCommissionRateRsp(std::string identity, bool result, const std::string &reason) {
+void StrategyEvent::pubCommissionRateRsp(const std::string &identity, bool result, const std::string &reason) {
   strategy_trader::message rsp;
   auto *commissionRateRsp = rsp.mutable_commission_rate_rsp();
   auto &traderSer = TraderSevice::getInstance();
@@ -592,7 +449,7 @@ void StrategyEvent::InstrumentReqHandle(MsgStruct &msg) {
   pubInstrumentRsp(identify, true);
 }
 
-void StrategyEvent::pubInstrumentRsp(std::string identity, bool result, const std::string &reason) {
+void StrategyEvent::pubInstrumentRsp(const std::string &identity, bool result, const std::string &reason) {
   strategy_trader::message rsp;
   auto *instrumentRsp = rsp.mutable_instrument_rsp();
   auto &traderSer = TraderSevice::getInstance();
@@ -622,7 +479,7 @@ void StrategyEvent::pubInstrumentRsp(std::string identity, bool result, const st
   return;
 }
 
-bool StrategyEvent::sendEmail(std::string identity) {
+bool StrategyEvent::sendEmail(const std::string &identity) {
   const auto &traderSer = TraderSevice::getInstance();
   auto &orderManage = traderSer.ROLE(OrderManage);
 

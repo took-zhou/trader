@@ -22,22 +22,22 @@ struct StrategyEvent {
   void OrderInsertReqHandle(MsgStruct &msg);
   void pubOrderInsertRsp(OrderIdentify identity, bool result, std::string reason);
 
-  void AccountStatusReqHandle(MsgStruct &msg);
-  void pubAccountStatusRsp(std::string identity, int field, bool result, const std::string &reason = "success");
-
   void OrderCancelReqHandle(MsgStruct &msg);
   void pubOrderCancelRsp(OrderIdentify identity, bool result, const std::string &reason);
 
+  void AccountStatusReqHandle(MsgStruct &msg);
+  void pubAccountStatusRsp(const std::string &identity, bool result, const std::string &reason = "success");
+
   void MarginRateReqHandle(MsgStruct &msg);
-  void pubMarginRateRsp(std::string identity, bool result, const std::string &reason = "success");
+  void pubMarginRateRsp(const std::string &identity, bool result, const std::string &reason = "success");
 
   void CommissionRateReqHandle(MsgStruct &msg);
-  void pubCommissionRateRsp(std::string identity, bool result, const std::string &reason = "success");
+  void pubCommissionRateRsp(const std::string &identity, bool result, const std::string &reason = "success");
 
   void InstrumentReqHandle(MsgStruct &msg);
-  void pubInstrumentRsp(std::string identity, bool result, const std::string &reason = "success");
+  void pubInstrumentRsp(const std::string &identity, bool result, const std::string &reason = "success");
 
-  bool sendEmail(std::string identity);
+  bool sendEmail(const std::string &identity);
 
   std::map<std::string, std::function<void(MsgStruct &msg)>> msgFuncMap;
 };
