@@ -52,9 +52,7 @@ bool TraderEvent::run() {
   auto orderRecRun = [&]() {
     MsgStruct msg;
     while (1) {
-      // INFO_LOG("orderRecRun while");
       orderMsgChan >> msg;
-      INFO_LOG("orderRecRun*************msg name[%s]", msg.msgName.c_str());
       if (!msg.isValid()) {
         ERROR_LOG(" invalid msg, session is [%s], msgName is [%s]", msg.sessionName.c_str(), msg.msgName.c_str());
         continue;
@@ -73,9 +71,7 @@ bool TraderEvent::run() {
   auto queryRecRun = [&]() {
     MsgStruct msg;
     while (1) {
-      // INFO_LOG("queryRecRun while");
       queryMsgChan >> msg;
-      INFO_LOG("queryRecRun*************msg name[%s]", msg.msgName.c_str());
       if (!msg.isValid()) {
         ERROR_LOG(" invalid msg, session is [%s], msgName is [%s]", msg.sessionName.c_str(), msg.msgName.c_str());
         continue;
@@ -95,9 +91,7 @@ bool TraderEvent::run() {
   auto ctpRecRun = [&]() {
     MsgStruct msg;
     while (1) {
-      // INFO_LOG("ctpRecRun while");
       ctpMsgChan >> msg;
-      // INFO_LOG("hai*************msg name[%s]",msg.msgName.c_str());
       if (!msg.isValid()) {
         ERROR_LOG(" invalid msg, session is [%s], msgName is [%s]", msg.sessionName.c_str(), msg.msgName.c_str());
         continue;

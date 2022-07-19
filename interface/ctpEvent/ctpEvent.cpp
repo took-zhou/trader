@@ -107,51 +107,6 @@ void CtpEvent::OnRspQryTradingAccountHandle(MsgStruct &msg) {
   if (tradeAccount) {
     tmpAccountInfo.Available = utils::doubleToStringConvert(tradeAccount->Available);
     tmpAccountInfo.Balance = utils::doubleToStringConvert(tradeAccount->Balance);
-    tmpAccountInfo.BizType = utils::doubleToStringConvert(tradeAccount->BizType);
-    tmpAccountInfo.CashIn = utils::doubleToStringConvert(tradeAccount->CashIn);
-    tmpAccountInfo.CloseProfit = utils::doubleToStringConvert(tradeAccount->CloseProfit);
-    tmpAccountInfo.Commission = utils::doubleToStringConvert(tradeAccount->Commission);
-    tmpAccountInfo.Credit = utils::doubleToStringConvert(tradeAccount->Credit);
-    tmpAccountInfo.CurrMargin = utils::doubleToStringConvert(tradeAccount->CurrMargin);
-    tmpAccountInfo.CurrencyID = tradeAccount->CurrencyID;
-    tmpAccountInfo.DeliveryMargin = utils::doubleToStringConvert(tradeAccount->DeliveryMargin);
-    tmpAccountInfo.Deposit = utils::doubleToStringConvert(tradeAccount->Deposit);
-    tmpAccountInfo.ExchangeDeliveryMargin = utils::doubleToStringConvert(tradeAccount->ExchangeDeliveryMargin);
-    tmpAccountInfo.ExchangeMargin = utils::doubleToStringConvert(tradeAccount->ExchangeMargin);
-    tmpAccountInfo.FrozenCash = utils::doubleToStringConvert(tradeAccount->FrozenCash);
-    tmpAccountInfo.FrozenCommission = utils::doubleToStringConvert(tradeAccount->FrozenCommission);
-    tmpAccountInfo.FrozenMargin = utils::doubleToStringConvert(tradeAccount->FrozenMargin);
-    tmpAccountInfo.FrozenSwap = utils::doubleToStringConvert(tradeAccount->FrozenSwap);
-    tmpAccountInfo.FundMortgageAvailable = utils::doubleToStringConvert(tradeAccount->FundMortgageAvailable);
-    tmpAccountInfo.FundMortgageIn = utils::doubleToStringConvert(tradeAccount->FundMortgageIn);
-    tmpAccountInfo.FundMortgageOut = utils::doubleToStringConvert(tradeAccount->FundMortgageOut);
-    tmpAccountInfo.Interest = utils::doubleToStringConvert(tradeAccount->Interest);
-    tmpAccountInfo.InterestBase = utils::doubleToStringConvert(tradeAccount->InterestBase);
-    tmpAccountInfo.Mortgage = utils::doubleToStringConvert(tradeAccount->Mortgage);
-    tmpAccountInfo.MortgageableFund = utils::doubleToStringConvert(tradeAccount->MortgageableFund);
-    tmpAccountInfo.PositionProfit = utils::doubleToStringConvert(tradeAccount->PositionProfit);
-    tmpAccountInfo.PreBalance = utils::doubleToStringConvert(tradeAccount->PreBalance);
-    tmpAccountInfo.PreCredit = utils::doubleToStringConvert(tradeAccount->PreCredit);
-    tmpAccountInfo.PreDeposit = utils::doubleToStringConvert(tradeAccount->PreDeposit);
-    tmpAccountInfo.PreFundMortgageIn = utils::doubleToStringConvert(tradeAccount->PreFundMortgageIn);
-    tmpAccountInfo.PreFundMortgageOut = utils::doubleToStringConvert(tradeAccount->PreFundMortgageOut);
-    tmpAccountInfo.PreMargin = utils::doubleToStringConvert(tradeAccount->PreMargin);
-    tmpAccountInfo.PreMortgage = utils::doubleToStringConvert(tradeAccount->PreMortgage);
-    tmpAccountInfo.RemainSwap = utils::doubleToStringConvert(tradeAccount->RemainSwap);
-    tmpAccountInfo.Reserve = utils::doubleToStringConvert(tradeAccount->Reserve);
-    tmpAccountInfo.ReserveBalance = utils::doubleToStringConvert(tradeAccount->ReserveBalance);
-    tmpAccountInfo.SettlementID = utils::doubleToStringConvert(tradeAccount->SettlementID);
-    tmpAccountInfo.SpecProductCloseProfit = utils::doubleToStringConvert(tradeAccount->SpecProductCloseProfit);
-    tmpAccountInfo.SpecProductCommission = utils::doubleToStringConvert(tradeAccount->SpecProductCommission);
-    tmpAccountInfo.SpecProductExchangeMargin = utils::doubleToStringConvert(tradeAccount->SpecProductExchangeMargin);
-    tmpAccountInfo.SpecProductFrozenCommission = utils::doubleToStringConvert(tradeAccount->SpecProductFrozenCommission);
-    tmpAccountInfo.SpecProductFrozenMargin = utils::doubleToStringConvert(tradeAccount->SpecProductFrozenMargin);
-    tmpAccountInfo.SpecProductMargin = utils::doubleToStringConvert(tradeAccount->SpecProductMargin);
-    tmpAccountInfo.SpecProductPositionProfit = utils::doubleToStringConvert(tradeAccount->SpecProductPositionProfit);
-    tmpAccountInfo.SpecProductPositionProfitByAlg = utils::doubleToStringConvert(tradeAccount->SpecProductPositionProfitByAlg);
-    tmpAccountInfo.TradingDay = tradeAccount->TradingDay;
-    tmpAccountInfo.Withdraw = utils::doubleToStringConvert(tradeAccount->Withdraw);
-    tmpAccountInfo.WithdrawQuota = utils::doubleToStringConvert(tradeAccount->WithdrawQuota);
     tmpAccountInfo.rsp_is_null = false;
   } else {
     tmpAccountInfo.rsp_is_null = true;
@@ -159,7 +114,6 @@ void CtpEvent::OnRspQryTradingAccountHandle(MsgStruct &msg) {
 
   std::string semName = "trader_ReqQryTradingAccount";
   globalSem.postSemBySemName(semName);
-  INFO_LOG("post sem of [%s]", semName.c_str());
 }
 
 void CtpEvent::OnRtnTradeHandle(MsgStruct &msg) {
@@ -226,6 +180,15 @@ void CtpEvent::OnRtnOrderHandle(MsgStruct &msg) {
 void CtpEvent::OnRspOrderInsertHandle(MsgStruct &msg) {
   CThostFtdcInputOrderField *ctpRspField = static_cast<CThostFtdcInputOrderField *>(msg.ctpMsg);
   CThostFtdcRspInfoField *ctpMsgInfo = static_cast<CThostFtdcRspInfoField *>(msg.ctpMsgInfo);
+
+  // 打印错误信息
+  if (ctpMsgInfo) {
+    TThostFtdcErrorMsgType msg;
+    utils::gbk2utf8(ctpMsgInfo->ErrorMsg, msg, sizeof(msg));
+
+    ERROR_LOG("\tErrorMsg [%s]", msg);
+    ERROR_LOG("\tErrorID [%d]", ctpMsgInfo->ErrorID);
+  }
 
   std::string orderKey = std::string(ctpRspField->OrderRef);
 
@@ -317,7 +280,6 @@ void CtpEvent::OnRspQryInstrumentHandle(MsgStruct &msg) {
 
     std::string semName = "trader_ReqQryInstrument_Single";
     globalSem.postSemBySemName(semName);
-    INFO_LOG("post sem of [%s]", semName.c_str());
   }
 }
 
@@ -338,7 +300,6 @@ void CtpEvent::OnRspQryInstrumentMarginRateHandle(MsgStruct &msg) {
 
   std::string semName = "margin_rate";
   globalSem.postSemBySemName(semName);
-  INFO_LOG("post sem of [%s]", semName.c_str());
 }
 
 void CtpEvent::OnRspQryInstrumentCommissionRateHandle(MsgStruct &msg) {
@@ -361,5 +322,4 @@ void CtpEvent::OnRspQryInstrumentCommissionRateHandle(MsgStruct &msg) {
 
   std::string semName = "commission_rate";
   globalSem.postSemBySemName(semName);
-  INFO_LOG("post sem of [%s]", semName.c_str());
 }

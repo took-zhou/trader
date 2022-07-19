@@ -129,7 +129,6 @@ void StrategyEvent::AccountStatusReqHandle(MsgStruct &msg) {
     globalSem.delOrderSem(semName);
     return;
   }
-  INFO_LOG("waitSemBySemName [%s] ok", semName.c_str());
   globalSem.delOrderSem(semName);
 
   if (traderSer.ROLE(Trader).ROLE(TmpStore).accountInfo.rsp_is_null == true) {
@@ -148,6 +147,7 @@ void StrategyEvent::pubAccountStatusRsp(const std::string &identity, bool result
   if (result == true) {
     auto &tmpAccountInfo = traderSer.ROLE(Trader).ROLE(TmpStore).accountInfo;
 
+    accountRsp->set_balance(tmpAccountInfo.Balance);
     accountRsp->set_available(tmpAccountInfo.Available);
   } else {
     accountRsp->set_failedreason(reason);
@@ -298,7 +298,6 @@ void StrategyEvent::MarginRateReqHandle(MsgStruct &msg) {
     globalSem.delOrderSem(semName);
     return;
   }
-  INFO_LOG("waitSemBySemName [%s] ok", semName.c_str());
   globalSem.delOrderSem(semName);
 
   if (traderSer.ROLE(Trader).ROLE(TmpStore).marginRate.rsp_is_null == true) {
@@ -367,7 +366,6 @@ void StrategyEvent::CommissionRateReqHandle(MsgStruct &msg) {
     globalSem.delOrderSem(semName);
     return;
   }
-  INFO_LOG("waitSemBySemName [%s] ok", semName.c_str());
   globalSem.delOrderSem(semName);
 
   if (traderSer.ROLE(Trader).ROLE(TmpStore).commissionRate.rsp_is_null == true) {
@@ -438,7 +436,6 @@ void StrategyEvent::InstrumentReqHandle(MsgStruct &msg) {
     globalSem.delOrderSem(semName);
     return;
   }
-  INFO_LOG("waitSemBySemName [%s] ok", semName.c_str());
   globalSem.delOrderSem(semName);
 
   if (traderSer.ROLE(Trader).ROLE(TmpStore).instrumentInfo.rsp_is_null == true) {

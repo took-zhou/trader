@@ -225,7 +225,6 @@ int CtpTraderBaseApi::ReqQryTradingAccount() {
   strcpy(requestMsg.CurrencyID, "CNY");
 
   int result = m_pApi->ReqQryTradingAccount(&requestMsg, requestIdBuildAlg());
-  INFO_LOG("ReqQryTradingAccount send result is [%d]", result);
 
   if (result == 0) {
     std::string semName = "trader_ReqQryTradingAccount";

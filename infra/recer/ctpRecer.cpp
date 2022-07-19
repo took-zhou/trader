@@ -37,10 +37,10 @@ void TraderSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThos
   msgStruct.sessionName = "ctp";
   msgStruct.msgName = "OnRspUserLogin";
   msgStruct.ctpMsg = pRspUserLogin;
-  ctpMsgChan << msgStruct;
 
-  globalSem.addOrderSem("OnRspUserLogin");
-  globalSem.waitSemBySemName("OnRspUserLogin");
+  globalSem.addOrderSem(msgStruct.msgName);
+  ctpMsgChan << msgStruct;
+  globalSem.waitSemBySemName(msgStruct.msgName);
 }
 
 void TraderSpi::OnRspUserLogout(CThostFtdcUserLogoutField *pUserLogout, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
@@ -56,11 +56,10 @@ void TraderSpi::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField 
   MsgStruct msgStruct;
   msgStruct.sessionName = "ctp";
   msgStruct.msgName = "OnRspSettlementInfoConfirm";
-  msgStruct.ctpMsg = pSettlementInfoConfirm;
-  ctpMsgChan << msgStruct;
 
-  globalSem.addOrderSem("OnRspSettlementInfoConfirm");
-  globalSem.waitSemBySemName("OnRspSettlementInfoConfirm");
+  globalSem.addOrderSem(msgStruct.msgName);
+  ctpMsgChan << msgStruct;
+  globalSem.waitSemBySemName(msgStruct.msgName);
 }
 
 void TraderSpi::OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo) {
@@ -69,10 +68,10 @@ void TraderSpi::OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CTho
   msgStruct.msgName = "OnErrRtnOrderInsert";
   msgStruct.ctpMsg = pInputOrder;
   msgStruct.ctpMsgInfo = pRspInfo;
-  ctpMsgChan << msgStruct;
 
-  globalSem.addOrderSem("OnErrRtnOrderInsert");
-  globalSem.waitSemBySemName("OnErrRtnOrderInsert");
+  globalSem.addOrderSem(msgStruct.msgName);
+  ctpMsgChan << msgStruct;
+  globalSem.waitSemBySemName(msgStruct.msgName);
 }
 
 void TraderSpi::OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
@@ -81,10 +80,10 @@ void TraderSpi::OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostF
   msgStruct.msgName = "OnRspOrderInsert";
   msgStruct.ctpMsg = pInputOrder;
   msgStruct.ctpMsgInfo = pRspInfo;
-  ctpMsgChan << msgStruct;
 
-  globalSem.addOrderSem("OnRspOrderInsert");
-  globalSem.waitSemBySemName("OnRspOrderInsert");
+  globalSem.addOrderSem(msgStruct.msgName);
+  ctpMsgChan << msgStruct;
+  globalSem.waitSemBySemName(msgStruct.msgName);
 }
 
 void TraderSpi::OnRtnOrder(CThostFtdcOrderField *pOrder) {
@@ -92,10 +91,10 @@ void TraderSpi::OnRtnOrder(CThostFtdcOrderField *pOrder) {
   msgStruct.sessionName = "ctp";
   msgStruct.msgName = "OnRtnOrder";
   msgStruct.ctpMsg = pOrder;
-  ctpMsgChan << msgStruct;
 
-  globalSem.addOrderSem("OnRtnOrder");
-  globalSem.waitSemBySemName("OnRtnOrder");
+  globalSem.addOrderSem(msgStruct.msgName);
+  ctpMsgChan << msgStruct;
+  globalSem.waitSemBySemName(msgStruct.msgName);
 }
 
 void TraderSpi::OnRtnTrade(CThostFtdcTradeField *pTrade) {
@@ -103,10 +102,10 @@ void TraderSpi::OnRtnTrade(CThostFtdcTradeField *pTrade) {
   msgStruct.sessionName = "ctp";
   msgStruct.msgName = "OnRtnTrade";
   msgStruct.ctpMsg = pTrade;
-  ctpMsgChan << msgStruct;
 
-  globalSem.addOrderSem("OnRtnTrade");
-  globalSem.waitSemBySemName("OnRtnTrade");
+  globalSem.addOrderSem(msgStruct.msgName);
+  ctpMsgChan << msgStruct;
+  globalSem.waitSemBySemName(msgStruct.msgName);
 }
 
 void TraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID,
@@ -115,10 +114,10 @@ void TraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAc
   msgStruct.sessionName = "ctp";
   msgStruct.msgName = "OnRspQryTradingAccount";
   msgStruct.ctpMsg = pTradingAccount;
-  ctpMsgChan << msgStruct;
 
-  globalSem.addOrderSem("OnRspQryTradingAccount");
-  globalSem.waitSemBySemName("OnRspQryTradingAccount");
+  globalSem.addOrderSem(msgStruct.msgName);
+  ctpMsgChan << msgStruct;
+  globalSem.waitSemBySemName(msgStruct.msgName);
 }
 
 void TraderSpi::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
@@ -127,10 +126,10 @@ void TraderSpi::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CThos
   msgStruct.msgName = "OnRspQryInstrument";
   msgStruct.ctpMsg = pInstrument;
   msgStruct.bIsLast = bIsLast;
-  ctpMsgChan << msgStruct;
 
-  globalSem.addOrderSem("OnRspQryInstrument");
-  globalSem.waitSemBySemName("OnRspQryInstrument");
+  globalSem.addOrderSem(msgStruct.msgName);
+  ctpMsgChan << msgStruct;
+  globalSem.waitSemBySemName(msgStruct.msgName);
 }
 
 void TraderSpi::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID,
@@ -141,10 +140,10 @@ void TraderSpi::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAct
   msgStruct.ctpMsg = pInputOrderAction;
   msgStruct.ctpMsgInfo = pRspInfo;
   msgStruct.bIsLast = bIsLast;
-  ctpMsgChan << msgStruct;
 
-  globalSem.addOrderSem("OnRspOrderAction");
-  globalSem.waitSemBySemName("OnRspOrderAction");
+  globalSem.addOrderSem(msgStruct.msgName);
+  ctpMsgChan << msgStruct;
+  globalSem.waitSemBySemName(msgStruct.msgName);
 }
 
 void TraderSpi::OnErrRtnOrderAction(CThostFtdcOrderActionField *pOrderAction, CThostFtdcRspInfoField *pRspInfo) {
@@ -153,10 +152,10 @@ void TraderSpi::OnErrRtnOrderAction(CThostFtdcOrderActionField *pOrderAction, CT
   msgStruct.msgName = "OnErrRtnOrderAction";
   msgStruct.ctpMsg = pOrderAction;
   msgStruct.ctpMsgInfo = pRspInfo;
-  ctpMsgChan << msgStruct;
 
-  globalSem.addOrderSem("OnErrRtnOrderAction");
-  globalSem.waitSemBySemName("OnErrRtnOrderAction");
+  globalSem.addOrderSem(msgStruct.msgName);
+  ctpMsgChan << msgStruct;
+  globalSem.waitSemBySemName(msgStruct.msgName);
 };
 
 void TraderSpi::OnRspQryInstrumentMarginRate(CThostFtdcInstrumentMarginRateField *pInstrumentMarginRate, CThostFtdcRspInfoField *pRspInfo,
@@ -165,10 +164,10 @@ void TraderSpi::OnRspQryInstrumentMarginRate(CThostFtdcInstrumentMarginRateField
   msgStruct.sessionName = "ctp";
   msgStruct.msgName = "OnRspQryInstrumentMarginRate";
   msgStruct.ctpMsg = pInstrumentMarginRate;
-  ctpMsgChan << msgStruct;
 
-  globalSem.addOrderSem("OnRspQryInstrumentMarginRate");
-  globalSem.waitSemBySemName("OnRspQryInstrumentMarginRate");
+  globalSem.addOrderSem(msgStruct.msgName);
+  ctpMsgChan << msgStruct;
+  globalSem.waitSemBySemName(msgStruct.msgName);
 };
 
 void TraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionRateField *pInstrumentCommissionRate,
@@ -177,8 +176,8 @@ void TraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionR
   msgStruct.sessionName = "ctp";
   msgStruct.msgName = "OnRspQryInstrumentCommissionRate";
   msgStruct.ctpMsg = pInstrumentCommissionRate;
-  ctpMsgChan << msgStruct;
 
-  globalSem.addOrderSem("OnRspQryInstrumentCommissionRate");
-  globalSem.waitSemBySemName("OnRspQryInstrumentCommissionRate");
+  globalSem.addOrderSem(msgStruct.msgName);
+  ctpMsgChan << msgStruct;
+  globalSem.waitSemBySemName(msgStruct.msgName);
 };

@@ -81,13 +81,11 @@ bool SettlementConfirm::hasConfirmedToday(const std::string tradingDay) {
   if (is_file_exists(confirmFile)) {
     ifstream istrm(confirmFile, ios::binary);
     if (!istrm.is_open()) {
-      ERROR_LOG("failed to open %s",
-                confirmFile.c_str());  // @suppress("Invalid arguments")
+      ERROR_LOG("failed to open %s", confirmFile.c_str());  // @suppress("Invalid arguments")
     }
     json record;
     istrm >> record;
     istrm.close();
-    JsonPrint(record);
 
     if (record["date"].get<std::string>() == tradingDay && record["value"].get<int>() == 1) {
       INFO_LOG("settlement today has been confirmed before!");
