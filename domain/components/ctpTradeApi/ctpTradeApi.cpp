@@ -258,9 +258,9 @@ bool CtpTraderApi::init() {
   const std::string conPath = jsonCfg.getConfig("trader", "ConPath").get<std::string>();
   utils::creatFolder(conPath);
   traderApi->CreateFtdcTraderApi(conPath.c_str());  //设置.con的保存位置
-  traderSpi = TraderSpi();
+  traderSpi = new TraderSpi();
 
-  traderApi->RegisterSpi(&traderSpi);                  //注册回调类
+  traderApi->RegisterSpi(traderSpi);                   //注册回调类
   traderApi->SubscribePrivateTopic(THOST_TERT_QUICK);  //订阅
   traderApi->SubscribePublicTopic(THOST_TERT_QUICK);   //订阅
 
@@ -290,6 +290,12 @@ void CtpTraderApi::release() {
   traderApi->Release();
   delete traderApi;
   traderApi = nullptr;
+
+  // 释放UserSpi实例
+  if (traderSpi) {
+    delete traderSpi;
+    traderSpi = NULL;
+  }
 }
 
 bool CtpTraderApi::logIn() {
@@ -350,7 +356,8 @@ void CtpTraderApi::runLogInAndLogOutAlg() {
       } else {
         this->release();
       }
-    } else if (ROLE(TraderTimeState).output.status == LOGOUT_TIME && login_state != LOGOUT_STATE) {
+    } else if ((ROLE(TraderTimeState).output.status == LOGOUT_TIME || (traderSpi != nullptr && traderSpi->reConnect > 1)) &&
+               login_state != LOGOUT_STATE) {
       this->logOut();
     }
     std::this_thread::sleep_for(1000ms);

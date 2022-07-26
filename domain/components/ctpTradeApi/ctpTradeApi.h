@@ -391,7 +391,7 @@ struct CtpTraderApi {
  private:
   TRADER_LOGIN_STATE login_state = LOGOUT_STATE;
 
-  TraderSpi traderSpi;
+  TraderSpi *traderSpi = nullptr;
 };
 
 #endif /* WORKSPACE_TRADER_DOMAIN_COMPONENTS_CTPTRADEAPI_CTPTRADEAPI_H_ */

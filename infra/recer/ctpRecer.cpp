@@ -17,13 +17,16 @@ extern co_chan<MsgStruct> ctpMsgChan;
 
 void TraderSpi::OnFrontConnected() {
   INFO_LOG("get OnFrontConnected rsp from ctp");
-  INFO_LOG("reConnect:%d.", reConnect);
   if (reConnect++ == 0) {
     std::string semName = "trader_init";
     globalSem.postSemBySemName(semName);
     INFO_LOG("post sem of [%s]", semName.c_str());
   }
+
+  INFO_LOG("reConnect:%d.", reConnect);
 }
+
+void TraderSpi::OnFrontDisconnected(int nReason) { ERROR_LOG("OnFrontDisconnected, ErrorCode:%#x", nReason); }
 
 void TraderSpi::OnRspAuthenticate(CThostFtdcRspAuthenticateField *pRspAuthenticateField, CThostFtdcRspInfoField *pRspInfo, int nRequestID,
                                   bool bIsLast) {
