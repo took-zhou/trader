@@ -32,6 +32,9 @@ void ProxyRecer::init() {
   // market_trader
   topicList.push_back("market_trader.QryInstrumentReq");
 
+  // manage_trader
+  topicList.push_back("manage_trader.AccountStatusReq");
+
   topicList.push_back("ctpview_trader.LoginControl");
   topicList.push_back("ctpview_trader.BugInjection");
 
@@ -48,6 +51,7 @@ void ProxyRecer::init() {
   queryTopicList.push_back("strategy_trader.CommissionRateReq");
   queryTopicList.push_back("strategy_trader.InstrumentReq");
   queryTopicList.push_back("market_trader.QryInstrumentReq");
+  queryTopicList.push_back("manage_trader.AccountStatusReq");
   queryTopicList.push_back("ctpview_trader.LoginControl");
   queryTopicList.push_back("ctpview_trader.BugInjection");
 

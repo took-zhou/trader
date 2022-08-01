@@ -10,9 +10,8 @@
 
 #include "trader/interface/ctpEvent/ctpEvent.h"
 #include "trader/interface/ctpviewEvent/ctpviewEvent.h"
-#include "trader/interface/interactorEvent/interactorEvent.h"
+#include "trader/interface/manageEvent/manageEvent.h"
 #include "trader/interface/marketEvent/marketEvent.h"
-#include "trader/interface/selfEvent/selfEvent.h"
 #include "trader/interface/strategyEvent/strategyEvent.h"
 
 #include <functional>
@@ -20,7 +19,7 @@
 #include <string>
 #include "common/self/dci/Role.h"
 struct MsgStruct;
-struct TraderEvent : CtpEvent, StrategyEvent, MarketEvent, InteractEvent, SelfEvent, CtpviewEvent {
+struct TraderEvent : CtpEvent, StrategyEvent, MarketEvent, ManageEvent, CtpviewEvent {
   TraderEvent(){};
   TraderEvent(const TraderEvent &) = delete;
   TraderEvent &operator=(const TraderEvent &) = delete;
@@ -34,8 +33,7 @@ struct TraderEvent : CtpEvent, StrategyEvent, MarketEvent, InteractEvent, SelfEv
   IMPL_ROLE(CtpEvent);
   IMPL_ROLE(StrategyEvent);
   IMPL_ROLE(MarketEvent);
-  IMPL_ROLE(InteractEvent);
-  IMPL_ROLE(SelfEvent);
+  IMPL_ROLE(ManageEvent);
   IMPL_ROLE(CtpviewEvent);
 
   std::map<std::string, std::function<void(MsgStruct msg)>> sessionFuncMap;

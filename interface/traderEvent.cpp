@@ -26,8 +26,7 @@ void TraderEvent::regSessionFunc() {
   sessionFuncMap.clear();
   sessionFuncMap["market_trader"] = [this](MsgStruct msg) { ROLE(MarketEvent).handle(msg); };
   sessionFuncMap["strategy_trader"] = [this](MsgStruct msg) { ROLE(StrategyEvent).handle(msg); };
-  sessionFuncMap["trader_trader"] = [this](MsgStruct msg) { ROLE(SelfEvent).handle(msg); };
-  sessionFuncMap["interactor_trader"] = [this](MsgStruct msg) { ROLE(InteractEvent).handle(msg); };
+  sessionFuncMap["manage_trader"] = [this](MsgStruct msg) { ROLE(ManageEvent).handle(msg); };
   sessionFuncMap["ctp"] = [this](MsgStruct msg) { ROLE(CtpEvent).handle(msg); };
   sessionFuncMap["ctpview_trader"] = [this](MsgStruct msg) { ROLE(CtpviewEvent).handle(msg); };
 
@@ -41,8 +40,7 @@ bool TraderEvent::init() {
   regSessionFunc();
   ROLE(MarketEvent).init();
   ROLE(StrategyEvent).init();
-  ROLE(SelfEvent).init();
-  ROLE(InteractEvent).init();
+  ROLE(ManageEvent).init();
   ROLE(CtpEvent).init();
   ROLE(CtpviewEvent).init();
   return true;

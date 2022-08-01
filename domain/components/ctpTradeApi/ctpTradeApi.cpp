@@ -272,7 +272,7 @@ bool CtpTraderApi::init() {
   traderApi->Init();  // connect to ctp
   std::string semName = "trader_init";
 
-  if (globalSem.waitSemBySemName(semName, 10)) {
+  if (globalSem.waitSemBySemName(semName, 60)) {
     out = false;
     login_state = ERROR_STATE;
     ERROR_LOG("%s", "trader init fail.");

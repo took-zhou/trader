@@ -29,8 +29,8 @@ void EmailSender::send(const char *head, const char *msg) {
       auto &jsonCfg = utils::JsonConfig::getInstance();
 
       auto redipients = jsonCfg.getConfig("emailbox", "redipients");
-      for (int i = 0; i < redipients.size(); i++) {
-        mail.AddRecipient(((std::string)redipients[i]).c_str());
+      for (auto &redipient : redipients) {
+        mail.AddRecipient(((std::string)redipient).c_str());
       }
 
       std::string mail_server = jsonCfg.getConfig("emailbox", "server");

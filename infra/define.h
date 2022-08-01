@@ -17,7 +17,7 @@ constexpr char ORDER_BUILD_ERROR[] = "order_build_error";
 constexpr char ORDER_FILL_ERROR[] = "order_fill_error";
 constexpr char ORDER_CANCEL[] = "order_cancel";
 
-enum struct EventType { Ctp_Event = 0, Market_Event = 1, Trader_Event = 2, Strategy_Event = 3, Interactor_Event = 4, INVALID = 5 };
+enum struct EventType { Ctp_Event = 0, Market_Event = 1, Trader_Event = 2, Strategy_Event = 3, Manage_Event = 4, INVALID = 5 };
 
 struct MsgStruct {
   std::string sessionName{""};
