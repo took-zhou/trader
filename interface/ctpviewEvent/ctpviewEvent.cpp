@@ -46,6 +46,7 @@ void CtpviewEvent::LoginControlHandle(MsgStruct &msg) {
   int command = indication.command();
   auto &traderSer = TraderSevice::getInstance();
 
+  INFO_LOG("force set time state: %d", command);
   traderSer.ROLE(Trader).ROLE(TraderTimeState).set_time_state(command);
 }
 
