@@ -30,36 +30,15 @@ int main(int argc, char *agrv[]) {
   jsonCfg.writeConfig("trader", "version", compile_time);
   INFO_LOG("program last build at %s.", compile_time.c_str());
 
-  //初始化zmq模块
-  auto &zmq = ZmqBase::getInstance();
-  while (!zmq.init()) {
-    ERROR_LOG("zmq init failed");
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-  }
-  INFO_LOG("begin init recerSender");
-  //消息接收\发送器初始化
-  auto &recerSender = RecerSender::getInstance();
-  while (!recerSender.init()) {
-    ERROR_LOG("recerSender init failed");
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-  }
-
   INFO_LOG("begin init traderSer");
-  //初始化ctpTrader
   auto &traderSer = TraderSevice::getInstance();
-  while (not traderSer.init()) {
-    ERROR_LOG("traderSer init failed");
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-  }
+  INFO_LOG("traderSer init ok");
+
   INFO_LOG("begin init traderEvent");
-  // 初始化strategyEvent模块
   auto &traderEvent = TraderEvent::getInstance();
-  while (!traderEvent.init()) {
-    ERROR_LOG("marketEvent init failed");
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-  }
+  INFO_LOG("traderEvent init ok");
+
   INFO_LOG("begin run");
-  // strategyEvent 循环等待消息触发
   traderEvent.run();
   return 0;
 }

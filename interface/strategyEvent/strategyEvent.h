@@ -10,36 +10,22 @@
 #include <functional>
 #include <map>
 #include <string>
-
-struct OrderIdentify;
-struct MsgStruct;
+#include "common/self/utils.h"
 
 struct StrategyEvent {
-  bool init();
-  void handle(MsgStruct &msg);
+ public:
+  StrategyEvent();
+  void handle(utils::ItpMsg &msg);
   void regMsgFun();
 
-  void OrderInsertReqHandle(MsgStruct &msg);
-  void pubOrderInsertRsp(OrderIdentify identity, bool result, std::string reason);
+  void OrderInsertReqHandle(utils::ItpMsg &msg);
+  void OrderCancelReqHandle(utils::ItpMsg &msg);
+  void AccountStatusReqHandle(utils::ItpMsg &msg);
+  void TransactionCostReqHandle(utils::ItpMsg &msg);
+  void InstrumentReqHandle(utils::ItpMsg &msg);
 
-  void OrderCancelReqHandle(MsgStruct &msg);
-  void pubOrderCancelRsp(OrderIdentify identity, bool result, const std::string &reason);
-
-  void AccountStatusReqHandle(MsgStruct &msg);
-  void pubAccountStatusRsp(const std::string &identity, bool result, const std::string &reason = "success");
-
-  void MarginRateReqHandle(MsgStruct &msg);
-  void pubMarginRateRsp(const std::string &identity, bool result, const std::string &reason = "success");
-
-  void CommissionRateReqHandle(MsgStruct &msg);
-  void pubCommissionRateRsp(const std::string &identity, bool result, const std::string &reason = "success");
-
-  void InstrumentReqHandle(MsgStruct &msg);
-  void pubInstrumentRsp(const std::string &identity, bool result, const std::string &reason = "success");
-
-  bool sendEmail(const std::string &identity);
-
-  std::map<std::string, std::function<void(MsgStruct &msg)>> msgFuncMap;
+ private:
+  std::map<std::string, std::function<void(utils::ItpMsg &msg)>> msgFuncMap;
 };
 
 #endif /* WORKSPACE_TRADER_INTERFACE_STRATEGYEVENT_H_ */

@@ -2,29 +2,21 @@
  * proxyRecer.cpp
  *      Author: Administrator
  */
+#include "trader/infra/recer/proxyRecer.h"
 #include <map>
-
-#include "common/extern/libgo/libgo/libgo.h"
-#include "common/extern/libzmq/include/zhelpers.h"
+#include <thread>
 #include "common/extern/log/log.h"
 #include "common/self/utils.h"
-#include "trader/infra/recer/proxyRecer.h"
 #include "trader/infra/zmqBase.h"
 
-extern MsgStruct NilMsgStruct;
-extern std::map<std::string, EventType> TitleToEvent;
-extern co_chan<MsgStruct> orderMsgChan;
-extern co_chan<MsgStruct> queryMsgChan;
-
-void ProxyRecer::init() {
+ProxyRecer::ProxyRecer() {
   INFO_LOG("begin ProxyRecer::init");
   topicList.clear();
   // strategy_trader
   topicList.push_back("strategy_trader.OrderInsertReq");
   topicList.push_back("strategy_trader.AccountStatusReq");
   topicList.push_back("strategy_trader.OrderCancelReq");
-  topicList.push_back("strategy_trader.MarginRateReq");
-  topicList.push_back("strategy_trader.CommissionRateReq");
+  topicList.push_back("strategy_trader.TransactionCostReq");
   topicList.push_back("strategy_trader.InstrumentReq");
   // trader_trader
   topicList.push_back("trader_trader.HeartBeat");
@@ -43,31 +35,52 @@ void ProxyRecer::init() {
     zmqBase.SubscribeTopic(topic.c_str());
   }
 
+  initQueryReceiver();
+  initOrderReceiver();
+
+  INFO_LOG("init proxyRecer ok");
+}
+
+bool ProxyRecer::initQueryReceiver(void) {
   queryTopicList.clear();
-  orderTopicList.clear();
 
   queryTopicList.push_back("strategy_trader.AccountStatusReq");
-  queryTopicList.push_back("strategy_trader.MarginRateReq");
-  queryTopicList.push_back("strategy_trader.CommissionRateReq");
+  queryTopicList.push_back("strategy_trader.TransactionCostReq");
   queryTopicList.push_back("strategy_trader.InstrumentReq");
   queryTopicList.push_back("market_trader.QryInstrumentReq");
   queryTopicList.push_back("manage_trader.AccountStatusReq");
   queryTopicList.push_back("ctpview_trader.LoginControl");
   queryTopicList.push_back("ctpview_trader.BugInjection");
 
+  auto &zmqBase = ZmqBase::getInstance();
+  query_receiver = zmq_socket(zmqBase.context, ZMQ_SUB);
+  zmq_connect(query_receiver, "inproc://workers");
+  if (query_receiver == nullptr) {
+    ERROR_LOG("query_receiver is nullptr");
+  }
+
+  for (auto &topic : queryTopicList) {
+    zmq_setsockopt(query_receiver, ZMQ_SUBSCRIBE, topic.c_str(), strlen(topic.c_str()));
+  }
+}
+
+bool ProxyRecer::initOrderReceiver(void) {
+  orderTopicList.clear();
+
   orderTopicList.push_back("strategy_trader.OrderInsertReq");
   orderTopicList.push_back("strategy_trader.OrderCancelReq");
 
-  auto routine1 = [&]() { query_information_routine(zmqBase.context); };
-  std::thread(routine1).detach();
+  auto &zmqBase = ZmqBase::getInstance();
+  order_receiver = zmq_socket(zmqBase.context, ZMQ_SUB);
+  zmq_connect(order_receiver, "inproc://workers");
+  if (order_receiver == nullptr) {
+    ERROR_LOG("order_receiver is nullptr");
+  }
 
-  auto routin2 = [&]() { order_routine(zmqBase.context); };
-  std::thread(routin2).detach();
-
-  INFO_LOG("init proxyRecer ok");
+  for (auto &topic : orderTopicList) {
+    zmq_setsockopt(order_receiver, ZMQ_SUBSCRIBE, topic.c_str(), strlen(topic.c_str()));
+  }
 }
-
-bool ProxyRecer::checkSessionAndTitle(std::vector<std::string> &sessionAndTitle) { return true; }
 
 bool ProxyRecer::isTopicInSubTopics(std::string title) {
   for (auto &topic : topicList) {
@@ -78,82 +91,94 @@ bool ProxyRecer::isTopicInSubTopics(std::string title) {
   return false;
 }
 
-void *ProxyRecer::query_information_routine(void *context) {
-  MsgStruct msg;
+char *ProxyRecer::queryRecv() {
+  enum { cap = 256 };
+  char buffer[cap];
+  int size = zmq_recv(query_receiver, buffer, cap - 1, 0);
+  if (size == -1) return NULL;
+  buffer[size < cap ? size : cap - 1] = '\0';
 
-  void *receiver = zmq_socket(context, ZMQ_SUB);
-  zmq_connect(receiver, "inproc://workers");
-  if (receiver == nullptr) {
-    ERROR_LOG("receiver is nullptr");
-    return NULL;
-  }
-
-  for (auto &topic : queryTopicList) {
-    zmq_setsockopt(receiver, ZMQ_SUBSCRIBE, topic.c_str(), strlen(topic.c_str()));
-  }
-
-  while (1) {
-    char *recContent = s_recv(receiver);
-    std::string content = std::string(recContent);
-    auto spacePos = content.find_first_of(" ");
-    auto title = content.substr(0, spacePos);
-    auto pbMsg = content.substr(spacePos + 1);
-
-    // INFO_LOG("recv msg, topic is[%s]",title.c_str());
-    std::string tmpEventName = std::string(title);
-    std::vector<std::string> sessionAndTitle = utils::splitString(tmpEventName, std::string("."));
-    if (sessionAndTitle.size() != 2) {
-      ERROR_LOG("receiver content is error!");
-      return NULL;
-    }
-    std::string session = sessionAndTitle.at(0);
-    std::string msgTitle = sessionAndTitle.at(1);
-
-    msg.sessionName = session;
-    msg.msgName = msgTitle;
-    msg.pbMsg = pbMsg;
-
-    queryMsgChan << msg;
-  }
-  return NULL;
+  return strndup(buffer, sizeof(buffer) - 1);
 }
 
-void *ProxyRecer::order_routine(void *context) {
-  MsgStruct msg;
+char *ProxyRecer::orderRecv() {
+  enum { cap = 256 };
+  char buffer[cap];
+  int size = zmq_recv(order_receiver, buffer, cap - 1, 0);
+  if (size == -1) return NULL;
+  buffer[size < cap ? size : cap - 1] = '\0';
 
-  void *receiver = zmq_socket(context, ZMQ_SUB);
-  zmq_connect(receiver, "inproc://workers");
-  if (receiver == nullptr) {
-    ERROR_LOG("receiver is nullptr");
-    return NULL;
-  }
+  return strndup(buffer, sizeof(buffer) - 1);
+}
 
-  for (auto &topic : orderTopicList) {
-    zmq_setsockopt(receiver, ZMQ_SUBSCRIBE, topic.c_str(), strlen(topic.c_str()));
-  }
+bool ProxyRecer::receQueryMsg(utils::ItpMsg &msg) {
+  bool out = true;
 
-  while (1) {
-    char *recContent = s_recv(receiver);
-    std::string content = std::string(recContent);
-    auto spacePos = content.find_first_of(" ");
-    auto title = content.substr(0, spacePos);
-    auto pbMsg = content.substr(spacePos + 1);
-
-    // INFO_LOG("recv msg, topic is[%s]",title.c_str());
-    std::string tmpEventName = std::string(title);
-    std::vector<std::string> sessionAndTitle = utils::splitString(tmpEventName, std::string("."));
-    if (sessionAndTitle.size() != 2) {
-      ERROR_LOG("receiver content is error!");
-      return NULL;
+  // INFO_LOG("prepare recv titleChar");
+  char *recContent = queryRecv();
+  if (recContent != nullptr) {
+    int index = 0;
+    int segIndex = 0;
+    int length = strlen(recContent) + 1;
+    char temp[length];
+    for (int i = 0; i < length; i++) {
+      temp[index] = recContent[i];
+      if (recContent[i] == '.' && segIndex == 0) {
+        temp[index] = '\0';
+        msg.sessionName = temp;
+        index = 0;
+        segIndex++;
+      } else if (recContent[i] == ' ' && segIndex == 1) {
+        temp[index] = '\0';
+        msg.msgName = temp;
+        index = 0;
+        segIndex++;
+      } else if (recContent[i] == '\0' && segIndex == 2) {
+        msg.pbMsg = temp;
+        break;
+      } else {
+        index++;
+      }
     }
-    std::string session = sessionAndTitle.at(0);
-    std::string msgTitle = sessionAndTitle.at(1);
-
-    msg.sessionName = session;
-    msg.msgName = msgTitle;
-    msg.pbMsg = pbMsg;
-
-    orderMsgChan << msg;
+  } else {
+    out = false;
   }
-  return NULL;
+
+  return out;
+}
+
+bool ProxyRecer::receOrderMsg(utils::ItpMsg &msg) {
+  bool out = true;
+
+  // INFO_LOG("prepare recv titleChar");
+  char *recContent = orderRecv();
+  if (recContent != nullptr) {
+    int index = 0;
+    int segIndex = 0;
+    int length = strlen(recContent) + 1;
+    char temp[length];
+    for (int i = 0; i < length; i++) {
+      temp[index] = recContent[i];
+      if (recContent[i] == '.' && segIndex == 0) {
+        temp[index] = '\0';
+        msg.sessionName = temp;
+        index = 0;
+        segIndex++;
+      } else if (recContent[i] == ' ' && segIndex == 1) {
+        temp[index] = '\0';
+        msg.msgName = temp;
+        index = 0;
+        segIndex++;
+      } else if (recContent[i] == '\0' && segIndex == 2) {
+        msg.pbMsg = temp;
+        break;
+      } else {
+        index++;
+      }
+    }
+  } else {
+    out = false;
+  }
+
+  return out;
 }

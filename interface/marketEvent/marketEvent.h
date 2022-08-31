@@ -13,19 +13,18 @@
 #include "common/extern/ctp/inc/ThostFtdcTraderApi.h"
 #include "common/self/basetype.h"
 #include "common/self/dci/Role.h"
-
-struct MsgStruct;
+#include "common/self/utils.h"
 
 struct MarketEvent {
-  bool init();
+  MarketEvent();
 
-  void handle(MsgStruct &msg);
+  void handle(utils::ItpMsg &msg);
   void regMsgFun();
 
-  void QryInstrumentReqHandle(MsgStruct &msg);
+  void QryInstrumentReqHandle(utils::ItpMsg &msg);
   void pubQryInstrumentRsp(CThostFtdcInstrumentField *field, bool result, bool isFinish);
 
-  std::map<std::string, std::function<void(MsgStruct &msg)>> msgFuncMap;
+  std::map<std::string, std::function<void(utils::ItpMsg &msg)>> msgFuncMap;
 };
 
 #endif /* WORKSPACE_TRADER_INTERFACE_MARKETEVENT_H_ */

@@ -1,32 +1,32 @@
 /*
  * zmqBase.h
  *
- *  Created on: 2020年10月23日
+ *  Created on: 2020.11.13
  *      Author: Administrator
  */
+#ifndef WORKSPACE_TRADER_INFRA_ZMQBASE_H_
+#define WORKSPACE_TRADER_INFRA_ZMQBASE_H_
 
-#ifndef WORKSPACE_STRATEGY_INFRA_ZMQBASE_H_
-#define WORKSPACE_STRATEGY_INFRA_ZMQBASE_H_
-
-#include <string>
-#include "common/extern/libzmq/include/zmq.hpp"
+#include "common/extern/libzmq/include/zmq.h"
 
 struct ZmqBase {
-  ZmqBase() {}
+  ZmqBase();
   ZmqBase(const ZmqBase &) = delete;
   ZmqBase &operator=(const ZmqBase &) = delete;
   static ZmqBase &getInstance() {
     static ZmqBase instance;
     return instance;
   }
-  bool init();
+
   void SubscribeTopic(const char *topicStr);
   void unSubscribeTopic(const char *topicStr);
-  int publishMsg(const char *head, const char *msg);
+
+  int SendMsg(const char *head, const char *msg);
+  char *RecvMsg();
   void *context{nullptr};
   void *receiver{nullptr};
   void *publisher{nullptr};
   void *workers{nullptr};
 };
 
-#endif /* WORKSPACE_STRATEGY_INFRA_ZMQBASE_H_ */
+#endif /* WORKSPACE_MARKET_INFRA_ZMQBASE_H_ */

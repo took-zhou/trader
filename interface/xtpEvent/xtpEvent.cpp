@@ -5,10 +5,11 @@
  *      Author: Administrator
  */
 
-#include "trader/interface/ctpEvent/ctpEvent.h"
+#include "trader/interface/xtpEvent/xtpEvent.h"
 #include <algorithm>
 #include <mutex>
 #include "common/extern/log/log.h"
+#include "common/extern/xtp/inc/xtp_trader_api.h"
 #include "common/self/protobuf/ipc.pb.h"
 #include "common/self/protobuf/manage-trader.pb.h"
 #include "common/self/protobuf/market-trader.pb.h"
@@ -18,14 +19,14 @@
 #include "trader/domain/traderService.h"
 #include "trader/infra/recerSender.h"
 
-CtpEvent::CtpEvent() { regMsgFun(); }
+XtpEvent::XtpEvent() { regMsgFun(); }
 
-void CtpEvent::regMsgFun() {
+void XtpEvent::regMsgFun() {
   int cnt = 0;
   msgFuncMap.clear();
-  msgFuncMap["OnRtnOrder"] = [this](utils::ItpMsg &msg) { OnRtnOrderHandle(msg); };
-  msgFuncMap["OnRtnTrade"] = [this](utils::ItpMsg &msg) { OnRtnTradeHandle(msg); };
-  msgFuncMap["OnRspOrderAction"] = [this](utils::ItpMsg &msg) { OnRspOrderActionHandle(msg); };
+  msgFuncMap["OnOrderEvent"] = [this](utils::ItpMsg &msg) { OnOrderEventHandle(msg); };
+  msgFuncMap["OnTradeEvent"] = [this](utils::ItpMsg &msg) { OnTradeEventHandle(msg); };
+  msgFuncMap["OnCancelOrderError"] = [this](utils::ItpMsg &msg) { OnCancelOrderErrorHandle(msg); };
   msgFuncMap["OnRspQryInstrument"] = [this](utils::ItpMsg &msg) { OnRspQryInstrumentHandle(msg); };
   msgFuncMap["OnRspQryTradingAccount"] = [this](utils::ItpMsg &msg) { OnRspQryTradingAccountHandle(msg); };
   msgFuncMap["OnRspQryInstrumentMarginRate"] = [this](utils::ItpMsg &msg) { OnRspQryInstrumentMarginRateHandle(msg); };
@@ -37,7 +38,7 @@ void CtpEvent::regMsgFun() {
   }
 }
 
-void CtpEvent::handle(utils::ItpMsg &msg) {
+void XtpEvent::handle(utils::ItpMsg &msg) {
   auto iter = msgFuncMap.find(msg.msgName);
   if (iter != msgFuncMap.end()) {
     iter->second(msg);
@@ -47,23 +48,23 @@ void CtpEvent::handle(utils::ItpMsg &msg) {
   return;
 }
 
-void CtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
+void XtpEvent::OnOrderEventHandle(utils::ItpMsg &msg) {
   ipc::message itpMsg;
   itpMsg.ParseFromString(msg.pbMsg);
   auto &itp_msg = itpMsg.itp_msg();
 
-  auto pOrder = reinterpret_cast<CThostFtdcOrderField *>(itp_msg.address());
+  auto orderInfo = reinterpret_cast<XTPOrderInfo *>(itp_msg.address());
   auto &traderSer = TraderSevice::getInstance();
   auto &orderManage = traderSer.ROLE(OrderManage);
-  auto content = orderManage.getOrder(pOrder->OrderRef);
+  auto content = orderManage.getOrder(utils::intToString(orderInfo->order_client_id));
   if (content != nullptr) {
-    if (pOrder->OrderStatus == THOST_FTDC_OST_Canceled) {
+    if (orderInfo->order_status == XTP_ORDER_STATUS_CANCELED) {
 #ifdef BENCH_TEST
       ScopedTimer t("OnRtnOrderHandle");
 #endif
       strategy_trader::message rspMsg;
       auto *orderCancelRsp = rspMsg.mutable_order_cancel_rsp();
-      orderCancelRsp->set_identity(pOrder->OrderRef);
+      orderCancelRsp->set_identity(utils::intToString(orderInfo->order_client_id));
       orderCancelRsp->set_result(strategy_trader::Result::success);
       std::string strRsp = rspMsg.SerializeAsString();
       std::string head = "strategy_trader.OrderCancelRsp" + utils::intToString(itp_msg.request_id());
@@ -79,36 +80,36 @@ void CtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
       strRsp = rsp.SerializeAsString();
       head = "strategy_trader.OrderInsertRsp." + utils::intToString(itp_msg.request_id());
       recerSender.ROLE(Sender).ROLE(ProxySender).send(head.c_str(), strRsp.c_str());
-      INFO_LOG("the order be canceled, orderRef[%s],prid[%d]", pOrder->OrderRef, itp_msg.request_id());
+      INFO_LOG("the order be canceled, orderRef[%d],prid[%d]", orderInfo->order_client_id, itp_msg.request_id());
 
-      orderManage.delOrder(pOrder->OrderRef);
+      orderManage.delOrder(utils::intToString(orderInfo->order_client_id));
     }
   }
 }
 
-void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
+void XtpEvent::OnTradeEventHandle(utils::ItpMsg &msg) {
   ipc::message itpMsg;
   itpMsg.ParseFromString(msg.pbMsg);
   auto &itp_msg = itpMsg.itp_msg();
 
-  auto pTrade = reinterpret_cast<CThostFtdcTradeField *>(itp_msg.address());
+  auto tradeReport = reinterpret_cast<XTPTradeReport *>(itp_msg.address());
   auto &traderSer = TraderSevice::getInstance();
   auto &orderManage = traderSer.ROLE(OrderManage);
 
 #ifdef BENCH_TEST
   ScopedTimer t("OnRtnTradeHandle");
 #endif
-  auto content = orderManage.getOrder(pTrade->OrderRef);
+  auto content = orderManage.getOrder(utils::intToString(tradeReport->order_client_id));
   if (content != nullptr) {
-    content->tradedOrder.price = pTrade->Price;
-    content->tradedOrder.volume = pTrade->Volume;
-    content->tradedOrder.direction = utils::charToString(pTrade->Direction);
-    content->tradedOrder.date = pTrade->TradeDate;
-    content->tradedOrder.time = pTrade->TradeTime;
+    content->tradedOrder.price = tradeReport->price;
+    content->tradedOrder.volume = tradeReport->quantity;
+    content->tradedOrder.direction = utils::charToString(tradeReport->side);
+    content->tradedOrder.date = tradeReport->trade_time;
+    content->tradedOrder.time = tradeReport->trade_time;
 
     strategy_trader::message rsp;
     auto *insertRsp = rsp.mutable_order_insert_rsp();
-    insertRsp->set_identity(pTrade->OrderRef);
+    insertRsp->set_identity(utils::intToString(tradeReport->order_client_id));
     insertRsp->set_result(strategy_trader::Result::success);
 
     auto *succInfo = insertRsp->mutable_info();
@@ -122,27 +123,27 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
 
     sendEmail(*content);
 
-    content->left_volume -= pTrade->Volume;
+    content->left_volume -= tradeReport->quantity;
     if (content->left_volume == 0) {
-      INFO_LOG("the order was finished, ref[%s],identity[%s]", pTrade->OrderRef, content->prid.c_str());
-      orderManage.delOrder(pTrade->OrderRef);
+      INFO_LOG("the order was finished, ref[%d],identity[%s]", tradeReport->order_client_id, content->prid.c_str());
+      orderManage.delOrder(utils::intToString(tradeReport->order_client_id));
     }
   }
 }
 
-void CtpEvent::OnRspOrderActionHandle(utils::ItpMsg &msg) {
+void XtpEvent::OnCancelOrderErrorHandle(utils::ItpMsg &msg) {
   ipc::message itpMsg;
   itpMsg.ParseFromString(msg.pbMsg);
   auto &itp_msg = itpMsg.itp_msg();
 
-  auto orderActionRsp = reinterpret_cast<CThostFtdcInputOrderActionField *>(itp_msg.address());
+  auto cancelInfo = reinterpret_cast<XTPOrderCancelInfo *>(itp_msg.address());
   auto &traderSer = TraderSevice::getInstance();
   auto &orderManage = traderSer.ROLE(OrderManage);
-  auto content = orderManage.getOrder(orderActionRsp->OrderRef);
+  auto content = orderManage.getOrder(utils::intToString(cancelInfo->order_xtp_id));
   if (content != nullptr) {
     strategy_trader::message rspMsg;
     auto *orderCancelRsp = rspMsg.mutable_order_cancel_rsp();
-    orderCancelRsp->set_identity(orderActionRsp->OrderRef);
+    orderCancelRsp->set_identity(utils::intToString(cancelInfo->order_xtp_id));
     orderCancelRsp->set_result(strategy_trader::Result::failed);
     orderCancelRsp->set_failedreason("INVALID");
     std::string strRsp = rspMsg.SerializeAsString();
@@ -152,7 +153,7 @@ void CtpEvent::OnRspOrderActionHandle(utils::ItpMsg &msg) {
   }
 }
 
-void CtpEvent::OnRspQryTradingAccountHandle(utils::ItpMsg &msg) {
+void XtpEvent::OnRspQryTradingAccountHandle(utils::ItpMsg &msg) {
   ipc::message itpMsg;
   itpMsg.ParseFromString(msg.pbMsg);
   auto &itp_msg = itpMsg.itp_msg();
@@ -185,7 +186,7 @@ void CtpEvent::OnRspQryTradingAccountHandle(utils::ItpMsg &msg) {
   }
 }
 
-void CtpEvent::OnRspQryInstrumentHandle(utils::ItpMsg &msg) {
+void XtpEvent::OnRspQryInstrumentHandle(utils::ItpMsg &msg) {
   ipc::message itpMsg;
   itpMsg.ParseFromString(msg.pbMsg);
   auto &itp_msg = itpMsg.itp_msg();
@@ -226,7 +227,7 @@ void CtpEvent::OnRspQryInstrumentHandle(utils::ItpMsg &msg) {
   }
 }
 
-void CtpEvent::OnRspQryInstrumentMarginRateHandle(utils::ItpMsg &msg) {
+void XtpEvent::OnRspQryInstrumentMarginRateHandle(utils::ItpMsg &msg) {
   ipc::message itpMsg;
   itpMsg.ParseFromString(msg.pbMsg);
   auto &itp_msg = itpMsg.itp_msg();
@@ -248,7 +249,7 @@ void CtpEvent::OnRspQryInstrumentMarginRateHandle(utils::ItpMsg &msg) {
   recerSender.ROLE(Sender).ROLE(ProxySender).send(head.c_str(), strRsp.c_str());
 }
 
-void CtpEvent::OnRspQryInstrumentCommissionRateHandle(utils::ItpMsg &msg) {
+void XtpEvent::OnRspQryInstrumentCommissionRateHandle(utils::ItpMsg &msg) {
   ipc::message itpMsg;
   itpMsg.ParseFromString(msg.pbMsg);
   auto &itp_msg = itpMsg.itp_msg();
@@ -273,7 +274,7 @@ void CtpEvent::OnRspQryInstrumentCommissionRateHandle(utils::ItpMsg &msg) {
   recerSender.ROLE(Sender).ROLE(ProxySender).send(head.c_str(), strRsp.c_str());
 }
 
-bool CtpEvent::sendEmail(const utils::OrderContent &content) {
+bool XtpEvent::sendEmail(const utils::OrderContent &content) {
   std::string subjectContent = "";
   subjectContent += content.instrumentID + "成交通知";
 

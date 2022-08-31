@@ -4,7 +4,7 @@
  *  Created on: 2020.11.13
  *      Author: Administrator
  */
-#include "trader/domain/components/ctpTradeApi/traderTimeState.h"
+#include "trader/domain/components/traderTimeState.h"
 #include <string.h>
 #include <unistd.h>
 #include <string>

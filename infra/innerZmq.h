@@ -5,13 +5,15 @@
  *      Author: Administrator
  */
 
-#ifndef H56F09BAA_8284_4208_94EE_31E9DC18CE89
-#define H56F09BAA_8284_4208_94EE_31E9DC18CE89
+#ifndef WORKSPACE_TRADER_INFRA_INNERZMQBASE_H_
+#define WORKSPACE_TRADER_INFRA_INNERZMQBASE_H_
+#include <sstream>
 #include <string>
-#include "trader/infra/define.h"
+
+#include "common/extern/libzmq/include/zmq.h"
 
 struct InnerZmq {
-  InnerZmq() {}
+  InnerZmq();
   InnerZmq(const InnerZmq &) = delete;
   InnerZmq &operator=(const InnerZmq &) = delete;
   static InnerZmq &getInstance() {
@@ -19,12 +21,12 @@ struct InnerZmq {
     return instance;
   }
 
-  bool init();
-  void pushTask(const std::string &msg);
+  int pushTask(const char *head, const char *msg);
+  char *pullTask();
   std::string inprocAddress{"inproc://innerzmq"};
   void *context{nullptr};
   void *receiver{nullptr};
   void *sender{nullptr};
 };
 
-#endif /* H56F09BAA_8284_4208_94EE_31E9DC18CE89 */
+#endif /* WORKSPACE_MARKET_INFRA_INNERZMQBASE_H_ */

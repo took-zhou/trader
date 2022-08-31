@@ -11,17 +11,18 @@
 #include <map>
 #include <string>
 
-struct MsgStruct;
+#include "common/self/utils.h"
 
 struct ManageEvent {
-  bool init();
-  void handle(MsgStruct &msg);
+ public:
+  ManageEvent();
+  void handle(utils::ItpMsg &msg);
   void regMsgFun();
 
-  void AccountStatusReqHandle(MsgStruct &msg);
-  void pubAccountStatusRsp(const std::string &identity, bool result, const std::string &reason = "success");
+  void AccountStatusReqHandle(utils::ItpMsg &msg);
 
-  std::map<std::string, std::function<void(MsgStruct &msg)>> msgFuncMap;
+ private:
+  std::map<std::string, std::function<void(utils::ItpMsg &msg)>> msgFuncMap;
 };
 
 #endif /* WORKSPACE_TRADER_INTERFACE_MANAGEEVENT_MANAGEEVENT_H_ */

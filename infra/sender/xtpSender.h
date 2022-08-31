@@ -5,26 +5,25 @@
  *      Author: Administrator
  */
 
-#ifndef WORKSPACE_TRADER_INFRA_CTPSENDER_H_
-#define WORKSPACE_TRADER_INFRA_CTPSENDER_H_
+#ifndef WORKSPACE_TRADER_INFRA_XTPSENDER_H_
+#define WORKSPACE_TRADER_INFRA_XTPSENDER_H_
 #include <map>
 #include <string>
-#include <vector>
-#include "common/extern/ctp/inc/ThostFtdcTraderApi.h"
+#include "common/extern/xtp/inc/xtp_trader_api.h"
 #include "common/self/utils.h"
-#include "trader/infra/recer/ctpRecer.h"
+#include "trader/infra/recer/xtpRecer.h"
 #include "trader/infra/sender/sendApi.h"
 
-struct CtpTraderInfo {
-  CThostFtdcTraderApi *traderApi;
-  CtpTraderSpi *traderSpi;
+struct XtpTraderInfo {
+  XTP::API::TraderApi *traderApi;
+  XtpTraderSpi *traderSpi;
   int frontId;
   int sessionId;
 };
 
-struct CtpSender : SendApi {
+struct XtpSender : SendApi {
  public:
-  CtpSender(void);
+  XtpSender(void);
   bool ReqUserLogin();
   bool ReqUserLogout();
   bool InsertOrder(utils::OrderContent &content);
@@ -34,18 +33,13 @@ struct CtpSender : SendApi {
   bool ReqTransactionCost(const utils::InstrumtntID &ins_exch, const int requestId);
   bool LossConnection();
 
-  static std::map<std::string, CtpTraderInfo> CtpTraderInfoMap;
-
  private:
-  bool buildorder(utils::OrderContent &content, CThostFtdcInputOrderField &order);
   bool init(void);
-  bool authenticate(void);
-  bool confirm(void);
   bool release(void);
 
-  static CThostFtdcInputOrderField defaultOrderField;
+  static std::map<std::string, XtpTraderInfo> XtpTraderInfoMap;
   int nRequestID = 0;
   bool isInit = false;
 };
 
-#endif /* WORKSPACE_TRADER_INFRA_CTPSENDER_H_ */
+#endif /* WORKSPACE_TRADER_INFRA_XTPSENDER_H_ */

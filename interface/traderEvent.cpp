@@ -6,29 +6,23 @@
  */
 
 #include "trader/interface/traderEvent.h"
-#include "common/extern/libgo/libgo/libgo.h"
+#include <chrono>
+#include <thread>
 #include "common/self/semaphorePart.h"
 #include "trader/domain/traderService.h"
 #include "trader/infra/recerSender.h"
 
-#include <chrono>
-#include <thread>
-
-extern co_chan<MsgStruct> ctpMsgChan;
-extern co_chan<MsgStruct> orderMsgChan;
-extern co_chan<MsgStruct> queryMsgChan;
-extern GlobalSem globalSem;
-constexpr U32 MAIN_THREAD_WAIT_TIME = 100000;
-constexpr U32 RSP_HANDLE_THREAD_WAIT_TIME = 1000000;
+TraderEvent::TraderEvent() { regSessionFunc(); }
 
 void TraderEvent::regSessionFunc() {
   int cnt = 0;
   sessionFuncMap.clear();
-  sessionFuncMap["market_trader"] = [this](MsgStruct msg) { ROLE(MarketEvent).handle(msg); };
-  sessionFuncMap["strategy_trader"] = [this](MsgStruct msg) { ROLE(StrategyEvent).handle(msg); };
-  sessionFuncMap["manage_trader"] = [this](MsgStruct msg) { ROLE(ManageEvent).handle(msg); };
-  sessionFuncMap["ctp"] = [this](MsgStruct msg) { ROLE(CtpEvent).handle(msg); };
-  sessionFuncMap["ctpview_trader"] = [this](MsgStruct msg) { ROLE(CtpviewEvent).handle(msg); };
+  sessionFuncMap["market_trader"] = [this](utils::ItpMsg msg) { ROLE(MarketEvent).handle(msg); };
+  sessionFuncMap["strategy_trader"] = [this](utils::ItpMsg msg) { ROLE(StrategyEvent).handle(msg); };
+  sessionFuncMap["manage_trader"] = [this](utils::ItpMsg msg) { ROLE(ManageEvent).handle(msg); };
+  sessionFuncMap["ctp_trader"] = [this](utils::ItpMsg msg) { ROLE(CtpEvent).handle(msg); };
+  sessionFuncMap["xtp_trader"] = [this](utils::ItpMsg msg) { ROLE(XtpEvent).handle(msg); };
+  sessionFuncMap["ctpview_trader"] = [this](utils::ItpMsg msg) { ROLE(CtpviewEvent).handle(msg); };
 
   for (auto &iter : sessionFuncMap) {
     INFO_LOG("sessionFuncMap[%d] key is [%s]", cnt, iter.first.c_str());
@@ -36,22 +30,13 @@ void TraderEvent::regSessionFunc() {
   }
 }
 
-bool TraderEvent::init() {
-  regSessionFunc();
-  ROLE(MarketEvent).init();
-  ROLE(StrategyEvent).init();
-  ROLE(ManageEvent).init();
-  ROLE(CtpEvent).init();
-  ROLE(CtpviewEvent).init();
-  return true;
-}
-
 bool TraderEvent::run() {
+  auto &recerSender = RecerSender::getInstance();
+
   auto orderRecRun = [&]() {
-    MsgStruct msg;
+    utils::ItpMsg msg;
     while (1) {
-      orderMsgChan >> msg;
-      if (!msg.isValid()) {
+      if (recerSender.ROLE(Recer).ROLE(ProxyRecer).receQueryMsg(msg) == false) {
         ERROR_LOG(" invalid msg, session is [%s], msgName is [%s]", msg.sessionName.c_str(), msg.msgName.c_str());
         continue;
       }
@@ -67,17 +52,16 @@ bool TraderEvent::run() {
   std::thread(orderRecRun).detach();
 
   auto queryRecRun = [&]() {
-    MsgStruct msg;
+    utils::ItpMsg msg;
     while (1) {
-      queryMsgChan >> msg;
-      if (!msg.isValid()) {
+      if (recerSender.ROLE(Recer).ROLE(ProxyRecer).receOrderMsg(msg) == false) {
         ERROR_LOG(" invalid msg, session is [%s], msgName is [%s]", msg.sessionName.c_str(), msg.msgName.c_str());
         continue;
       }
 
       if (sessionFuncMap.find(msg.sessionName) != sessionFuncMap.end()) {
         sessionFuncMap[msg.sessionName](msg);
-        usleep(RSP_HANDLE_THREAD_WAIT_TIME);
+        std::this_thread::sleep_for(1s);
       } else {
         ERROR_LOG("can not find[%s] in sessionFuncMap", msg.sessionName.c_str());
       }
@@ -86,12 +70,12 @@ bool TraderEvent::run() {
   INFO_LOG("queryRecRun prepare ok");
   std::thread(queryRecRun).detach();
 
-  auto ctpRecRun = [&]() {
-    MsgStruct msg;
+  auto itpRecRun = [&]() {
+    utils::ItpMsg msg;
     while (1) {
-      ctpMsgChan >> msg;
-      if (!msg.isValid()) {
+      if (recerSender.ROLE(Recer).ROLE(ItpRecer).receMsg(msg) == false) {
         ERROR_LOG(" invalid msg, session is [%s], msgName is [%s]", msg.sessionName.c_str(), msg.msgName.c_str());
+        GlobalSem::getInstance().postSemBySemName(GlobalSem::apiRecv);
         continue;
       }
 
@@ -101,13 +85,12 @@ bool TraderEvent::run() {
         ERROR_LOG("can not find[%s] in sessionFuncMap", msg.sessionName.c_str());
       }
 
-      globalSem.postSemBySemName(msg.msgName);
+      GlobalSem::getInstance().postSemBySemName(GlobalSem::apiRecv);
     }
   };
-  INFO_LOG("ctpRecRun prepare ok");
-  std::thread(ctpRecRun).detach();
+  INFO_LOG("itpRecRun prepare ok");
+  std::thread(itpRecRun).detach();
 
-  auto &recerSender = RecerSender::getInstance();
   recerSender.run();
 
   return true;

@@ -11,7 +11,7 @@
 #include "common/extern/csmtp/CSmtp.h"
 
 struct EmailSender {
-  bool init();
+  EmailSender();
   void send(const char *head, const char *msg);
 
   std::string mail_title;

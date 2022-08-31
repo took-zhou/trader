@@ -11,22 +11,15 @@
 #include "common/self/protobuf/market-trader.pb.h"
 #include "common/self/utils.h"
 #include "trader/domain/traderService.h"
-#include "trader/infra/define.h"
 #include "trader/infra/recerSender.h"
 #include "trader/interface/ctpEvent/ctpEvent.h"
 
-constexpr U32 MAX_INSTRUMENT_STATUS_SIZE = 5;
-constexpr U32 WAITTIME_FOR_MARKET_HANDLE = 10000;
-bool MarketEvent::init() {
-  regMsgFun();
-
-  return true;
-}
+MarketEvent::MarketEvent() { regMsgFun(); }
 
 void MarketEvent::regMsgFun() {
   int cnt = 0;
   msgFuncMap.clear();
-  msgFuncMap["QryInstrumentReq"] = [this](MsgStruct &msg) { QryInstrumentReqHandle(msg); };
+  msgFuncMap["QryInstrumentReq"] = [this](utils::ItpMsg &msg) { QryInstrumentReqHandle(msg); };
 
   for (auto &iter : msgFuncMap) {
     INFO_LOG("msgFuncMap[%d] key is [%s]", cnt, iter.first.c_str());
@@ -34,7 +27,7 @@ void MarketEvent::regMsgFun() {
   }
 }
 
-void MarketEvent::handle(MsgStruct &msg) {
+void MarketEvent::handle(utils::ItpMsg &msg) {
   auto iter = msgFuncMap.find(msg.msgName);
   if (iter != msgFuncMap.end()) {
     iter->second(msg);
@@ -44,12 +37,12 @@ void MarketEvent::handle(MsgStruct &msg) {
   return;
 }
 
-void MarketEvent::QryInstrumentReqHandle(MsgStruct &msg) {
+void MarketEvent::QryInstrumentReqHandle(utils::ItpMsg &msg) {
   market_trader::message reqMsg;
   reqMsg.ParseFromString(msg.pbMsg);
   auto &traderSer = TraderSevice::getInstance();
-  if (traderSer.ROLE(Trader).ROLE(CtpTraderApi).getTraderLoginState() != LOGIN_STATE) {
-    ERROR_LOG("ctp not login!");
+  if (traderSer.login_state != LOGIN_STATE) {
+    ERROR_LOG("itp not login!");
     pubQryInstrumentRsp(nullptr, true, false);
     return;
   }
@@ -58,12 +51,13 @@ void MarketEvent::QryInstrumentReqHandle(MsgStruct &msg) {
     ERROR_LOG("qry_instrument_req identity[%s] is not [all]", req.identity().c_str());
     return;
   }
-  auto *traderApi = traderSer.ROLE(Trader).ROLE(CtpTraderApi).traderApi;
 
   utils::InstrumtntID ins_exch;
   ins_exch.exch = "";
   ins_exch.ins = "";
-  traderApi->ReqQryInstrument(ins_exch);
+
+  auto &recerSender = RecerSender::getInstance();
+  recerSender.ROLE(Sender).ROLE(ItpSender).ReqInstrumentInfo(ins_exch, utils::stringToInt(req.identity()));
 }
 
 void MarketEvent::pubQryInstrumentRsp(CThostFtdcInstrumentField *field, bool result, bool isFinish) {

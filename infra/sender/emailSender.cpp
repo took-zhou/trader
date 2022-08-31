@@ -12,11 +12,7 @@
 #include "common/self/fileUtil.h"
 #include "trader/infra/sender/emailSender.h"
 
-bool EmailSender::init() {
-  bool ret = true;
-
-  return ret;
-}
+EmailSender::EmailSender() {}
 
 void EmailSender::send(const char *head, const char *msg) {
   mail_title = head;

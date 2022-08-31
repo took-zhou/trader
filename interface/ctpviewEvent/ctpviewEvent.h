@@ -11,17 +11,17 @@
 #include <map>
 #include <string>
 
-struct MsgStruct;
+#include "common/self/utils.h"
 
 struct CtpviewEvent {
-  bool init();
-  void handle(MsgStruct &msg);
+  CtpviewEvent();
+  void handle(utils::ItpMsg &msg);
   void regMsgFun();
 
-  void LoginControlHandle(MsgStruct &msg);
-  void BugInjectionHandle(MsgStruct &msg);
+  void LoginControlHandle(utils::ItpMsg &msg);
+  void BugInjectionHandle(utils::ItpMsg &msg);
 
-  std::map<std::string, std::function<void(MsgStruct &msg)>> msgFuncMap;
+  std::map<std::string, std::function<void(utils::ItpMsg &msg)>> msgFuncMap;
 };
 
 #endif /* WORKSPACE_TRADER_INTERFACE_CTPVIEWEVENT_CTPVIEWEVENT_H_ */

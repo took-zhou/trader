@@ -5,26 +5,25 @@
  *      Author: Administrator
  */
 
-#ifndef WORKSPACE_TRADER_INTERFACE_CTPEVENT_H_
-#define WORKSPACE_TRADER_INTERFACE_CTPEVENT_H_
+#ifndef WORKSPACE_TRADER_INTERFACE_XTPEVENT_H_
+#define WORKSPACE_TRADER_INTERFACE_XTPEVENT_H_
 #include <functional>
 #include <map>
 #include <string>
 #include <vector>
 
-#include "common/extern/ctp/inc/ThostFtdcTraderApi.h"
 #include "common/self/basetype.h"
 #include "common/self/dci/Role.h"
 #include "common/self/utils.h"
 
-struct CtpEvent {
-  CtpEvent();
+struct XtpEvent {
+  XtpEvent();
   void handle(utils::ItpMsg &msg);
   void regMsgFun();
 
-  void OnRtnOrderHandle(utils::ItpMsg &msg);
-  void OnRtnTradeHandle(utils::ItpMsg &msg);
-  void OnRspOrderActionHandle(utils::ItpMsg &msg);
+  void OnTradeEventHandle(utils::ItpMsg &msg);
+  void OnOrderEventHandle(utils::ItpMsg &msg);
+  void OnCancelOrderErrorHandle(utils::ItpMsg &msg);
 
   void OnRspQryTradingAccountHandle(utils::ItpMsg &msg);
   void OnRspQryInstrumentHandle(utils::ItpMsg &msg);

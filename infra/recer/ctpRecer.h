@@ -7,11 +7,14 @@
 
 #ifndef WORKSPACE_TRADER_INFRA_CTPRECER_H_
 #define WORKSPACE_TRADER_INFRA_CTPRECER_H_
-#include "common/extern/ctp/inc/ThostFtdcTraderApi.h"
 
-class TraderSpi : public CThostFtdcTraderSpi {
+#include "common/extern/ctp/inc/ThostFtdcTraderApi.h"
+#include "common/self/utils.h"
+#include "trader/infra/recer/recerSpi.h"
+
+class CtpTraderSpi : public CThostFtdcTraderSpi {
  public:
-  ~TraderSpi(){};
+  ~CtpTraderSpi(){};
 
  public:
   ///当客户端与交易后台建立起通信连接时（还未登录前），该方法被调用。
@@ -60,7 +63,7 @@ class TraderSpi : public CThostFtdcTraderSpi {
   void OnRspGenUserText(CThostFtdcRspGenUserTextField *pRspGenUserText, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast){};
 
   ///报单录入请求响应
-  void OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
+  void OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast){};
 
   ///预埋单录入请求响应
   void OnRspParkedOrderInsert(CThostFtdcParkedOrderField *pParkedOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast){};
@@ -292,10 +295,10 @@ class TraderSpi : public CThostFtdcTraderSpi {
   void OnRtnTrade(CThostFtdcTradeField *pTrade);
 
   ///报单录入错误回报
-  void OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo);
+  void OnErrRtnOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo){};
 
   ///报单操作错误回报
-  void OnErrRtnOrderAction(CThostFtdcOrderActionField *pOrderAction, CThostFtdcRspInfoField *pRspInfo);
+  void OnErrRtnOrderAction(CThostFtdcOrderActionField *pOrderAction, CThostFtdcRspInfoField *pRspInfo){};
 
   ///合约交易状态通知
   void OnRtnInstrumentStatus(CThostFtdcInstrumentStatusField *pInstrumentStatus){};
@@ -449,11 +452,16 @@ class TraderSpi : public CThostFtdcTraderSpi {
   ///银行发起变更银行账号通知
   void OnRtnChangeAccountByBank(CThostFtdcChangeAccountField *pChangeAccount){};
 
-  int reConnect = 0;
+  bool frontDisconnected = false;
+
+  int sessionId = 0;
+  int frontId = 0;
 };
 
-struct CtpRecer {
-  bool init() { return true; };
+struct CtpRecer : RecerSpi {
+ public:
+  CtpRecer(){};
+  bool receMsg(utils::ItpMsg &msg);
 };
 
 #endif /* WORKSPACE_TRADER_INFRA_CTPRECER_H_ */

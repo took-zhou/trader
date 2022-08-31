@@ -9,18 +9,27 @@
 #define WORKSPACE_TRADER_INFRA_PROXYRECER_H_
 
 #include <vector>
-#include "trader/infra/define.h"
-struct ZmqBase;
+#include "common/self/utils.h"
+#include "trader/infra/zmqBase.h"
 
 struct ProxyRecer {
-  void init();
-  void *query_information_routine(void *context);
-  void *order_routine(void *context);
-  bool checkSessionAndTitle(std::vector<std::string> &sessionAndTitle);
+ public:
+  ProxyRecer();
+  bool receQueryMsg(utils::ItpMsg &msg);
+  bool receOrderMsg(utils::ItpMsg &msg);
   bool isTopicInSubTopics(std::string);
+
   std::vector<std::string> topicList;
   std::vector<std::string> queryTopicList;
   std::vector<std::string> orderTopicList;
+
+ private:
+  bool initQueryReceiver(void);
+  bool initOrderReceiver(void);
+  char *queryRecv();
+  char *orderRecv();
+  void *query_receiver{nullptr};
+  void *order_receiver{nullptr};
 };
 
 #endif /* WORKSPACE_TRADER_INFRA_PROXYRECER_H_ */
