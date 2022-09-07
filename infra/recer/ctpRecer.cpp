@@ -54,12 +54,14 @@ void CtpTraderSpi::OnRtnOrder(CThostFtdcOrderField *pOrder) {
   ipc::message reqMsg;
   auto sendMsg = reqMsg.mutable_itp_msg();
   sendMsg->set_address(reinterpret_cast<int64_t>(pOrder));
-  std::string reqStr;
-  reqMsg.SerializeToString(&reqStr);
+  utils::ItpMsg msg;
+  reqMsg.SerializeToString(&msg.pbMsg);
+  msg.sessionName = "ctp_trader";
+  msg.msgName = "OnRtnOrder";
 
   auto &globalSem = GlobalSem::getInstance();
   auto &innerZmq = InnerZmq::getInstance();
-  innerZmq.pushTask("ctp_trader.OnRtnOrder", reqStr.c_str());
+  innerZmq.pushTask(msg);
   globalSem.waitSemBySemName(GlobalSem::apiRecv);
 }
 
@@ -67,12 +69,14 @@ void CtpTraderSpi::OnRtnTrade(CThostFtdcTradeField *pTrade) {
   ipc::message reqMsg;
   auto sendMsg = reqMsg.mutable_itp_msg();
   sendMsg->set_address(reinterpret_cast<int64_t>(pTrade));
-  std::string reqStr;
-  reqMsg.SerializeToString(&reqStr);
+  utils::ItpMsg msg;
+  reqMsg.SerializeToString(&msg.pbMsg);
+  msg.sessionName = "ctp_trader";
+  msg.msgName = "OnRtnTrade";
 
   auto &globalSem = GlobalSem::getInstance();
   auto &innerZmq = InnerZmq::getInstance();
-  innerZmq.pushTask("ctp_trader.OnRtnTrade", reqStr.c_str());
+  innerZmq.pushTask(msg);
   globalSem.waitSemBySemName(GlobalSem::apiRecv);
 }
 
@@ -83,12 +87,14 @@ void CtpTraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradin
   sendMsg->set_address(reinterpret_cast<int64_t>(pTradingAccount));
   sendMsg->set_request_id(nRequestID);
   sendMsg->set_is_last(bIsLast);
-  std::string reqStr;
-  reqMsg.SerializeToString(&reqStr);
+  utils::ItpMsg msg;
+  reqMsg.SerializeToString(&msg.pbMsg);
+  msg.sessionName = "ctp_trader";
+  msg.msgName = "OnRspQryTradingAccount";
 
   auto &globalSem = GlobalSem::getInstance();
   auto &innerZmq = InnerZmq::getInstance();
-  innerZmq.pushTask("ctp_trader.OnRspQryTradingAccount", reqStr.c_str());
+  innerZmq.pushTask(msg);
   globalSem.waitSemBySemName(GlobalSem::apiRecv);
 }
 
@@ -99,12 +105,14 @@ void CtpTraderSpi::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CT
   sendMsg->set_address(reinterpret_cast<int64_t>(pInstrument));
   sendMsg->set_request_id(nRequestID);
   sendMsg->set_is_last(bIsLast);
-  std::string reqStr;
-  reqMsg.SerializeToString(&reqStr);
+  utils::ItpMsg msg;
+  reqMsg.SerializeToString(&msg.pbMsg);
+  msg.sessionName = "ctp_trader";
+  msg.msgName = "OnRspQryInstrument";
 
   auto &globalSem = GlobalSem::getInstance();
   auto &innerZmq = InnerZmq::getInstance();
-  innerZmq.pushTask("ctp_trader.OnRspQryInstrument", reqStr.c_str());
+  innerZmq.pushTask(msg);
   globalSem.waitSemBySemName(GlobalSem::apiRecv);
 }
 
@@ -115,12 +123,14 @@ void CtpTraderSpi::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrder
   sendMsg->set_address(reinterpret_cast<int64_t>(pInputOrderAction));
   sendMsg->set_request_id(nRequestID);
   sendMsg->set_is_last(bIsLast);
-  std::string reqStr;
-  reqMsg.SerializeToString(&reqStr);
+  utils::ItpMsg msg;
+  reqMsg.SerializeToString(&msg.pbMsg);
+  msg.sessionName = "ctp_trader";
+  msg.msgName = "OnRspOrderAction";
 
   auto &globalSem = GlobalSem::getInstance();
   auto &innerZmq = InnerZmq::getInstance();
-  innerZmq.pushTask("ctp_trader.OnRspOrderAction", reqStr.c_str());
+  innerZmq.pushTask(msg);
   globalSem.waitSemBySemName(GlobalSem::apiRecv);
 }
 
@@ -131,12 +141,14 @@ void CtpTraderSpi::OnRspQryInstrumentMarginRate(CThostFtdcInstrumentMarginRateFi
   sendMsg->set_address(reinterpret_cast<int64_t>(pInstrumentMarginRate));
   sendMsg->set_request_id(nRequestID);
   sendMsg->set_is_last(bIsLast);
-  std::string reqStr;
-  reqMsg.SerializeToString(&reqStr);
+  utils::ItpMsg msg;
+  reqMsg.SerializeToString(&msg.pbMsg);
+  msg.sessionName = "ctp_trader";
+  msg.msgName = "OnRspQryInstrumentMarginRate";
 
   auto &globalSem = GlobalSem::getInstance();
   auto &innerZmq = InnerZmq::getInstance();
-  innerZmq.pushTask("ctp_trader.OnRspQryInstrumentMarginRate", reqStr.c_str());
+  innerZmq.pushTask(msg);
   globalSem.waitSemBySemName(GlobalSem::apiRecv);
 };
 
@@ -147,47 +159,13 @@ void CtpTraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissi
   sendMsg->set_address(reinterpret_cast<int64_t>(pInstrumentCommissionRate));
   sendMsg->set_request_id(nRequestID);
   sendMsg->set_is_last(bIsLast);
-  std::string reqStr;
-  reqMsg.SerializeToString(&reqStr);
+  utils::ItpMsg msg;
+  reqMsg.SerializeToString(&msg.pbMsg);
+  msg.sessionName = "ctp_trader";
+  msg.msgName = "OnRspQryInstrumentCommissionRate";
 
   auto &globalSem = GlobalSem::getInstance();
   auto &innerZmq = InnerZmq::getInstance();
-  innerZmq.pushTask("ctp_trader.OnRspQryInstrumentCommissionRate", reqStr.c_str());
+  innerZmq.pushTask(msg);
   globalSem.waitSemBySemName(GlobalSem::apiRecv);
 };
-
-bool CtpRecer::receMsg(utils::ItpMsg &msg) {
-  bool out = true;
-  auto &innerZmqBase = InnerZmq::getInstance();
-
-  char *recContent = innerZmqBase.pullTask();
-  if (recContent != nullptr) {
-    int index = 0;
-    int segIndex = 0;
-    int length = strlen(recContent) + 1;
-    char temp[length];
-    for (int i = 0; i < length; i++) {
-      temp[index] = recContent[i];
-      if (recContent[i] == '.' && segIndex == 0) {
-        temp[index] = '\0';
-        msg.sessionName = temp;
-        index = 0;
-        segIndex++;
-      } else if (recContent[i] == ' ' && segIndex == 1) {
-        temp[index] = '\0';
-        msg.msgName = temp;
-        index = 0;
-        segIndex++;
-      } else if (recContent[i] == '\0' && segIndex == 2) {
-        msg.pbMsg = temp;
-        break;
-      } else {
-        index++;
-      }
-    }
-  } else {
-    out = false;
-  }
-
-  return out;
-}

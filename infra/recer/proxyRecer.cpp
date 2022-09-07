@@ -91,87 +91,79 @@ bool ProxyRecer::isTopicInSubTopics(std::string title) {
   return false;
 }
 
-char *ProxyRecer::queryRecv() {
-  enum { cap = 256 };
-  char buffer[cap];
-  int size = zmq_recv(query_receiver, buffer, cap - 1, 0);
-  if (size == -1) return NULL;
-  buffer[size < cap ? size : cap - 1] = '\0';
-
-  return strndup(buffer, sizeof(buffer) - 1);
-}
-
-char *ProxyRecer::orderRecv() {
-  enum { cap = 256 };
-  char buffer[cap];
-  int size = zmq_recv(order_receiver, buffer, cap - 1, 0);
-  if (size == -1) return NULL;
-  buffer[size < cap ? size : cap - 1] = '\0';
-
-  return strndup(buffer, sizeof(buffer) - 1);
-}
-
 bool ProxyRecer::receQueryMsg(utils::ItpMsg &msg) {
   bool out = true;
 
-  // INFO_LOG("prepare recv titleChar");
-  char *recContent = queryRecv();
-  if (recContent != nullptr) {
+  std::string recvString;
+  recvString.resize(256);
+
+  int msgsize = zmq_recv(query_receiver, &recvString[0], recvString.length() - 1, 0);
+  if (msgsize != -1) {
     int index = 0;
     int segIndex = 0;
-    int length = strlen(recContent) + 1;
-    char temp[length];
-    for (int i = 0; i < length; i++) {
-      temp[index] = recContent[i];
-      if (recContent[i] == '.' && segIndex == 0) {
-        temp[index] = '\0';
-        msg.sessionName = temp;
-        index = 0;
+    char temp[msgsize];
+    for (int i = 0; i < msgsize; i++) {
+      temp[index] = recvString[i];
+      if (temp[index] == '.') {
+        if (segIndex == 0) {
+          temp[index] = '\0';
+          msg.sessionName = temp;
+        } else if (segIndex == 1) {
+          temp[index] = '\0';
+          msg.msgName = temp;
+        }
         segIndex++;
-      } else if (recContent[i] == ' ' && segIndex == 1) {
-        temp[index] = '\0';
-        msg.msgName = temp;
         index = 0;
+      } else if (temp[index] == ' ') {
+        if (segIndex == 1) {
+          temp[index] = '\0';
+          msg.msgName = temp;
+        }
         segIndex++;
-      } else if (recContent[i] == '\0' && segIndex == 2) {
-        msg.pbMsg = temp;
-        break;
+        index = 0;
       } else {
         index++;
       }
     }
+    msg.pbMsg.resize(index);
+    memcpy(&msg.pbMsg[0], temp, index);
   } else {
     out = false;
   }
-
   return out;
 }
 
 bool ProxyRecer::receOrderMsg(utils::ItpMsg &msg) {
   bool out = true;
 
-  // INFO_LOG("prepare recv titleChar");
-  char *recContent = orderRecv();
-  if (recContent != nullptr) {
+  std::string recvString;
+  recvString.resize(256);
+
+  int msgsize = zmq_recv(order_receiver, &recvString[0], recvString.length() - 1, 0);
+  if (msgsize != -1) {
     int index = 0;
     int segIndex = 0;
-    int length = strlen(recContent) + 1;
-    char temp[length];
-    for (int i = 0; i < length; i++) {
-      temp[index] = recContent[i];
-      if (recContent[i] == '.' && segIndex == 0) {
-        temp[index] = '\0';
-        msg.sessionName = temp;
-        index = 0;
+
+    char temp[msgsize];
+    for (int i = 0; i < msgsize; i++) {
+      temp[index] = recvString[i];
+      if (temp[index] == '.') {
+        if (segIndex == 0) {
+          temp[index] = '\0';
+          msg.sessionName = temp;
+        } else if (segIndex == 1) {
+          temp[index] = '\0';
+          msg.msgName = temp;
+        }
         segIndex++;
-      } else if (recContent[i] == ' ' && segIndex == 1) {
-        temp[index] = '\0';
-        msg.msgName = temp;
         index = 0;
+      } else if (temp[index] == ' ') {
+        if (segIndex == 1) {
+          temp[index] = '\0';
+          msg.msgName = temp;
+        }
         segIndex++;
-      } else if (recContent[i] == '\0' && segIndex == 2) {
-        msg.pbMsg = temp;
-        break;
+        index = 0;
       } else {
         index++;
       }

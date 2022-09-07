@@ -26,8 +26,6 @@ struct ProxyRecer {
  private:
   bool initQueryReceiver(void);
   bool initOrderReceiver(void);
-  char *queryRecv();
-  char *orderRecv();
   void *query_receiver{nullptr};
   void *order_receiver{nullptr};
 };

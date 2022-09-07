@@ -23,11 +23,11 @@ int main(int argc, char *agrv[]) {
   std::string traderLogPath = jsonCfg.getConfig("trader", "LogPath").get<std::string>();
   utils::creatFolder(traderLogPath);
   LOG_INIT(traderLogPath.c_str(), "traderlog", 6);
-  INFO_LOG("TRADE LOG PATH is %s", traderLogPath.c_str());
+  INFO_LOG("trade log path is %s", traderLogPath.c_str());
 
   // 打印版本信息
   std::string compile_time = utils::GetCompileTime();
-  jsonCfg.writeConfig("trader", "version", compile_time);
+  jsonCfg.writeConfig("trader", "CompileTime", compile_time);
   INFO_LOG("program last build at %s.", compile_time.c_str());
 
   INFO_LOG("begin init traderSer");

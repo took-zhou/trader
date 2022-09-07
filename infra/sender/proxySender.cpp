@@ -8,7 +8,8 @@
 #include "trader/infra/sender/proxySender.h"
 #include "trader/infra/zmqBase.h"
 
-bool ProxySender::send(const char *head, const char *msg) {
+bool ProxySender::send(utils::ItpMsg &msg) {
   auto &zmqBase = ZmqBase::getInstance();
-  return zmqBase.SendMsg(head, msg);
+  std::string outstring = msg.sessionName + "." + msg.msgName + " " + msg.pbMsg;
+  return zmqBase.SendMsg(outstring);
 }

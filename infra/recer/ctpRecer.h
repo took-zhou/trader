@@ -10,7 +10,6 @@
 
 #include "common/extern/ctp/inc/ThostFtdcTraderApi.h"
 #include "common/self/utils.h"
-#include "trader/infra/recer/recerSpi.h"
 
 class CtpTraderSpi : public CThostFtdcTraderSpi {
  public:
@@ -456,12 +455,6 @@ class CtpTraderSpi : public CThostFtdcTraderSpi {
 
   int sessionId = 0;
   int frontId = 0;
-};
-
-struct CtpRecer : RecerSpi {
- public:
-  CtpRecer(){};
-  bool receMsg(utils::ItpMsg &msg);
 };
 
 #endif /* WORKSPACE_TRADER_INFRA_CTPRECER_H_ */

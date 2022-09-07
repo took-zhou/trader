@@ -27,12 +27,14 @@ void XtpTraderSpi::OnOrderEvent(XTPOrderInfo *order_info, XTPRI *error_info, uin
   ipc::message reqMsg;
   auto sendMsg = reqMsg.mutable_itp_msg();
   sendMsg->set_address(reinterpret_cast<int64_t>(order_info));
-  std::string reqStr;
-  reqMsg.SerializeToString(&reqStr);
+  utils::ItpMsg msg;
+  reqMsg.SerializeToString(&msg.pbMsg);
+  msg.sessionName = "xtp_trader";
+  msg.msgName = "OnOrderEvent";
 
   auto &globalSem = GlobalSem::getInstance();
   auto &innerZmq = InnerZmq::getInstance();
-  innerZmq.pushTask("xtp_trader.OnOrderEvent", reqStr.c_str());
+  innerZmq.pushTask(msg);
   globalSem.waitSemBySemName(GlobalSem::apiRecv);
 }
 
@@ -40,12 +42,14 @@ void XtpTraderSpi::OnTradeEvent(XTPTradeReport *trade_info, uint64_t session_id)
   ipc::message reqMsg;
   auto sendMsg = reqMsg.mutable_itp_msg();
   sendMsg->set_address(reinterpret_cast<int64_t>(trade_info));
-  std::string reqStr;
-  reqMsg.SerializeToString(&reqStr);
+  utils::ItpMsg msg;
+  reqMsg.SerializeToString(&msg.pbMsg);
+  msg.sessionName = "xtp_trader";
+  msg.msgName = "OnTradeEvent";
 
   auto &globalSem = GlobalSem::getInstance();
   auto &innerZmq = InnerZmq::getInstance();
-  innerZmq.pushTask("xtp_trader.OnTradeEvent", reqStr.c_str());
+  innerZmq.pushTask(msg);
   globalSem.waitSemBySemName(GlobalSem::apiRecv);
 }
 
@@ -53,12 +57,14 @@ void XtpTraderSpi::OnCancelOrderError(XTPOrderCancelInfo *cancel_info, XTPRI *er
   ipc::message reqMsg;
   auto sendMsg = reqMsg.mutable_itp_msg();
   sendMsg->set_address(reinterpret_cast<int64_t>(cancel_info));
-  std::string reqStr;
-  reqMsg.SerializeToString(&reqStr);
+  utils::ItpMsg msg;
+  reqMsg.SerializeToString(&msg.pbMsg);
+  msg.sessionName = "xtp_trader";
+  msg.msgName = "XTPOrderCancelInfo";
 
   auto &globalSem = GlobalSem::getInstance();
   auto &innerZmq = InnerZmq::getInstance();
-  innerZmq.pushTask("xtp_trader.XTPOrderCancelInfo", reqStr.c_str());
+  innerZmq.pushTask(msg);
   globalSem.waitSemBySemName(GlobalSem::apiRecv);
 }
 
@@ -111,39 +117,3 @@ void XtpTraderSpi::OnQueryCreditTickerAssignInfo(XTPClientQueryCrdPositionStkInf
 
 void XtpTraderSpi::OnQueryCreditExcessStock(XTPClientQueryCrdSurplusStkRspInfo *stock_info, XTPRI *error_info, int request_id,
                                             uint64_t session_id) {}
-
-bool XtpRecer::receMsg(utils::ItpMsg &msg) {
-  bool out = true;
-  auto &innerZmqBase = InnerZmq::getInstance();
-
-  char *recContent = innerZmqBase.pullTask();
-  if (recContent != nullptr) {
-    int index = 0;
-    int segIndex = 0;
-    int length = strlen(recContent) + 1;
-    char temp[length];
-    for (int i = 0; i < length; i++) {
-      temp[index] = recContent[i];
-      if (recContent[i] == '.' && segIndex == 0) {
-        temp[index] = '\0';
-        msg.sessionName = temp;
-        index = 0;
-        segIndex++;
-      } else if (recContent[i] == ' ' && segIndex == 1) {
-        temp[index] = '\0';
-        msg.msgName = temp;
-        index = 0;
-        segIndex++;
-      } else if (recContent[i] == '\0' && segIndex == 2) {
-        msg.pbMsg = temp;
-        break;
-      } else {
-        index++;
-      }
-    }
-  } else {
-    out = false;
-  }
-
-  return out;
-}

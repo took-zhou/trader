@@ -75,10 +75,12 @@ void MarketEvent::pubQryInstrumentRsp(CThostFtdcInstrumentField *field, bool res
     qryInstruments->set_finish_flag(isFinish);
   }
 
-  std::string strRsp = rsp.SerializeAsString();
-  std::string head = "market_trader.QryInstrumentRsp";
+  utils::ItpMsg msg;
+  rsp.SerializeToString(&msg.pbMsg);
+  msg.sessionName = "market_trader";
+  msg.msgName = "QryInstrumentRsp";
   auto &recerSender = RecerSender::getInstance();
-  bool sendRes = recerSender.ROLE(Sender).ROLE(ProxySender).send(head.c_str(), strRsp.c_str());
+  bool sendRes = recerSender.ROLE(Sender).ROLE(ProxySender).send(msg);
 
   if (sendRes == false) {
     ERROR_LOG("send OrderInsertRsp error");

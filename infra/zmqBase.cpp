@@ -50,20 +50,16 @@ void ZmqBase::SubscribeTopic(const char *topicStr) { zmq_setsockopt(receiver, ZM
 
 void ZmqBase::unSubscribeTopic(const char *topicStr) { zmq_setsockopt(receiver, ZMQ_UNSUBSCRIBE, topicStr, strlen(topicStr)); }
 
-int ZmqBase::SendMsg(const char *head, const char *msg) {
-  std::stringstream tmpStr;
-  tmpStr << head << " " << msg;
-
-  int size = zmq_send(publisher, const_cast<char *>(tmpStr.str().c_str()), strlen(const_cast<char *>(tmpStr.str().c_str())), 0);
+int ZmqBase::SendMsg(const std::string &msg) {
+  int size = zmq_send(publisher, const_cast<char *>(msg.c_str()), msg.length(), 0);
   return size;
 }
 
-char *ZmqBase::RecvMsg() {
-  enum { cap = 256 };
-  char buffer[cap];
-  int size = zmq_recv(receiver, buffer, cap - 1, 0);
-  if (size == -1) return NULL;
-  buffer[size < cap ? size : cap - 1] = '\0';
+int ZmqBase::RecvMsg(std::string &msg) {
+  int size = zmq_recv(receiver, &msg, msg.length() - 1, 0);
+  if (size != -1) {
+    msg[size < msg.length() ? size : msg.length() - 1] = '\0';
+  }
 
-  return strndup(buffer, sizeof(buffer) - 1);
+  return size;
 }

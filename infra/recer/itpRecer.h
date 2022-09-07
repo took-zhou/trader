@@ -1,7 +1,7 @@
 #ifndef WORKSPACE_TRADER_INFRA_ITPRECER_H_
 #define WORKSPACE_TRADER_INFRA_ITPRECER_H_
 
-#include "trader/infra/recer/recerSpi.h"
+#include "common/self/utils.h"
 
 struct ItpRecer {
  public:
@@ -14,9 +14,6 @@ struct ItpRecer {
   }
 
   bool receMsg(utils::ItpMsg &msg);
-
- private:
-  RecerSpi *recerSpi = nullptr;
 };
 
 #endif

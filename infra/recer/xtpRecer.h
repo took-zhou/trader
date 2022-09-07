@@ -3,7 +3,6 @@
 
 #include "common/extern/xtp/inc/xtp_trader_api.h"
 #include "common/self/utils.h"
-#include "trader/infra/recer/recerSpi.h"
 
 class XtpTraderSpi : public XTP::API::TraderSpi {
  public:
@@ -71,12 +70,6 @@ class XtpTraderSpi : public XTP::API::TraderSpi {
   void OnRspUserLogin(void);
   void OnRspUserLogout(void);
   bool frontDisconnected = false;
-};
-
-struct XtpRecer : RecerSpi {
- public:
-  XtpRecer(){};
-  bool receMsg(utils::ItpMsg &msg);
 };
 
 #endif /* WORKSPACE_TRADER_INFRA_CTPRECER_H_ */
