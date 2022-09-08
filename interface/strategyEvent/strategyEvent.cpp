@@ -44,6 +44,9 @@ void StrategyEvent::regMsgFun() {
 }
 
 void StrategyEvent::OrderCancelReqHandle(utils::ItpMsg &msg) {
+#ifdef BENCH_TEST
+  ScopedTimer t("OrderCancelReqHandle");
+#endif
   strategy_trader::message reqMsg;
   reqMsg.ParseFromString(msg.pbMsg);
 
@@ -68,7 +71,7 @@ void StrategyEvent::AccountStatusReqHandle(utils::ItpMsg &msg) {
   strategy_trader::message reqMsg;
   reqMsg.ParseFromString(msg.pbMsg);
   auto reqInfo = reqMsg.account_status_req();
-  auto identify = reqInfo.process_random_id();
+  auto prid = reqInfo.process_random_id();
   auto &traderSer = TraderSevice::getInstance();
 
   if (traderSer.login_state != LOGIN_STATE) {
@@ -77,7 +80,7 @@ void StrategyEvent::AccountStatusReqHandle(utils::ItpMsg &msg) {
   }
 
   auto &recerSender = RecerSender::getInstance();
-  recerSender.ROLE(Sender).ROLE(ItpSender).ReqAvailableFunds(utils::stringToInt(identify));
+  recerSender.ROLE(Sender).ROLE(ItpSender).ReqAvailableFunds(stoi(prid));
 }
 
 void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {
@@ -101,9 +104,9 @@ void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {
   content->instrumentID = orderInsertReq.order().instrument();
   content->total_volume = orderInsertReq.order().volume_total_original();
   content->left_volume = orderInsertReq.order().volume_total_original();
-  content->limit_price = utils::stringToFloat(orderInsertReq.order().limitprice());
+  content->limit_price = orderInsertReq.order().limitprice();
   content->direction = orderInsertReq.order().direction();
-  content->comboffset = utils::stringToInt(orderInsertReq.order().comb_offset_flag());
+  content->comboffset = orderInsertReq.order().comb_offset_flag();
   content->orderType = orderInsertReq.order().order_type();
   content->userId = orderInsertReq.user();
   content->orderRef = orderInsertReq.identity();
@@ -133,7 +136,7 @@ void StrategyEvent::TransactionCostReqHandle(utils::ItpMsg &msg) {
   ins_exch.exch = reqMsg.transaction_cost_req().instrument_info().exchange_id();
 
   auto &recerSender = RecerSender::getInstance();
-  recerSender.ROLE(Sender).ROLE(ItpSender).ReqTransactionCost(ins_exch, utils::stringToInt(prid));
+  recerSender.ROLE(Sender).ROLE(ItpSender).ReqTransactionCost(ins_exch, stoi(prid));
 }
 
 void StrategyEvent::InstrumentReqHandle(utils::ItpMsg &msg) {
@@ -151,5 +154,5 @@ void StrategyEvent::InstrumentReqHandle(utils::ItpMsg &msg) {
   ins_exch.exch = reqMsg.instrument_req().instrument_info().exchange_id();
 
   auto &recerSender = RecerSender::getInstance();
-  recerSender.ROLE(Sender).ROLE(ItpSender).ReqInstrumentInfo(ins_exch, utils::stringToInt(prid));
+  recerSender.ROLE(Sender).ROLE(ItpSender).ReqInstrumentInfo(ins_exch, stoi(prid));
 }

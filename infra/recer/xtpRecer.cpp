@@ -12,7 +12,10 @@
 #include "common/self/utils.h"
 #include "trader/infra/innerZmq.h"
 
-void XtpTraderSpi::OnError(XTPRI *error_info) { ; }
+void XtpTraderSpi::OnError(XTPRI *error_info) {
+  bool bResult = ((error_info) && (error_info->error_id != 0));
+  if (bResult) ERROR_LOG("--->>> ErrorID= %d , ErrorMsg= %s.", error_info->error_id, error_info->error_msg);
+}
 
 void XtpTraderSpi::OnDisconnected(uint64_t session_id, int reason) {
   ERROR_LOG("OnFrontDisconnected, ErrorCode:%#x", reason);

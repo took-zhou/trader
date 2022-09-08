@@ -3,6 +3,7 @@
 #include <thread>
 #include "common/extern/log/log.h"
 #include "common/self/fileUtil.h"
+#include "common/self/protobuf/strategy-trader.pb.h"
 #include "common/self/semaphorePart.h"
 #include "common/self/utils.h"
 #include "trader/infra/recer/xtpRecer.h"
@@ -23,7 +24,7 @@ bool XtpSender::ReqUserLogin() {
 
     auto protocol_ip_port = utils::splitString(frontaddr, ":");
     std::string ip = utils::splitString(protocol_ip_port[1], "//")[1];
-    int port = utils::stringToInt(protocol_ip_port[2]);
+    int port = stoi(protocol_ip_port[2]);
     XTP_PROTOCOL_TYPE protoc = XTP_PROTOCOL_TCP;
     if (protocol_ip_port[0] == "tcp") {
       protoc = XTP_PROTOCOL_TCP;
@@ -69,23 +70,30 @@ bool XtpSender::InsertOrder(utils::OrderContent &content) {
   auto pos = XtpTraderInfoMap.find(content.userId);
   if (pos != XtpTraderInfoMap.end()) {
     XTPOrderInsertInfo orderinfo;
-    orderinfo.order_client_id = pos->second.sessionId;
+    orderinfo.order_client_id = stoi(content.orderRef);
     strcpy(orderinfo.ticker, content.instrumentID.c_str());
     if (content.exchangeId == "SHSE") {
       orderinfo.market = XTP_MKT_SH_A;
     } else if (content.exchangeId == "SZSE") {
       orderinfo.market = XTP_MKT_SZ_A;
     }
-
     orderinfo.price = content.limit_price;
     orderinfo.quantity = content.total_volume;
-    orderinfo.side = content.comboffset;
+
+    if (content.comboffset == strategy_trader::OPEN) {
+      orderinfo.side = XTP_SIDE_BUY;
+    } else if (content.comboffset == strategy_trader::CLOSE) {
+      orderinfo.side = XTP_SIDE_SELL;
+    } else if (content.comboffset == strategy_trader::CLOSE_YESTERDAY) {
+      orderinfo.side = XTP_SIDE_SELL;
+    } else if (content.comboffset == strategy_trader::CLOSE_TODAY) {
+      orderinfo.side = XTP_SIDE_SELL;
+    }
+
     orderinfo.price_type = (XTP_PRICE_TYPE)1;
     orderinfo.business_type = (XTP_BUSINESS_TYPE)0;
     orderinfo.position_effect = (XTP_POSITION_EFFECT_TYPE)0;
-
-    int64_t xtp_id = pos->second.traderApi->InsertOrder(&orderinfo, pos->second.sessionId);
-    content.orderRef = utils::unsignedlongintToString(xtp_id);
+    content.xtpOrderId = pos->second.traderApi->InsertOrder(&orderinfo, pos->second.sessionId);
   }
   return ret;
 }
@@ -94,7 +102,7 @@ bool XtpSender::CancelOrder(utils::OrderContent &content) {
   bool ret = true;
   auto pos = XtpTraderInfoMap.find(content.userId);
   if (pos != XtpTraderInfoMap.end()) {
-    pos->second.traderApi->CancelOrder(utils::stringToInt(content.orderRef), pos->second.sessionId);
+    pos->second.traderApi->CancelOrder(content.xtpOrderId, pos->second.sessionId);
   }
   return ret;
 }
@@ -144,9 +152,22 @@ bool XtpSender::release() {
   }
 }
 
-bool XtpSender::ReqAvailableFunds(const int requestId) {}
-bool XtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch, const int requestId) {}
-bool XtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch, const int requestId) {}
+bool XtpSender::ReqAvailableFunds(const int requestId) {
+  bool ret = true;
+  for (auto &item : XtpTraderInfoMap) {
+    ret = item.second.traderApi->QueryAsset(item.second.sessionId, requestId);
+  }
+  return ret;
+}
+
+bool XtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch, const int requestId) {
+  INFO_LOG("not support.");
+  return true;
+}
+bool XtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch, const int requestId) {
+  INFO_LOG("not support.");
+  return true;
+}
 
 bool XtpSender::LossConnection() {
   bool ret = false;

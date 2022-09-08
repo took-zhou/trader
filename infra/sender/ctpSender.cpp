@@ -12,6 +12,7 @@
 #include "common/extern/json/json.h"
 #include "common/extern/log/log.h"
 #include "common/self/fileUtil.h"
+#include "common/self/protobuf/strategy-trader.pb.h"
 #include "common/self/semaphorePart.h"
 #include "common/self/utils.h"
 #include "trader/infra/recer/ctpRecer.h"
@@ -92,22 +93,20 @@ bool CtpSender::ReqUserLogout() {
 
 bool CtpSender::InsertOrder(utils::OrderContent &content) {
   bool ret = true;
+  auto &jsonCfg = utils::JsonConfig::getInstance();
   auto pos = CtpTraderInfoMap.find(content.userId);
   if (pos != CtpTraderInfoMap.end()) {
-    CThostFtdcInputOrderField order;
-    buildorder(content, order);
-
-    auto &jsonCfg = utils::JsonConfig::getInstance();
+    buildorder(content, defaultOrderField);
     const std::string brokerId = jsonCfg.getDeepConfig("users", pos->first, "BrokerID").get<std::string>();
     const std::string investorId = jsonCfg.getDeepConfig("users", pos->first, "InvestorID").get<std::string>();
     const std::string userId = jsonCfg.getDeepConfig("users", pos->first, "UserID").get<std::string>();
 
-    strcpy(order.BrokerID, brokerId.c_str());
-    strcpy(order.InvestorID, investorId.c_str());
-    strcpy(order.UserID, userId.c_str());
+    strcpy(defaultOrderField.BrokerID, brokerId.c_str());
+    strcpy(defaultOrderField.InvestorID, investorId.c_str());
+    strcpy(defaultOrderField.UserID, userId.c_str());
 
-    int result = pos->second.traderApi->ReqOrderInsert(&order, nRequestID++);
-    INFO_LOG("ReqOrderInsert send result is [%d], orderRef is[%s]", result, order.OrderRef);
+    int result = pos->second.traderApi->ReqOrderInsert(&defaultOrderField, nRequestID++);
+    INFO_LOG("ReqOrderInsert send result is [%d], orderRef is[%s]", result, defaultOrderField.OrderRef);
   }
 
   return ret;
@@ -115,6 +114,7 @@ bool CtpSender::InsertOrder(utils::OrderContent &content) {
 
 bool CtpSender::CancelOrder(utils::OrderContent &content) {
   bool ret = true;
+  auto &jsonCfg = utils::JsonConfig::getInstance();
   auto pos = CtpTraderInfoMap.find(content.userId);
   if (pos != CtpTraderInfoMap.end()) {
     CThostFtdcInputOrderActionField orderActionReq{0};
@@ -122,8 +122,10 @@ bool CtpSender::CancelOrder(utils::OrderContent &content) {
     orderActionReq.FrontID = pos->second.frontId;
     orderActionReq.SessionID = pos->second.sessionId;
     strcpy(orderActionReq.InstrumentID, content.instrumentID.c_str());
-    strcpy(orderActionReq.InvestorID, content.userId.c_str());
-    strcpy(orderActionReq.UserID, content.userId.c_str());
+    const std::string investorId = jsonCfg.getDeepConfig("users", pos->first, "InvestorID").get<std::string>();
+    const std::string userId = jsonCfg.getDeepConfig("users", pos->first, "UserID").get<std::string>();
+    strcpy(orderActionReq.InvestorID, investorId.c_str());
+    strcpy(orderActionReq.UserID, userId.c_str());
     orderActionReq.ActionFlag = THOST_FTDC_AF_Delete;
     int result = pos->second.traderApi->ReqOrderAction(&orderActionReq, nRequestID++);
     INFO_LOG("ReqOrderAction send result is [%d]", result);
@@ -132,9 +134,59 @@ bool CtpSender::CancelOrder(utils::OrderContent &content) {
   return ret;
 }
 
-bool CtpSender::ReqAvailableFunds(const int requestId) {}
-bool CtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch, const int requestId) {}
-bool CtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch, const int requestId) {}
+bool CtpSender::ReqAvailableFunds(const int requestId) {
+  auto &jsonCfg = utils::JsonConfig::getInstance();
+
+  for (auto &item : CtpTraderInfoMap) {
+    CThostFtdcQryTradingAccountField requestMsg{0};
+    const std::string brokerID = jsonCfg.getDeepConfig("users", item.first, "BrokerID").get<std::string>();
+    const std::string investorID = jsonCfg.getDeepConfig("users", item.first, "InvestorID").get<std::string>();
+    strcpy(requestMsg.InvestorID, investorID.c_str());
+    strcpy(requestMsg.BrokerID, brokerID.c_str());
+    strcpy(requestMsg.CurrencyID, "CNY");
+
+    int result = item.second.traderApi->ReqQryTradingAccount(&requestMsg, requestId);
+    if (requestId != 0) {
+      INFO_LOG("ReqQryTradingAccount send result is [%d]", result);
+    }
+  }
+}
+
+bool CtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch, const int requestId) {
+  for (auto &item : CtpTraderInfoMap) {
+    CThostFtdcQryInstrumentField requestMsg{0};
+    std::strcpy(requestMsg.ExchangeID, ins_exch.exch.c_str());
+    std::strcpy(requestMsg.InstrumentID, ins_exch.ins.c_str());
+
+    int result = item.second.traderApi->ReqQryInstrument(&requestMsg, requestId);
+    INFO_LOG("ReqQryInstrument send result is [%d]", result);
+  }
+}
+
+bool CtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch, const int requestId) {
+  auto &jsonCfg = utils::JsonConfig::getInstance();
+  for (auto &item : CtpTraderInfoMap) {
+    CThostFtdcQryInstrumentMarginRateField marginRateField{0};
+    const std::string investorID = jsonCfg.getDeepConfig("users", item.first, "InvestorID").get<std::string>();
+    const std::string brokerID = jsonCfg.getDeepConfig("users", item.first, "BrokerID").get<std::string>();
+    strcpy(marginRateField.BrokerID, brokerID.c_str());
+    strcpy(marginRateField.InvestorID, investorID.c_str());
+    strcpy(marginRateField.ExchangeID, ins_exch.exch.c_str());
+    strcpy(marginRateField.InstrumentID, ins_exch.ins.c_str());
+    marginRateField.HedgeFlag = THOST_FTDC_HF_Speculation;
+    int result = item.second.traderApi->ReqQryInstrumentMarginRate(&marginRateField, requestId);
+    INFO_LOG("ReqQryInstrumentMarginRate send result is [%d]", result);
+
+    std::this_thread::sleep_for(1s);
+    CThostFtdcQryInstrumentCommissionRateField commissonRateField{0};
+    strcpy(commissonRateField.BrokerID, brokerID.c_str());
+    strcpy(commissonRateField.InvestorID, investorID.c_str());
+    strcpy(commissonRateField.ExchangeID, ins_exch.exch.c_str());
+    strcpy(commissonRateField.InstrumentID, ins_exch.ins.c_str());
+    result = item.second.traderApi->ReqQryInstrumentCommissionRate(&commissonRateField, requestId);
+    INFO_LOG("ReqQryInstrumentCommissionRate send result is [%d]", result);
+  }
+}
 
 bool CtpSender::init() {
   bool out = true;
@@ -258,34 +310,45 @@ bool CtpSender::release() {
 }
 
 bool CtpSender::buildorder(utils::OrderContent &content, CThostFtdcInputOrderField &order) {
-  memcpy(&order, &defaultOrderField, sizeof(CThostFtdcInputOrderField));
-
   strcpy(order.OrderRef, content.orderRef.c_str());
   strcpy(order.InstrumentID, content.instrumentID.c_str());
   strcpy(order.ExchangeID, content.exchangeId.c_str());
-  order.Direction = content.direction;
   order.LimitPrice = content.limit_price;
   order.VolumeTotalOriginal = content.total_volume;
 
-  order.CombOffsetFlag[0] = content.comboffset;
+  if (content.comboffset == strategy_trader::OPEN) {
+    order.CombOffsetFlag[0] = THOST_FTDC_OF_Open;
+  } else if (content.comboffset == strategy_trader::CLOSE) {
+    order.CombOffsetFlag[0] = THOST_FTDC_OF_Close;
+  } else if (content.comboffset == strategy_trader::CLOSE_YESTERDAY) {
+    order.CombOffsetFlag[0] = THOST_FTDC_OF_CloseYesterday;
+  } else if (content.comboffset == strategy_trader::CLOSE_TODAY) {
+    order.CombOffsetFlag[0] = THOST_FTDC_OFEN_CloseToday;
+  }
 
-  if (content.orderType == "limit_LIMIT") {
+  if (content.direction == strategy_trader::BUY) {
+    order.Direction = '0';
+  } else if (content.direction == strategy_trader::SELL) {
+    order.Direction = '1';
+  }
+
+  if (content.orderType == strategy_trader::limit_LIMIT) {
     order.OrderPriceType = THOST_FTDC_OPT_LimitPrice;
     order.TimeCondition = THOST_FTDC_TC_GFD;
     order.VolumeCondition = THOST_FTDC_VC_AV;
-  } else if (content.orderType == "Limit_FAK") {
+  } else if (content.orderType == strategy_trader::Limit_FAK) {
     order.OrderPriceType = THOST_FTDC_OPT_LimitPrice;
     order.TimeCondition = THOST_FTDC_TC_IOC;
     order.VolumeCondition = THOST_FTDC_VC_AV;
-  } else if (content.orderType == "limit_FOK") {
+  } else if (content.orderType == strategy_trader::limit_FOK) {
     order.OrderPriceType = THOST_FTDC_OPT_LimitPrice;
     order.TimeCondition = THOST_FTDC_TC_IOC;
     order.VolumeCondition = THOST_FTDC_VC_CV;
-  } else if (content.orderType == "AnyPrice_Fok") {
+  } else if (content.orderType == strategy_trader::AnyPrice_Fok) {
     order.OrderPriceType = THOST_FTDC_OPT_AnyPrice;
     order.TimeCondition = THOST_FTDC_TC_GFD;
     order.VolumeCondition = THOST_FTDC_VC_AV;
-  } else if (content.orderType == "AnyPrice_Fak") {
+  } else if (content.orderType == strategy_trader::AnyPrice_Fak) {
     order.OrderPriceType = THOST_FTDC_OPT_AnyPrice;
     order.TimeCondition = THOST_FTDC_TC_IOC;
     order.VolumeCondition = THOST_FTDC_VC_AV;

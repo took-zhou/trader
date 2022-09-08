@@ -57,7 +57,7 @@ void MarketEvent::QryInstrumentReqHandle(utils::ItpMsg &msg) {
   ins_exch.ins = "";
 
   auto &recerSender = RecerSender::getInstance();
-  recerSender.ROLE(Sender).ROLE(ItpSender).ReqInstrumentInfo(ins_exch, utils::stringToInt(req.identity()));
+  recerSender.ROLE(Sender).ROLE(ItpSender).ReqInstrumentInfo(ins_exch, stoi(req.identity()));
 }
 
 void MarketEvent::pubQryInstrumentRsp(CThostFtdcInstrumentField *field, bool result, bool isFinish) {
@@ -70,7 +70,7 @@ void MarketEvent::pubQryInstrumentRsp(CThostFtdcInstrumentField *field, bool res
   } else {
     qryInstruments->set_instrument_id(field->InstrumentID);
     qryInstruments->set_exchange_id(field->ExchangeID);
-    qryInstruments->set_price_tick(utils::doubleToStringConvert(field->PriceTick).c_str());
+    qryInstruments->set_price_tick(field->PriceTick);
     qryInstruments->set_result(market_trader::Result::success);
     qryInstruments->set_finish_flag(isFinish);
   }

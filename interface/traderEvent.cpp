@@ -36,11 +36,12 @@ bool TraderEvent::run() {
   auto orderRecRun = [&]() {
     utils::ItpMsg msg;
     while (1) {
-      if (recerSender.ROLE(Recer).ROLE(ProxyRecer).receQueryMsg(msg) == false) {
-        ERROR_LOG(" invalid msg, session is [%s], msgName is [%s]", msg.sessionName.c_str(), msg.msgName.c_str());
+      if (recerSender.ROLE(Recer).ROLE(ProxyRecer).receOrderMsg(msg) == false) {
+        ERROR_LOG("invalid msg, session is [%s], msgName is [%s]", msg.sessionName.c_str(), msg.msgName.c_str());
         continue;
       }
 
+      INFO_LOG("recv msg, session is[%s], msgName is[%s] ", msg.sessionName.c_str(), msg.msgName.c_str());
       if (sessionFuncMap.find(msg.sessionName) != sessionFuncMap.end()) {
         sessionFuncMap[msg.sessionName](msg);
       } else {
@@ -54,7 +55,7 @@ bool TraderEvent::run() {
   auto queryRecRun = [&]() {
     utils::ItpMsg msg;
     while (1) {
-      if (recerSender.ROLE(Recer).ROLE(ProxyRecer).receOrderMsg(msg) == false) {
+      if (recerSender.ROLE(Recer).ROLE(ProxyRecer).receQueryMsg(msg) == false) {
         ERROR_LOG(" invalid msg, session is [%s], msgName is [%s]", msg.sessionName.c_str(), msg.msgName.c_str());
         continue;
       }

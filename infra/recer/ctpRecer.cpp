@@ -34,6 +34,8 @@ void CtpTraderSpi::OnRspAuthenticate(CThostFtdcRspAuthenticateField *pRspAuthent
 
 void CtpTraderSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID,
                                   bool bIsLast) {
+  sessionId = pRspUserLogin->SessionID;
+  frontId = pRspUserLogin->FrontID;
   auto &globalSem = GlobalSem::getInstance();
   globalSem.postSemBySemName(GlobalSem::loginLogout);
   frontDisconnected = false;

@@ -56,37 +56,38 @@ void XtpEvent::OnOrderEventHandle(utils::ItpMsg &msg) {
   auto orderInfo = reinterpret_cast<XTPOrderInfo *>(itp_msg.address());
   auto &traderSer = TraderSevice::getInstance();
   auto &orderManage = traderSer.ROLE(OrderManage);
-  auto content = orderManage.getOrder(utils::intToString(orderInfo->order_client_id));
+  auto content = orderManage.getOrder(std::to_string(orderInfo->order_client_id));
   if (content != nullptr) {
-    if (orderInfo->order_status == XTP_ORDER_STATUS_CANCELED) {
+    if (orderInfo->order_status == XTP_ORDER_STATUS_CANCELED || orderInfo->order_status == XTP_ORDER_STATUS_REJECTED ||
+        orderInfo->order_status == XTP_ORDER_STATUS_PARTTRADEDNOTQUEUEING) {
 #ifdef BENCH_TEST
       ScopedTimer t("OnRtnOrderHandle");
 #endif
-      strategy_trader::message rspMsg;
-      auto *orderCancelRsp = rspMsg.mutable_order_cancel_rsp();
-      orderCancelRsp->set_identity(utils::intToString(orderInfo->order_client_id));
-      orderCancelRsp->set_result(strategy_trader::Result::success);
-
-      utils::ItpMsg msg;
-      rspMsg.SerializeToString(&msg.pbMsg);
-      msg.sessionName = "strategy_trader";
-      msg.msgName = "OrderCancelRsp." + utils::intToString(itp_msg.request_id());
       auto &recerSender = RecerSender::getInstance();
-      recerSender.ROLE(Sender).ROLE(ProxySender).send(msg);
+      if (content->activeCancleIndication) {
+        strategy_trader::message rspMsg;
+        auto *orderCancelRsp = rspMsg.mutable_order_cancel_rsp();
+        orderCancelRsp->set_identity(std::to_string(orderInfo->order_client_id));
+        orderCancelRsp->set_result(strategy_trader::Result::success);
 
+        utils::ItpMsg msg;
+        rspMsg.SerializeToString(&msg.pbMsg);
+        msg.sessionName = "strategy_trader";
+        msg.msgName = "OrderCancelRsp." + content->prid;
+        recerSender.ROLE(Sender).ROLE(ProxySender).send(msg);
+      }
       strategy_trader::message rsp;
       auto *insertRsp = rsp.mutable_order_insert_rsp();
       insertRsp->set_identity(content->orderRef);
       insertRsp->set_result(strategy_trader::Result::failed);
       insertRsp->set_reason(strategy_trader::FailedReason::Order_Cancel);
-
       rsp.SerializeToString(&msg.pbMsg);
       msg.sessionName = "strategy_trader";
-      msg.msgName = "OrderInsertRsp." + utils::intToString(itp_msg.request_id());
+      msg.msgName = "OrderInsertRsp." + content->prid;
       recerSender.ROLE(Sender).ROLE(ProxySender).send(msg);
-      INFO_LOG("the order be canceled, orderRef[%d],prid[%d]", orderInfo->order_client_id, itp_msg.request_id());
+      INFO_LOG("the order be canceled, orderRef: %d, prid: %s.", orderInfo->order_client_id, content->prid.c_str());
 
-      orderManage.delOrder(utils::intToString(orderInfo->order_client_id));
+      orderManage.delOrder(std::to_string(orderInfo->order_client_id));
     }
   }
 }
@@ -103,27 +104,27 @@ void XtpEvent::OnTradeEventHandle(utils::ItpMsg &msg) {
 #ifdef BENCH_TEST
   ScopedTimer t("OnRtnTradeHandle");
 #endif
-  auto content = orderManage.getOrder(utils::intToString(tradeReport->order_client_id));
+  auto content = orderManage.getOrder(std::to_string(tradeReport->order_client_id));
   if (content != nullptr) {
     content->tradedOrder.price = tradeReport->price;
     content->tradedOrder.volume = tradeReport->quantity;
-    content->tradedOrder.direction = utils::charToString(tradeReport->side);
+    content->tradedOrder.direction = std::to_string(tradeReport->side);
     content->tradedOrder.date = tradeReport->trade_time;
     content->tradedOrder.time = tradeReport->trade_time;
 
     strategy_trader::message rsp;
     auto *insertRsp = rsp.mutable_order_insert_rsp();
-    insertRsp->set_identity(utils::intToString(tradeReport->order_client_id));
+    insertRsp->set_identity(std::to_string(tradeReport->order_client_id));
     insertRsp->set_result(strategy_trader::Result::success);
 
     auto *succInfo = insertRsp->mutable_info();
-    succInfo->set_orderprice(utils::doubleToStringConvert(content->tradedOrder.price));
+    succInfo->set_orderprice(content->tradedOrder.price);
     succInfo->set_ordervolume(content->tradedOrder.volume);
 
     utils::ItpMsg msg;
     rsp.SerializeToString(&msg.pbMsg);
     msg.sessionName = "strategy_trader";
-    msg.msgName = "OrderInsertRsp." + utils::intToString(itp_msg.request_id());
+    msg.msgName = "OrderInsertRsp." + content->prid;
     auto &recerSender = RecerSender::getInstance();
     recerSender.ROLE(Sender).ROLE(ProxySender).send(msg);
 
@@ -132,7 +133,7 @@ void XtpEvent::OnTradeEventHandle(utils::ItpMsg &msg) {
     content->left_volume -= tradeReport->quantity;
     if (content->left_volume == 0) {
       INFO_LOG("the order was finished, ref[%d],identity[%s]", tradeReport->order_client_id, content->prid.c_str());
-      orderManage.delOrder(utils::intToString(tradeReport->order_client_id));
+      orderManage.delOrder(std::to_string(tradeReport->order_client_id));
     }
   }
 }
@@ -145,18 +146,18 @@ void XtpEvent::OnCancelOrderErrorHandle(utils::ItpMsg &msg) {
   auto cancelInfo = reinterpret_cast<XTPOrderCancelInfo *>(itp_msg.address());
   auto &traderSer = TraderSevice::getInstance();
   auto &orderManage = traderSer.ROLE(OrderManage);
-  auto content = orderManage.getOrder(utils::intToString(cancelInfo->order_xtp_id));
+  auto content = orderManage.getOrder(std::to_string(cancelInfo->order_xtp_id));
   if (content != nullptr) {
     strategy_trader::message rspMsg;
     auto *orderCancelRsp = rspMsg.mutable_order_cancel_rsp();
-    orderCancelRsp->set_identity(utils::intToString(cancelInfo->order_xtp_id));
+    orderCancelRsp->set_identity(std::to_string(cancelInfo->order_xtp_id));
     orderCancelRsp->set_result(strategy_trader::Result::failed);
     orderCancelRsp->set_failedreason("INVALID");
 
     utils::ItpMsg msg;
     rspMsg.SerializeToString(&msg.pbMsg);
     msg.sessionName = "strategy_trader";
-    msg.msgName = "OrderCancelRsp." + utils::intToString(itp_msg.request_id());
+    msg.msgName = "OrderCancelRsp." + content->prid;
     auto &recerSender = RecerSender::getInstance();
     recerSender.ROLE(Sender).ROLE(ProxySender).send(msg);
   }
@@ -174,8 +175,8 @@ void XtpEvent::OnRspQryTradingAccountHandle(utils::ItpMsg &msg) {
     manage_trader::message rsp;
     auto *accountRsp = rsp.mutable_account_status_rsp();
     accountRsp->set_result(manage_trader::Result::success);
-    accountRsp->set_balance(utils::doubleToStringConvert(tradeAccount->Balance));
-    accountRsp->set_available(utils::doubleToStringConvert(tradeAccount->Available));
+    accountRsp->set_balance(tradeAccount->Balance);
+    accountRsp->set_available(tradeAccount->Available);
 
     utils::ItpMsg msg;
     rsp.SerializeToString(&msg.pbMsg);
@@ -187,13 +188,13 @@ void XtpEvent::OnRspQryTradingAccountHandle(utils::ItpMsg &msg) {
     strategy_trader::message rsp;
     auto *accountRsp = rsp.mutable_account_status_rsp();
     accountRsp->set_result(strategy_trader::Result::success);
-    accountRsp->set_balance(utils::doubleToStringConvert(tradeAccount->Balance));
-    accountRsp->set_available(utils::doubleToStringConvert(tradeAccount->Available));
+    accountRsp->set_balance(tradeAccount->Balance);
+    accountRsp->set_available(tradeAccount->Available);
 
     utils::ItpMsg msg;
     rsp.SerializeToString(&msg.pbMsg);
     msg.sessionName = "strategy_trader";
-    msg.msgName = "AccountStatusRsp." + utils::intToString(itp_msg.request_id());
+    msg.msgName = "AccountStatusRsp." + std::to_string(itp_msg.request_id());
     auto &recerSender = RecerSender::getInstance();
     recerSender.ROLE(Sender).ROLE(ProxySender).send(msg);
   }
@@ -212,7 +213,7 @@ void XtpEvent::OnRspQryInstrumentHandle(utils::ItpMsg &msg) {
 
     instrumentRsp->set_instrument_id(instrumentField->InstrumentID);
     instrumentRsp->set_exchange_id(instrumentField->ExchangeID);
-    instrumentRsp->set_price_tick(utils::doubleToStringConvert(instrumentField->PriceTick).c_str());
+    instrumentRsp->set_price_tick(instrumentField->PriceTick);
     instrumentRsp->set_result(market_trader::Result::success);
     instrumentRsp->set_finish_flag(itp_msg.is_last());
 
@@ -232,13 +233,13 @@ void XtpEvent::OnRspQryInstrumentHandle(utils::ItpMsg &msg) {
     instrumentRsp->set_max_market_order_volume(instrumentField->MaxMarketOrderVolume);
     instrumentRsp->set_min_limit_order_volume(instrumentField->MinLimitOrderVolume);
     instrumentRsp->set_min_market_order_volume(instrumentField->MinMarketOrderVolume);
-    instrumentRsp->set_price_tick(utils::doubleToStringConvert(instrumentField->PriceTick));
-    instrumentRsp->set_volume_multiple(utils::doubleToStringConvert(instrumentField->VolumeMultiple));
+    instrumentRsp->set_price_tick(instrumentField->PriceTick);
+    instrumentRsp->set_volume_multiple(instrumentField->VolumeMultiple);
 
     utils::ItpMsg msg;
     rsp.SerializeToString(&msg.pbMsg);
     msg.sessionName = "strategy_trader";
-    msg.msgName = "InstrumentRsp." + utils::intToString(itp_msg.request_id());
+    msg.msgName = "InstrumentRsp." + std::to_string(itp_msg.request_id());
     auto &recerSender = RecerSender::getInstance();
     recerSender.ROLE(Sender).ROLE(ProxySender).send(msg);
   }
@@ -255,15 +256,15 @@ void XtpEvent::OnRspQryInstrumentMarginRateHandle(utils::ItpMsg &msg) {
   auto *marginRateRsp = rsp.mutable_margin_rate_rsp();
 
   marginRateRsp->set_result(strategy_trader::Result::success);
-  marginRateRsp->set_longmarginratiobymoney(utils::doubleToStringConvert(marginRateField->LongMarginRatioByMoney));
-  marginRateRsp->set_longmarginratiobyvolume(utils::doubleToStringConvert(marginRateField->LongMarginRatioByVolume));
-  marginRateRsp->set_shortmarginratiobymoney(utils::doubleToStringConvert(marginRateField->ShortMarginRatioByMoney));
-  marginRateRsp->set_shortmarginratiobyvolume(utils::doubleToStringConvert(marginRateField->ShortMarginRatioByVolume));
+  marginRateRsp->set_longmarginratiobymoney(marginRateField->LongMarginRatioByMoney);
+  marginRateRsp->set_longmarginratiobyvolume(marginRateField->LongMarginRatioByVolume);
+  marginRateRsp->set_shortmarginratiobymoney(marginRateField->ShortMarginRatioByMoney);
+  marginRateRsp->set_shortmarginratiobyvolume(marginRateField->ShortMarginRatioByVolume);
 
   utils::ItpMsg sendmsg;
   rsp.SerializeToString(&sendmsg.pbMsg);
   sendmsg.sessionName = "strategy_trader";
-  sendmsg.msgName = "MarginRateRsp." + utils::intToString(itp_msg.request_id());
+  sendmsg.msgName = "MarginRateRsp." + std::to_string(itp_msg.request_id());
   auto &recerSender = RecerSender::getInstance();
   recerSender.ROLE(Sender).ROLE(ProxySender).send(sendmsg);
 }
@@ -280,17 +281,17 @@ void XtpEvent::OnRspQryInstrumentCommissionRateHandle(utils::ItpMsg &msg) {
   auto &traderSer = TraderSevice::getInstance();
 
   commissionRateRsp->set_result(strategy_trader::Result::success);
-  commissionRateRsp->set_openratiobymoney(utils::doubleToStringConvert(commissionRateField->CloseRatioByMoney));
-  commissionRateRsp->set_openratiobyvolume(utils::doubleToStringConvert(commissionRateField->CloseRatioByVolume));
-  commissionRateRsp->set_closeratiobymoney(utils::doubleToStringConvert(commissionRateField->CloseTodayRatioByMoney));
-  commissionRateRsp->set_closeratiobyvolume(utils::doubleToStringConvert(commissionRateField->CloseTodayRatioByVolume));
-  commissionRateRsp->set_closetodayratiobymoney(utils::doubleToStringConvert(commissionRateField->OpenRatioByMoney));
-  commissionRateRsp->set_closetodayratiobyvolume(utils::doubleToStringConvert(commissionRateField->OpenRatioByVolume));
+  commissionRateRsp->set_openratiobymoney(commissionRateField->CloseRatioByMoney);
+  commissionRateRsp->set_openratiobyvolume(commissionRateField->CloseRatioByVolume);
+  commissionRateRsp->set_closeratiobymoney(commissionRateField->CloseTodayRatioByMoney);
+  commissionRateRsp->set_closeratiobyvolume(commissionRateField->CloseTodayRatioByVolume);
+  commissionRateRsp->set_closetodayratiobymoney(commissionRateField->OpenRatioByMoney);
+  commissionRateRsp->set_closetodayratiobyvolume(commissionRateField->OpenRatioByVolume);
 
   utils::ItpMsg sendmsg;
   rsp.SerializeToString(&sendmsg.pbMsg);
   sendmsg.sessionName = "strategy_trader";
-  sendmsg.msgName = "CommissionRateRsp." + utils::intToString(itp_msg.request_id());
+  sendmsg.msgName = "CommissionRateRsp." + std::to_string(itp_msg.request_id());
   auto &recerSender = RecerSender::getInstance();
   recerSender.ROLE(Sender).ROLE(ProxySender).send(sendmsg);
 }
@@ -302,14 +303,14 @@ bool XtpEvent::sendEmail(const utils::OrderContent &content) {
   std::string saveContent = "";
   saveContent += "账户: " + content.userId + "\n";
   saveContent += "合约: " + content.instrumentID + "\n";
-  saveContent += "下单价格: " + utils::doubleToStringConvert(content.limit_price) + "\n";
-  saveContent += "成交价格: " + utils::doubleToStringConvert(content.tradedOrder.price) + "\n";
+  saveContent += "下单价格: " + std::to_string(content.limit_price) + "\n";
+  saveContent += "成交价格: " + std::to_string(content.tradedOrder.price) + "\n";
   saveContent += "成交日期: " + content.tradedOrder.date + "\n";
   saveContent += "成交时间: " + content.tradedOrder.time + "\n";
   std::string direction = (content.tradedOrder.direction == "0") ? "BUY" : "SELL";
   saveContent += "方向: " + direction + "\n";
-  saveContent += "下单数量: " + utils::intToString(content.total_volume) + "\n";
-  saveContent += "本批成交数量: " + utils::intToString(content.tradedOrder.volume) + "\n";
+  saveContent += "下单数量: " + std::to_string(content.total_volume) + "\n";
+  saveContent += "本批成交数量: " + std::to_string(content.tradedOrder.volume) + "\n";
 
   auto &recerSender = RecerSender::getInstance();
   recerSender.ROLE(Sender).ROLE(EmailSender).send(subjectContent.c_str(), saveContent.c_str());

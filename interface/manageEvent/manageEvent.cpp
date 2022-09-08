@@ -47,5 +47,5 @@ void ManageEvent::AccountStatusReqHandle(utils::ItpMsg &msg) {
   }
 
   auto &recerSender = RecerSender::getInstance();
-  recerSender.ROLE(Sender).ROLE(ItpSender).ReqAvailableFunds(utils::stringToInt(identify));
+  recerSender.ROLE(Sender).ROLE(ItpSender).ReqAvailableFunds(stoi(identify));
 }
