@@ -3,7 +3,7 @@ include_directories(
     "${workspace_dir}/"
 )
 file(GLOB_RECURSE  trader_source
-    "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.cc"
 )
 
 add_library(tradelib  ${trader_source})
