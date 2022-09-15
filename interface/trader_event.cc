@@ -31,68 +31,68 @@ void TraderEvent::RegSessionFunc() {
 }
 
 bool TraderEvent::Run() {
-  auto &recerSender = RecerSender::getInstance();
+  auto &recer_sender = RecerSender::GetInstance();
 
-  auto orderRecRun = [&]() {
+  auto order_rec_run = [&]() {
     utils::ItpMsg msg;
     while (1) {
-      if (recerSender.ROLE(Recer).ROLE(ProxyRecer).ReceOrderMsg(msg) == false) {
-        ERROR_LOG("invalid msg, session is [%s], msgName is [%s]", msg.sessionName.c_str(), msg.msgName.c_str());
+      if (recer_sender.ROLE(Recer).ROLE(ProxyRecer).ReceOrderMsg(msg) == false) {
+        ERROR_LOG("invalid msg, session is [%s], msg_name is [%s]", msg.session_name.c_str(), msg.msg_name.c_str());
         continue;
       }
 
-      INFO_LOG("recv msg, session is[%s], msgName is[%s] ", msg.sessionName.c_str(), msg.msgName.c_str());
-      if (session_func_map.find(msg.sessionName) != session_func_map.end()) {
-        session_func_map[msg.sessionName](msg);
+      INFO_LOG("recv msg, session is[%s], msg_name is[%s] ", msg.session_name.c_str(), msg.msg_name.c_str());
+      if (session_func_map.find(msg.session_name) != session_func_map.end()) {
+        session_func_map[msg.session_name](msg);
       } else {
-        ERROR_LOG("can not find[%s] in session_func_map", msg.sessionName.c_str());
+        ERROR_LOG("can not find[%s] in session_func_map", msg.session_name.c_str());
       }
     }
   };
   INFO_LOG("orderRecRun prepare ok");
-  std::thread(orderRecRun).detach();
+  std::thread(order_rec_run).detach();
 
-  auto queryRecRun = [&]() {
+  auto query_rec_run = [&]() {
     utils::ItpMsg msg;
     while (1) {
-      if (recerSender.ROLE(Recer).ROLE(ProxyRecer).ReceQueryMsg(msg) == false) {
-        ERROR_LOG(" invalid msg, session is [%s], msgName is [%s]", msg.sessionName.c_str(), msg.msgName.c_str());
+      if (recer_sender.ROLE(Recer).ROLE(ProxyRecer).ReceQueryMsg(msg) == false) {
+        ERROR_LOG(" invalid msg, session is [%s], msg_name is [%s]", msg.session_name.c_str(), msg.msg_name.c_str());
         continue;
       }
 
-      if (session_func_map.find(msg.sessionName) != session_func_map.end()) {
-        session_func_map[msg.sessionName](msg);
+      if (session_func_map.find(msg.session_name) != session_func_map.end()) {
+        session_func_map[msg.session_name](msg);
         std::this_thread::sleep_for(1s);
       } else {
-        ERROR_LOG("can not find[%s] in session_func_map", msg.sessionName.c_str());
+        ERROR_LOG("can not find[%s] in session_func_map", msg.session_name.c_str());
       }
     }
   };
   INFO_LOG("queryRecRun prepare ok");
-  std::thread(queryRecRun).detach();
+  std::thread(query_rec_run).detach();
 
-  auto itpRecRun = [&]() {
+  auto itp_rec_run = [&]() {
     utils::ItpMsg msg;
     while (1) {
-      if (recerSender.ROLE(Recer).ROLE(ItpRecer).ReceMsg(msg) == false) {
-        ERROR_LOG(" invalid msg, session is [%s], msgName is [%s]", msg.sessionName.c_str(), msg.msgName.c_str());
-        GlobalSem::getInstance().PostSemBySemName(GlobalSem::kApiRecv);
+      if (recer_sender.ROLE(Recer).ROLE(ItpRecer).ReceMsg(msg) == false) {
+        ERROR_LOG(" invalid msg, session is [%s], msg_name is [%s]", msg.session_name.c_str(), msg.msg_name.c_str());
+        GlobalSem::GetInstance().PostSemBySemName(GlobalSem::kApiRecv);
         continue;
       }
 
-      if (session_func_map.find(msg.sessionName) != session_func_map.end()) {
-        session_func_map[msg.sessionName](msg);
+      if (session_func_map.find(msg.session_name) != session_func_map.end()) {
+        session_func_map[msg.session_name](msg);
       } else {
-        ERROR_LOG("can not find[%s] in session_func_map", msg.sessionName.c_str());
+        ERROR_LOG("can not find[%s] in session_func_map", msg.session_name.c_str());
       }
 
-      GlobalSem::getInstance().PostSemBySemName(GlobalSem::kApiRecv);
+      GlobalSem::GetInstance().PostSemBySemName(GlobalSem::kApiRecv);
     }
   };
   INFO_LOG("itpRecRun prepare ok");
-  std::thread(itpRecRun).detach();
+  std::thread(itp_rec_run).detach();
 
-  recerSender.Run();
+  recer_sender.Run();
 
   return true;
 }

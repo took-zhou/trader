@@ -11,28 +11,28 @@
 
 TraderSevice::TraderSevice() {
   // 开启发布线程
-  auto loginStateRun = [&]() { ROLE(TraderTimeState).Update(); };
-  std::thread(loginStateRun).detach();
+  auto login_state_run = [&]() { ROLE(TraderTimeState).Update(); };
+  std::thread(login_state_run).detach();
 
-  auto traderLogInOutFuc = [&]() {
-    auto &recerSender = RecerSender::getInstance();
+  auto trader_log_in_out_fuc = [&]() {
+    auto &recer_sender = RecerSender::GetInstance();
     while (1) {
-      if (ROLE(TraderTimeState).get_time_state() == kLoginTime && login_state == kLogoutState) {
-        if (recerSender.ROLE(Sender).ROLE(ItpSender).ReqUserLogin()) {
+      if (ROLE(TraderTimeState).GetTimeState() == kLoginTime && login_state == kLogoutState) {
+        if (recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogin()) {
           login_state = kLoginState;
         } else {
           login_state = kErrorState;
         }
-      } else if (ROLE(TraderTimeState).get_time_state() == kLogoutTime && login_state != kLogoutState) {
-        recerSender.ROLE(Sender).ROLE(ItpSender).ReqUserLogout();
+      } else if (ROLE(TraderTimeState).GetTimeState() == kLogoutTime && login_state != kLogoutState) {
+        recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogout();
         login_state = kLogoutState;
-      } else if (recerSender.ROLE(Sender).ROLE(ItpSender).LossConnection() && login_state != kLogoutState) {
-        recerSender.ROLE(Sender).ROLE(ItpSender).ReqUserLogin();
+      } else if (recer_sender.ROLE(Sender).ROLE(ItpSender).LossConnection() && login_state != kLogoutState) {
+        recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogin();
       }
 
       std::this_thread::sleep_for(1000ms);
     }
   };
-  std::thread(traderLogInOutFuc).detach();
-  INFO_LOG("traderLogInOutFuc prepare ok");
+  std::thread(trader_log_in_out_fuc).detach();
+  INFO_LOG("trader_log_in_out_fuc prepare ok");
 };

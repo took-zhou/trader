@@ -19,13 +19,13 @@ struct OrderManage {
  public:
   OrderManage();
 
-  bool BuildOrder(const std::string &orderKey, const std::shared_ptr<utils::OrderContent> &content);
-  bool DelOrder(const std::string &orderKey);
+  bool BuildOrder(const std::string &order_key, const std::shared_ptr<utils::OrderContent> &content);
+  bool DelOrder(const std::string &order_key);
 
-  utils::OrderContent *get_order(const std::string &orderKey);
+  utils::OrderContent *GetOrder(const std::string &order_key);
 
  private:
-  std::map<std::string, std::shared_ptr<utils::OrderContent>> order_map;
+  std::map<std::string, std::shared_ptr<utils::OrderContent>> order_map_;
 };
 
 #endif /* WORKSPACE_TRADER_DOMAIN_COMPONENTS_ORDER_H_ */

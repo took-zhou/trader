@@ -25,7 +25,7 @@ struct TraderEvent : CtpEvent, XtpEvent, StrategyEvent, MarketEvent, ManageEvent
   TraderEvent();
   TraderEvent(const TraderEvent &) = delete;
   TraderEvent &operator=(const TraderEvent &) = delete;
-  static TraderEvent &getInstance() {
+  static TraderEvent &GetInstance() {
     static TraderEvent instance;
     return instance;
   }

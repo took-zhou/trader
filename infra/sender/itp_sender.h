@@ -8,7 +8,7 @@ struct ItpSender {
   ItpSender();
   ItpSender(const ItpSender &) = delete;
   ItpSender &operator=(const ItpSender &) = delete;
-  static ItpSender &getInstance() {
+  static ItpSender &GetInstance() {
     static ItpSender instance;
     return instance;
   }
@@ -17,13 +17,13 @@ struct ItpSender {
   bool ReqUserLogout();
   bool InsertOrder(utils::OrderContent &content);
   bool CancelOrder(utils::OrderContent &content);
-  bool ReqAvailableFunds(const int requestId);
-  bool ReqInstrumentInfo(const utils::InstrumtntID &ins_exch, const int requestId);
-  bool ReqTransactionCost(const utils::InstrumtntID &ins_exch, const int requestId);
+  bool ReqAvailableFunds(const int request_id);
+  bool ReqInstrumentInfo(const utils::InstrumtntID &ins_exch, const int request_id);
+  bool ReqTransactionCost(const utils::InstrumtntID &ins_exch, const int request_id);
   bool LossConnection();
 
  private:
-  SendApi *send_api = nullptr;
+  SendApi *send_api_ = nullptr;
 };
 
 #endif

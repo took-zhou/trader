@@ -16,6 +16,7 @@
 
 struct XtpTraderInfo {
   std::string user_id;
+  std::string user_name;
   int front_id;
 };
 
@@ -26,21 +27,21 @@ struct XtpSender : SendApi {
   bool ReqUserLogout();
   bool InsertOrder(utils::OrderContent &content);
   bool CancelOrder(utils::OrderContent &content);
-  bool ReqAvailableFunds(const int requestId);
-  bool ReqInstrumentInfo(const utils::InstrumtntID &ins_exch, const int requestId);
-  bool ReqTransactionCost(const utils::InstrumtntID &ins_exch, const int requestId);
+  bool ReqAvailableFunds(const int request_id);
+  bool ReqInstrumentInfo(const utils::InstrumtntID &ins_exch, const int request_id);
+  bool ReqTransactionCost(const utils::InstrumtntID &ins_exch, const int request_id);
   bool LossConnection();
 
-  static std::map<int, XtpTraderInfo> kXtpTraderInfoMap;
+  static std::map<int, XtpTraderInfo> xtp_trader_info_map;
 
  private:
-  bool init(void);
-  bool release(void);
-  static XTP::API::TraderApi *kTraderApi;
-  static XtpTraderSpi *kTraderSpi;
+  bool Init(void);
+  bool Release(void);
+  static XTP::API::TraderApi *trader_api;
+  static XtpTraderSpi *trader_spi;
 
-  int request_id = 0;
-  bool is_init = false;
+  int request_id_ = 0;
+  bool is_init_ = false;
 };
 
 #endif /* WORKSPACE_TRADER_INFRA_XTPSENDER_H_ */

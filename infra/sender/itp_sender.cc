@@ -4,24 +4,24 @@
 #include "trader/infra/sender/xtp_sender.h"
 
 ItpSender::ItpSender() {
-  auto &jsonCfg = utils::JsonConfig::getInstance();
-  auto apiType = jsonCfg.get_config("common", "ApiType");
-  if (apiType == "ctp") {
-    send_api = new CtpSender();
-  } else if (apiType == "xtp") {
-    send_api = new XtpSender();
+  auto &json_cfg = utils::JsonConfig::GetInstance();
+  auto api_type = json_cfg.GetConfig("common", "ApiType");
+  if (api_type == "ctp") {
+    send_api_ = new CtpSender();
+  } else if (api_type == "xtp") {
+    send_api_ = new XtpSender();
   }
 }
 
-bool ItpSender::ReqUserLogin() { send_api->ReqUserLogin(); }
-bool ItpSender::ReqUserLogout() { send_api->ReqUserLogout(); }
-bool ItpSender::InsertOrder(utils::OrderContent &content) { send_api->InsertOrder(content); }
-bool ItpSender::CancelOrder(utils::OrderContent &content) { send_api->CancelOrder(content); }
-bool ItpSender::ReqAvailableFunds(const int requestId) { send_api->ReqAvailableFunds(requestId); }
-bool ItpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch, const int requestId) {
-  send_api->ReqInstrumentInfo(ins_exch, requestId);
+bool ItpSender::ReqUserLogin() { return send_api_->ReqUserLogin(); }
+bool ItpSender::ReqUserLogout() { return send_api_->ReqUserLogout(); }
+bool ItpSender::InsertOrder(utils::OrderContent &content) { return send_api_->InsertOrder(content); }
+bool ItpSender::CancelOrder(utils::OrderContent &content) { return send_api_->CancelOrder(content); }
+bool ItpSender::ReqAvailableFunds(const int request_id) { return send_api_->ReqAvailableFunds(request_id); }
+bool ItpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch, const int request_id) {
+  return send_api_->ReqInstrumentInfo(ins_exch, request_id);
 }
-bool ItpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch, const int requestId) {
-  send_api->ReqTransactionCost(ins_exch, requestId);
+bool ItpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch, const int request_id) {
+  return send_api_->ReqTransactionCost(ins_exch, request_id);
 }
-bool ItpSender::LossConnection() { send_api->LossConnection(); }
+bool ItpSender::LossConnection() { return send_api_->LossConnection(); }

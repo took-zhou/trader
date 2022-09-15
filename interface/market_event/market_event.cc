@@ -28,25 +28,25 @@ void MarketEvent::RegMsgFun() {
 }
 
 void MarketEvent::Handle(utils::ItpMsg &msg) {
-  auto iter = msg_func_map.find(msg.msgName);
+  auto iter = msg_func_map.find(msg.msg_name);
   if (iter != msg_func_map.end()) {
     iter->second(msg);
     return;
   }
-  ERROR_LOG("can not find func for msgName [%s]!", msg.msgName.c_str());
+  ERROR_LOG("can not find func for msg name [%s]!", msg.msg_name.c_str());
   return;
 }
 
 void MarketEvent::QryInstrumentReqHandle(utils::ItpMsg &msg) {
-  market_trader::message reqMsg;
-  reqMsg.ParseFromString(msg.pbMsg);
-  auto &traderSer = TraderSevice::getInstance();
-  if (traderSer.login_state != kLoginState) {
+  market_trader::message message;
+  message.ParseFromString(msg.pb_msg);
+  auto &trader_ser = TraderSevice::GetInstance();
+  if (trader_ser.login_state != kLoginState) {
     ERROR_LOG("itp not login!");
-    pubQryInstrumentRsp(nullptr, true, false);
+    PubQryInstrumentRsp(nullptr, true, false);
     return;
   }
-  auto &req = reqMsg.qry_instrument_req();
+  auto &req = message.qry_instrument_req();
   if (req.identity() != std::string("all")) {
     ERROR_LOG("qry_instrument_req identity[%s] is not [all]", req.identity().c_str());
     return;
@@ -56,33 +56,33 @@ void MarketEvent::QryInstrumentReqHandle(utils::ItpMsg &msg) {
   ins_exch.exch = "";
   ins_exch.ins = "";
 
-  auto &recerSender = RecerSender::getInstance();
-  recerSender.ROLE(Sender).ROLE(ItpSender).ReqInstrumentInfo(ins_exch, stoi(req.identity()));
+  auto &recer_sender = RecerSender::GetInstance();
+  recer_sender.ROLE(Sender).ROLE(ItpSender).ReqInstrumentInfo(ins_exch, stoi(req.identity()));
 }
 
-void MarketEvent::pubQryInstrumentRsp(CThostFtdcInstrumentField *field, bool result, bool isFinish) {
+void MarketEvent::PubQryInstrumentRsp(CThostFtdcInstrumentField *field, bool result, bool is_finish) {
   market_trader::message rsp;
-  auto *qryInstruments = rsp.mutable_qry_instrument_rsp();
+  auto *qry_instruments = rsp.mutable_qry_instrument_rsp();
 
   if (result == false) {
-    qryInstruments->set_result(market_trader::Result::failed);
-    qryInstruments->set_finish_flag(true);
+    qry_instruments->set_result(market_trader::Result::failed);
+    qry_instruments->set_finish_flag(true);
   } else {
-    qryInstruments->set_instrument_id(field->InstrumentID);
-    qryInstruments->set_exchange_id(field->ExchangeID);
-    qryInstruments->set_price_tick(field->PriceTick);
-    qryInstruments->set_result(market_trader::Result::success);
-    qryInstruments->set_finish_flag(isFinish);
+    qry_instruments->set_instrument_id(field->InstrumentID);
+    qry_instruments->set_exchange_id(field->ExchangeID);
+    qry_instruments->set_price_tick(field->PriceTick);
+    qry_instruments->set_result(market_trader::Result::success);
+    qry_instruments->set_finish_flag(is_finish);
   }
 
   utils::ItpMsg msg;
-  rsp.SerializeToString(&msg.pbMsg);
-  msg.sessionName = "market_trader";
-  msg.msgName = "QryInstrumentRsp";
-  auto &recerSender = RecerSender::getInstance();
-  bool sendRes = recerSender.ROLE(Sender).ROLE(ProxySender).Send(msg);
+  rsp.SerializeToString(&msg.pb_msg);
+  msg.session_name = "market_trader";
+  msg.msg_name = "QryInstrumentRsp";
+  auto &recer_sender = RecerSender::GetInstance();
+  bool send_res = recer_sender.ROLE(Sender).ROLE(ProxySender).Send(msg);
 
-  if (sendRes == false) {
+  if (send_res == false) {
     ERROR_LOG("send OrderInsertRsp error");
   }
   return;

@@ -17,7 +17,7 @@ uint8_t TraderTimeState::IsDuringDayLogoutTime(void) {
   uint8_t out;
   out = 0U;
 
-  if (((day_logout_mins < now_mins) && (now_mins < night_login_mins)) || (debug_time_state == kLogoutTime)) {
+  if (((day_logout_mins_ < now_mins_) && (now_mins_ < night_login_mins_)) || (debug_time_state_ == kLogoutTime)) {
     out = 1U;
   }
 
@@ -28,7 +28,7 @@ uint8_t TraderTimeState::IsDuringNightLogoutTime(void) {
   uint8_t out;
   out = 0U;
 
-  if (((night_logout_mins < now_mins) && (now_mins < day_login_mins)) || (debug_time_state == kLogoutTime)) {
+  if (((night_logout_mins_ < now_mins_) && (now_mins_ < day_login_mins_)) || (debug_time_state_ == kLogoutTime)) {
     out = 1U;
   }
 
@@ -39,7 +39,7 @@ uint8_t TraderTimeState::IsDuringDayLoginTime(void) {
   uint8_t out;
   out = 0U;
 
-  if ((day_login_mins <= now_mins) && (now_mins <= day_logout_mins) && (debug_time_state != kLogoutTime)) {
+  if ((day_login_mins_ <= now_mins_) && (now_mins_ <= day_logout_mins_) && (debug_time_state_ != kLogoutTime)) {
     out = 1U;
   }
 
@@ -50,7 +50,7 @@ uint8_t TraderTimeState::IsDuringNightLoginTime(void) {
   uint8_t out;
   out = 0U;
 
-  if (((night_login_mins <= now_mins) || (now_mins <= night_logout_mins)) && (debug_time_state != kLogoutTime)) {
+  if (((night_login_mins_ <= now_mins_) || (now_mins_ <= night_logout_mins_)) && (debug_time_state_ != kLogoutTime)) {
     out = 1U;
   }
 
@@ -58,59 +58,59 @@ uint8_t TraderTimeState::IsDuringNightLoginTime(void) {
 }
 
 void TraderTimeState::Step() {
-  if (is_active_step == 0U) {
-    is_active_step = 1U;
-    sub_time_state = kInInitSts;
-    time_state = kLogoutTime;
+  if (is_active_step_ == 0U) {
+    is_active_step_ = 1U;
+    sub_time_state_ = kInInitSts;
+    time_state_ = kLogoutTime;
   } else {
-    switch (sub_time_state) {
+    switch (sub_time_state_) {
       case kInDayLogin:
         if (IsDuringDayLogoutTime()) {
-          sub_time_state = kInDayLogout;
-          time_state = kLogoutTime;
+          sub_time_state_ = kInDayLogout;
+          time_state_ = kLogoutTime;
         }
         break;
 
       case kInDayLogout:
         if (IsDuringNightLoginTime()) {
-          sub_time_state = kInNightLogin;
-          time_state = kLoginTime;
+          sub_time_state_ = kInNightLogin;
+          time_state_ = kLoginTime;
         } else if (IsDuringDayLoginTime()) {
-          sub_time_state = kInDayLogin;
-          time_state = kLoginTime;
+          sub_time_state_ = kInDayLogin;
+          time_state_ = kLoginTime;
         }
         break;
 
       case kInInitSts:
         if (IsDuringDayLogoutTime()) {
-          sub_time_state = kInDayLogout;
-          time_state = kLogoutTime;
+          sub_time_state_ = kInDayLogout;
+          time_state_ = kLogoutTime;
         } else if (IsDuringNightLogoutTime()) {
-          sub_time_state = kInNightLogout;
-          time_state = kLogoutTime;
+          sub_time_state_ = kInNightLogout;
+          time_state_ = kLogoutTime;
         } else if (IsDuringDayLoginTime()) {
-          sub_time_state = kInDayLogin;
-          time_state = kLoginTime;
+          sub_time_state_ = kInDayLogin;
+          time_state_ = kLoginTime;
         } else if (IsDuringNightLoginTime()) {
-          sub_time_state = kInNightLogin;
-          time_state = kLoginTime;
+          sub_time_state_ = kInNightLogin;
+          time_state_ = kLoginTime;
         }
         break;
 
       case kInNightLogin:
         if (IsDuringNightLogoutTime()) {
-          sub_time_state = kInNightLogout;
-          time_state = kLogoutTime;
+          sub_time_state_ = kInNightLogout;
+          time_state_ = kLogoutTime;
         }
         break;
 
       case kInNightLogout:
         if (IsDuringDayLoginTime()) {
-          sub_time_state = kInDayLogin;
-          time_state = kLoginTime;
+          sub_time_state_ = kInDayLogin;
+          time_state_ = kLoginTime;
         } else if (IsDuringNightLoginTime()) {
-          sub_time_state = kInNightLogin;
-          time_state = kLoginTime;
+          sub_time_state_ = kInNightLogin;
+          time_state_ = kLoginTime;
         }
         break;
 
@@ -127,7 +127,7 @@ void TraderTimeState::Update(void) {
   while (1) {
     time(&now);
     timenow = localtime(&now);  //获取当前时间
-    now_mins = timenow->tm_hour * 60 + timenow->tm_min;
+    now_mins_ = timenow->tm_hour * 60 + timenow->tm_min;
 
     Step();
 
@@ -135,37 +135,37 @@ void TraderTimeState::Update(void) {
   }
 }
 
-void TraderTimeState::set_time_state(int command) {
+void TraderTimeState::SetTimeState(int command) {
   if (command == ctpview_trader::LoginControl_Command_login) {
-    time_state = kLoginTime;
+    time_state_ = kLoginTime;
   } else if (command == ctpview_trader::LoginControl_Command_logout) {
-    time_state = kLogoutTime;
+    time_state_ = kLogoutTime;
   } else if (command == ctpview_trader::LoginControl_Command_reserve) {
-    time_state = kReserve;
+    time_state_ = kReserve;
   }
 }
 
 TraderTimeState::TraderTimeState() {
-  auto &jsonCfg = utils::JsonConfig::getInstance();
+  auto &json_cfg = utils::JsonConfig::GetInstance();
 
-  string timeStr = jsonCfg.get_config("Trader", "LogInTimeList").get<std::string>();
-  vector<string> timeDurationSplited = utils::SplitString(timeStr, ";");
-  vector<string> dayTimeStrSplit = utils::SplitString(timeDurationSplited[0], "-");
-  vector<string> nightTimeStrSplit = utils::SplitString(timeDurationSplited[1], "-");
-  vector<string> dayStartStrSplit = utils::SplitString(dayTimeStrSplit[0], ":");
-  vector<string> dayEndStrSplit = utils::SplitString(dayTimeStrSplit[1], ":");
-  vector<string> nightStartStrSplit = utils::SplitString(nightTimeStrSplit[0], ":");
-  vector<string> nightEndStrSplit = utils::SplitString(nightTimeStrSplit[1], ":");
+  string time_str = json_cfg.GetConfig("trader", "LogInTimeList").get<std::string>();
+  vector<string> time_duration_splited = utils::SplitString(time_str, ";");
+  vector<string> day_time_str_split = utils::SplitString(time_duration_splited[0], "-");
+  vector<string> night_time_str_split = utils::SplitString(time_duration_splited[1], "-");
+  vector<string> day_start_str_split = utils::SplitString(day_time_str_split[0], ":");
+  vector<string> day_end_str_split = utils::SplitString(day_time_str_split[1], ":");
+  vector<string> night_start_str_split = utils::SplitString(night_time_str_split[0], ":");
+  vector<string> night_end_str_split = utils::SplitString(night_time_str_split[1], ":");
 
-  day_login_mins = atoi(dayStartStrSplit[0].c_str()) * 60 + atoi(dayStartStrSplit[1].c_str());
-  day_logout_mins = atoi(dayEndStrSplit[0].c_str()) * 60 + atoi(dayEndStrSplit[1].c_str());
-  night_login_mins = atoi(nightStartStrSplit[0].c_str()) * 60 + atoi(nightStartStrSplit[1].c_str());
-  night_logout_mins = atoi(nightEndStrSplit[0].c_str()) * 60 + atoi(nightEndStrSplit[1].c_str());
+  day_login_mins_ = stoi(day_start_str_split[0]) * 60 + stoi(day_start_str_split[1]);
+  day_logout_mins_ = stoi(day_end_str_split[0]) * 60 + stoi(day_end_str_split[1]);
+  night_login_mins_ = stoi(night_start_str_split[0]) * 60 + stoi(night_start_str_split[1]);
+  night_logout_mins_ = stoi(night_end_str_split[0]) * 60 + stoi(night_end_str_split[1]);
 
-  INFO_LOG("%d %d %d %d", day_login_mins, day_logout_mins, night_login_mins, night_logout_mins);
+  INFO_LOG("%d %d %d %d", day_login_mins_, day_logout_mins_, night_login_mins_, night_logout_mins_);
 }
 
 TraderTimeState::~TraderTimeState() { ; }
 
-TimeState TraderTimeState::get_time_state() { return time_state; }
-SubTimeState TraderTimeState::get_sub_time_state() { return sub_time_state; }
+TimeState TraderTimeState::GetTimeState() { return time_state_; }
+SubTimeState TraderTimeState::GetSubTimeState() { return sub_time_state_; }

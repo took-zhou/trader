@@ -13,163 +13,165 @@
 #include "trader/infra/inner_zmq.h"
 
 void CtpTraderSpi::OnFrontConnected() {
-  static int reConnect = 0;
-  INFO_LOG("OnFrontConnected():is excuted...");
-  if (reConnect++ == 0) {
-    auto &globalSem = GlobalSem::getInstance();
-    globalSem.PostSemBySemName(GlobalSem::kLoginLogout);
+  INFO_LOG("OnFrontConnected():is excuted, re_connect : %d.", re_connect);
+  if (re_connect++ == 0) {
+    auto &global_sem = GlobalSem::GetInstance();
+    global_sem.PostSemBySemName(GlobalSem::kLoginLogout);
   }
 }
 
-void CtpTraderSpi::OnFrontDisconnected(int nReason) {
-  ERROR_LOG("front_disconnected, ErrorCode:%#x", nReason);
+void CtpTraderSpi::OnFrontDisconnected(int reason) {
+  ERROR_LOG("front_disconnected, ErrorCode:%#x", reason);
   front_disconnected = true;
 }
 
-void CtpTraderSpi::OnRspAuthenticate(CThostFtdcRspAuthenticateField *pRspAuthenticateField, CThostFtdcRspInfoField *pRspInfo,
-                                     int nRequestID, bool bIsLast) {
-  auto &globalSem = GlobalSem::getInstance();
-  globalSem.PostSemBySemName(GlobalSem::kLoginLogout);
+void CtpTraderSpi::OnRspAuthenticate(CThostFtdcRspAuthenticateField *rsp_authenticate_field, CThostFtdcRspInfoField *rsp_info,
+                                     int request_id, bool is_last) {
+  auto &global_sem = GlobalSem::GetInstance();
+  global_sem.PostSemBySemName(GlobalSem::kLoginLogout);
 }
 
-void CtpTraderSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID,
-                                  bool bIsLast) {
-  session_id = pRspUserLogin->SessionID;
-  front_id = pRspUserLogin->FrontID;
-  auto &globalSem = GlobalSem::getInstance();
-  globalSem.PostSemBySemName(GlobalSem::kLoginLogout);
+void CtpTraderSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *rsp_user_login, CThostFtdcRspInfoField *rsp_info, int request_id,
+                                  bool is_last) {
+  session_id = rsp_user_login->SessionID;
+  front_id = rsp_user_login->FrontID;
+  user_id = rsp_user_login->UserID;
+  auto &global_sem = GlobalSem::GetInstance();
+  global_sem.PostSemBySemName(GlobalSem::kLoginLogout);
   front_disconnected = false;
 }
 
-void CtpTraderSpi::OnRspUserLogout(CThostFtdcUserLogoutField *pUserLogout, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-  auto &globalSem = GlobalSem::getInstance();
-  globalSem.PostSemBySemName(GlobalSem::kLoginLogout);
+void CtpTraderSpi::OnRspUserLogout(CThostFtdcUserLogoutField *user_logout, CThostFtdcRspInfoField *rsp_info, int request_id, bool is_last) {
+  auto &global_sem = GlobalSem::GetInstance();
+  global_sem.PostSemBySemName(GlobalSem::kLoginLogout);
 }
 
-void CtpTraderSpi::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *pSettlementInfoConfirm,
-                                              CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-  auto &globalSem = GlobalSem::getInstance();
-  globalSem.PostSemBySemName(GlobalSem::kLoginLogout);
+void CtpTraderSpi::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *settlement_info_confirm,
+                                              CThostFtdcRspInfoField *rsp_info, int request_id, bool is_last) {
+  auto &global_sem = GlobalSem::GetInstance();
+  global_sem.PostSemBySemName(GlobalSem::kLoginLogout);
 }
 
-void CtpTraderSpi::OnRtnOrder(CThostFtdcOrderField *pOrder) {
-  ipc::message reqMsg;
-  auto sendMsg = reqMsg.mutable_itp_msg();
-  sendMsg->set_address(reinterpret_cast<int64_t>(pOrder));
+void CtpTraderSpi::OnRtnOrder(CThostFtdcOrderField *order) {
+  ipc::message req_msg;
+  auto send_msg = req_msg.mutable_itp_msg();
+  send_msg->set_address(reinterpret_cast<int64_t>(order));
   utils::ItpMsg msg;
-  reqMsg.SerializeToString(&msg.pbMsg);
-  msg.sessionName = "ctp_trader";
-  msg.msgName = "OnRtnOrder";
+  req_msg.SerializeToString(&msg.pb_msg);
+  msg.session_name = "ctp_trader";
+  msg.msg_name = "OnRtnOrder";
 
-  auto &globalSem = GlobalSem::getInstance();
-  auto &innerZmq = InnerZmq::getInstance();
-  innerZmq.PushTask(msg);
-  globalSem.WaitSemBySemName(GlobalSem::kApiRecv);
+  auto &global_sem = GlobalSem::GetInstance();
+  auto &inner_zmq = InnerZmq::GetInstance();
+  inner_zmq.PushTask(msg);
+  global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
 }
 
-void CtpTraderSpi::OnRtnTrade(CThostFtdcTradeField *pTrade) {
-  ipc::message reqMsg;
-  auto sendMsg = reqMsg.mutable_itp_msg();
-  sendMsg->set_address(reinterpret_cast<int64_t>(pTrade));
+void CtpTraderSpi::OnRtnTrade(CThostFtdcTradeField *trade) {
+  ipc::message req_msg;
+  auto send_msg = req_msg.mutable_itp_msg();
+  send_msg->set_address(reinterpret_cast<int64_t>(trade));
   utils::ItpMsg msg;
-  reqMsg.SerializeToString(&msg.pbMsg);
-  msg.sessionName = "ctp_trader";
-  msg.msgName = "OnRtnTrade";
+  req_msg.SerializeToString(&msg.pb_msg);
+  msg.session_name = "ctp_trader";
+  msg.msg_name = "OnRtnTrade";
 
-  auto &globalSem = GlobalSem::getInstance();
-  auto &innerZmq = InnerZmq::getInstance();
-  innerZmq.PushTask(msg);
-  globalSem.WaitSemBySemName(GlobalSem::kApiRecv);
+  auto &global_sem = GlobalSem::GetInstance();
+  auto &inner_zmq = InnerZmq::GetInstance();
+  inner_zmq.PushTask(msg);
+  global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
 }
 
-void CtpTraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID,
-                                          bool bIsLast) {
-  ipc::message reqMsg;
-  auto sendMsg = reqMsg.mutable_itp_msg();
-  sendMsg->set_address(reinterpret_cast<int64_t>(pTradingAccount));
-  sendMsg->set_user_id(pTradingAccount->AccountID);
-  sendMsg->set_session_id(session_id);
-  sendMsg->set_request_id(nRequestID);
-  sendMsg->set_is_last(bIsLast);
+void CtpTraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *trading_account, CThostFtdcRspInfoField *rsp_info, int request_id,
+                                          bool is_last) {
+  ipc::message req_msg;
+  auto send_msg = req_msg.mutable_itp_msg();
+  send_msg->set_address(reinterpret_cast<int64_t>(trading_account));
+  send_msg->set_user_id(user_id);
+  send_msg->set_session_id(session_id);
+  send_msg->set_request_id(request_id);
+  send_msg->set_is_last(is_last);
   utils::ItpMsg msg;
-  reqMsg.SerializeToString(&msg.pbMsg);
-  msg.sessionName = "ctp_trader";
-  msg.msgName = "OnRspQryTradingAccount";
+  req_msg.SerializeToString(&msg.pb_msg);
+  msg.session_name = "ctp_trader";
+  msg.msg_name = "OnRspQryTradingAccount";
 
-  auto &globalSem = GlobalSem::getInstance();
-  auto &innerZmq = InnerZmq::getInstance();
-  innerZmq.PushTask(msg);
-  globalSem.WaitSemBySemName(GlobalSem::kApiRecv);
+  auto &global_sem = GlobalSem::GetInstance();
+  auto &inner_zmq = InnerZmq::GetInstance();
+  inner_zmq.PushTask(msg);
+  global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
 }
 
-void CtpTraderSpi::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID,
-                                      bool bIsLast) {
-  ipc::message reqMsg;
-  auto sendMsg = reqMsg.mutable_itp_msg();
-  sendMsg->set_address(reinterpret_cast<int64_t>(pInstrument));
-  sendMsg->set_request_id(nRequestID);
-  sendMsg->set_is_last(bIsLast);
+void CtpTraderSpi::OnRspQryInstrument(CThostFtdcInstrumentField *instrument, CThostFtdcRspInfoField *rsp_info, int request_id,
+                                      bool is_last) {
+  ipc::message req_msg;
+  auto send_msg = req_msg.mutable_itp_msg();
+  send_msg->set_address(reinterpret_cast<int64_t>(instrument));
+  send_msg->set_request_id(request_id);
+  send_msg->set_is_last(is_last);
   utils::ItpMsg msg;
-  reqMsg.SerializeToString(&msg.pbMsg);
-  msg.sessionName = "ctp_trader";
-  msg.msgName = "OnRspQryInstrument";
+  req_msg.SerializeToString(&msg.pb_msg);
+  msg.session_name = "ctp_trader";
+  msg.msg_name = "OnRspQryInstrument";
 
-  auto &globalSem = GlobalSem::getInstance();
-  auto &innerZmq = InnerZmq::getInstance();
-  innerZmq.PushTask(msg);
-  globalSem.WaitSemBySemName(GlobalSem::kApiRecv);
+  auto &global_sem = GlobalSem::GetInstance();
+  auto &inner_zmq = InnerZmq::GetInstance();
+  inner_zmq.PushTask(msg);
+  global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
 }
 
-void CtpTraderSpi::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID,
-                                    bool bIsLast) {
-  ipc::message reqMsg;
-  auto sendMsg = reqMsg.mutable_itp_msg();
-  sendMsg->set_address(reinterpret_cast<int64_t>(pInputOrderAction));
-  sendMsg->set_request_id(nRequestID);
-  sendMsg->set_is_last(bIsLast);
+void CtpTraderSpi::OnRspOrderAction(CThostFtdcInputOrderActionField *input_order_action, CThostFtdcRspInfoField *rsp_info, int request_id,
+                                    bool is_last) {
+  ipc::message req_msg;
+  auto send_msg = req_msg.mutable_itp_msg();
+  send_msg->set_address(reinterpret_cast<int64_t>(input_order_action));
+  send_msg->set_request_id(request_id);
+  send_msg->set_is_last(is_last);
   utils::ItpMsg msg;
-  reqMsg.SerializeToString(&msg.pbMsg);
-  msg.sessionName = "ctp_trader";
-  msg.msgName = "OnRspOrderAction";
+  req_msg.SerializeToString(&msg.pb_msg);
+  msg.session_name = "ctp_trader";
+  msg.msg_name = "OnRspOrderAction";
 
-  auto &globalSem = GlobalSem::getInstance();
-  auto &innerZmq = InnerZmq::getInstance();
-  innerZmq.PushTask(msg);
-  globalSem.WaitSemBySemName(GlobalSem::kApiRecv);
+  auto &global_sem = GlobalSem::GetInstance();
+  auto &inner_zmq = InnerZmq::GetInstance();
+  inner_zmq.PushTask(msg);
+  global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
 }
 
-void CtpTraderSpi::OnRspQryInstrumentMarginRate(CThostFtdcInstrumentMarginRateField *pInstrumentMarginRate,
-                                                CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-  ipc::message reqMsg;
-  auto sendMsg = reqMsg.mutable_itp_msg();
-  sendMsg->set_address(reinterpret_cast<int64_t>(pInstrumentMarginRate));
-  sendMsg->set_request_id(nRequestID);
-  sendMsg->set_is_last(bIsLast);
+void CtpTraderSpi::OnRspQryInstrumentMarginRate(CThostFtdcInstrumentMarginRateField *instrument_margin_rate,
+                                                CThostFtdcRspInfoField *rsp_info, int request_id, bool is_last) {
+  ipc::message req_msg;
+  auto send_msg = req_msg.mutable_itp_msg();
+  send_msg->set_address(reinterpret_cast<int64_t>(instrument_margin_rate));
+  send_msg->set_user_id(user_id);
+  send_msg->set_request_id(request_id);
+  send_msg->set_is_last(is_last);
   utils::ItpMsg msg;
-  reqMsg.SerializeToString(&msg.pbMsg);
-  msg.sessionName = "ctp_trader";
-  msg.msgName = "OnRspQryInstrumentMarginRate";
+  req_msg.SerializeToString(&msg.pb_msg);
+  msg.session_name = "ctp_trader";
+  msg.msg_name = "OnRspQryInstrumentMarginRate";
 
-  auto &globalSem = GlobalSem::getInstance();
-  auto &innerZmq = InnerZmq::getInstance();
-  innerZmq.PushTask(msg);
-  globalSem.WaitSemBySemName(GlobalSem::kApiRecv);
+  auto &global_sem = GlobalSem::GetInstance();
+  auto &inner_zmq = InnerZmq::GetInstance();
+  inner_zmq.PushTask(msg);
+  global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
 };
 
-void CtpTraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionRateField *pInstrumentCommissionRate,
-                                                    CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-  ipc::message reqMsg;
-  auto sendMsg = reqMsg.mutable_itp_msg();
-  sendMsg->set_address(reinterpret_cast<int64_t>(pInstrumentCommissionRate));
-  sendMsg->set_request_id(nRequestID);
-  sendMsg->set_is_last(bIsLast);
+void CtpTraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionRateField *instrument_commission_rate,
+                                                    CThostFtdcRspInfoField *rsp_info, int request_id, bool is_last) {
+  ipc::message req_msg;
+  auto send_msg = req_msg.mutable_itp_msg();
+  send_msg->set_address(reinterpret_cast<int64_t>(instrument_commission_rate));
+  send_msg->set_user_id(user_id);
+  send_msg->set_request_id(request_id);
+  send_msg->set_is_last(is_last);
   utils::ItpMsg msg;
-  reqMsg.SerializeToString(&msg.pbMsg);
-  msg.sessionName = "ctp_trader";
-  msg.msgName = "OnRspQryInstrumentCommissionRate";
+  req_msg.SerializeToString(&msg.pb_msg);
+  msg.session_name = "ctp_trader";
+  msg.msg_name = "OnRspQryInstrumentCommissionRate";
 
-  auto &globalSem = GlobalSem::getInstance();
-  auto &innerZmq = InnerZmq::getInstance();
-  innerZmq.PushTask(msg);
-  globalSem.WaitSemBySemName(GlobalSem::kApiRecv);
+  auto &global_sem = GlobalSem::GetInstance();
+  auto &inner_zmq = InnerZmq::GetInstance();
+  inner_zmq.PushTask(msg);
+  global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
 };

@@ -25,30 +25,30 @@ void CtpviewEvent::RegMsgFun() {
 }
 
 void CtpviewEvent::Handle(utils::ItpMsg &msg) {
-  auto iter = msg_func_map.find(msg.msgName);
+  auto iter = msg_func_map.find(msg.msg_name);
   if (iter != msg_func_map.end()) {
     iter->second(msg);
     return;
   }
-  ERROR_LOG("can not find func for msgName [%s]!", msg.msgName.c_str());
+  ERROR_LOG("can not find func for msg_name [%s]!", msg.msg_name.c_str());
   return;
 }
 
 void CtpviewEvent::LoginControlHandle(utils::ItpMsg &msg) {
   ctpview_trader::message login_control;
-  login_control.ParseFromString(msg.pbMsg);
+  login_control.ParseFromString(msg.pb_msg);
   auto indication = login_control.login_control();
 
   int command = indication.command();
-  auto &traderSer = TraderSevice::getInstance();
+  auto &trader_ser = TraderSevice::GetInstance();
 
   INFO_LOG("force set time state: %d", command);
-  traderSer.ROLE(TraderTimeState).set_time_state(command);
+  trader_ser.ROLE(TraderTimeState).SetTimeState(command);
 }
 
 void CtpviewEvent::BugInjectionHandle(utils::ItpMsg &msg) {
   ctpview_trader::message bug_injection;
-  bug_injection.ParseFromString(msg.pbMsg);
+  bug_injection.ParseFromString(msg.pb_msg);
 
   auto injection = bug_injection.bug_injection();
 
@@ -56,8 +56,8 @@ void CtpviewEvent::BugInjectionHandle(utils::ItpMsg &msg) {
   INFO_LOG("set bug injection type: %d", type);
 
   if (type == ctpview_trader::BugInjection_InjectionType_double_free) {
-    int *a = new int;
-    std::shared_ptr<int> p(a);
-    delete a;
+    int *temp_a = new int;
+    std::shared_ptr<int> ptr(temp_a);
+    delete temp_a;
   }
 }

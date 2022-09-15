@@ -17,7 +17,7 @@ struct TraderSevice : OrderManage, TraderTimeState {
   TraderSevice();
   TraderSevice(const TraderSevice &) = delete;
   TraderSevice &operator=(const TraderSevice &) = delete;
-  static TraderSevice &getInstance() {
+  static TraderSevice &GetInstance() {
     static TraderSevice instance;
     return instance;
   }

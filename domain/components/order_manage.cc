@@ -17,32 +17,36 @@
 
 OrderManage::OrderManage() { ; }
 
-utils::OrderContent *OrderManage::get_order(const std::string &orderKey) {
-  auto it = order_map.find(orderKey);
-  if (it != order_map.end()) {
-    return it->second.get();
+utils::OrderContent *OrderManage::GetOrder(const std::string &order_key) {
+  auto iter = order_map_.find(order_key);
+  if (iter != order_map_.end()) {
+    return iter->second.get();
   } else {
     return nullptr;
   }
 }
 
-bool OrderManage::DelOrder(const std::string &orderKey) {
-  auto it = order_map.find(orderKey);
-  if (it != order_map.end()) {
-    INFO_LOG("total ordermap size [%d]", (int)order_map.size());
-    order_map.erase(it);
-    INFO_LOG("del order[%s] ok", orderKey.c_str());
-    INFO_LOG("total ordermap size [%d]", (int)order_map.size());
+bool OrderManage::DelOrder(const std::string &order_key) {
+  auto iter = order_map_.find(order_key);
+  if (iter != order_map_.end()) {
+    INFO_LOG("total ordermap size [%d]", (int)order_map_.size());
+    order_map_.erase(iter);
+    INFO_LOG("del order[%s] ok", order_key.c_str());
+    INFO_LOG("total ordermap size [%d]", (int)order_map_.size());
 
   } else {
-    ERROR_LOG("not find order in local ref is[%s]", orderKey.c_str());
+    ERROR_LOG("not find order in local ref is[%s]", order_key.c_str());
   }
+
+  return true;
 }
 
-bool OrderManage::BuildOrder(const std::string &orderKey, const std::shared_ptr<utils::OrderContent> &content) {
-  if (order_map.find(orderKey) != order_map.end()) {
+bool OrderManage::BuildOrder(const std::string &order_key, const std::shared_ptr<utils::OrderContent> &content) {
+  if (order_map_.find(order_key) != order_map_.end()) {
     return false;
   }
 
-  order_map[orderKey] = content;
+  order_map_[order_key] = content;
+
+  return true;
 }

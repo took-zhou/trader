@@ -32,7 +32,7 @@ struct CtpEvent {
   void OnRspQryInstrumentCommissionRateHandle(utils::ItpMsg &msg);
 
  private:
-  std::map<std::string, std::function<void(utils::ItpMsg &msg)>> msg_func_map;
+  std::map<std::string, std::function<void(utils::ItpMsg &msg)>> msg_func_map_;
 
   bool SendEmail(const utils::OrderContent &content);
 };

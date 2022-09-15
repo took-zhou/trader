@@ -10,16 +10,22 @@
 #include <map>
 #include <string>
 #include <vector>
+
 #include "common/extern/ctp/inc/ThostFtdcTraderApi.h"
 #include "common/self/utils.h"
 #include "trader/infra/recer/ctp_recer.h"
 #include "trader/infra/sender/send_api.h"
 
 struct CtpTraderInfo {
+  int front_id;
+  std::string user_id;
+  std::string user_name;
+  CThostFtdcTraderApi *trader_api;
+};
+
+struct CtpApiSpiInfo {
   CThostFtdcTraderApi *trader_api;
   CtpTraderSpi *trader_spi;
-  int front_id;
-  int session_id;
 };
 
 struct CtpSender : SendApi {
@@ -29,12 +35,12 @@ struct CtpSender : SendApi {
   bool ReqUserLogout();
   bool InsertOrder(utils::OrderContent &content);
   bool CancelOrder(utils::OrderContent &content);
-  bool ReqAvailableFunds(const int requestId);
-  bool ReqInstrumentInfo(const utils::InstrumtntID &ins_exch, const int requestId);
-  bool ReqTransactionCost(const utils::InstrumtntID &ins_exch, const int requestId);
+  bool ReqAvailableFunds(const int request_id);
+  bool ReqInstrumentInfo(const utils::InstrumtntID &ins_exch, const int request_id);
+  bool ReqTransactionCost(const utils::InstrumtntID &ins_exch, const int request_id);
   bool LossConnection();
 
-  static std::map<std::string, CtpTraderInfo> kCtpTraderInfoMap;
+  static std::map<int, CtpTraderInfo> ctp_trader_info_map;
 
  private:
   bool BuildOrder(utils::OrderContent &content, CThostFtdcInputOrderField &order);
@@ -43,9 +49,10 @@ struct CtpSender : SendApi {
   bool Confirm(void);
   bool Release(void);
 
-  static CThostFtdcInputOrderField kDefaultOrderField;
-  int request_id = 0;
-  bool is_init = false;
+  static std::map<std::string, CtpApiSpiInfo> ctp_api_spi_info_map;
+  static CThostFtdcInputOrderField default_order_field;
+  int request_id_ = 0;
+  bool is_init_ = false;
 };
 
 #endif /* WORKSPACE_TRADER_INFRA_CTPSENDER_H_ */

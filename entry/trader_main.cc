@@ -18,30 +18,29 @@
 #include "trader/interface/trader_event.h"
 
 int main(int argc, char *agrv[]) {
-  auto &jsonCfg = utils::JsonConfig::getInstance();
+  auto &json_cfg = utils::JsonConfig::GetInstance();
 
   //开启log
-  std::string traderLogPath = jsonCfg.get_config("trader", "LogPath").get<std::string>();
-  utils::CreatFolder(traderLogPath);
-  LOG_INIT(traderLogPath.c_str(), "traderlog", 6);
-  INFO_LOG("trade log path is %s", traderLogPath.c_str());
+  std::string trader_log_path = json_cfg.GetConfig("trader", "LogPath").get<std::string>();
+  utils::CreatFolder(trader_log_path);
+  LOG_INIT(trader_log_path.c_str(), "traderlog", 6);
+  INFO_LOG("trade log path is %s", trader_log_path.c_str());
 
   // 打印版本信息
-  std::string compile_time = utils::get_compile_time();
-  jsonCfg.WriteConfig("trader", "CompileTime", compile_time);
+  std::string compile_time = utils::GetCompileTime();
+  json_cfg.WriteConfig("trader", "CompileTime", compile_time);
   INFO_LOG("program last build at %s.", compile_time.c_str());
 
-  INFO_LOG("begin init traderSer");
-  auto &traderSer = TraderSevice::getInstance();
-  INFO_LOG("traderSer init ok");
+  INFO_LOG("begin init trader server");
+  auto &trader_server = TraderSevice::GetInstance();
+  INFO_LOG("trader server init ok");
 
   std::this_thread::sleep_for(5s);
 
-  INFO_LOG("begin init traderEvent");
-  auto &traderEvent = TraderEvent::getInstance();
-  INFO_LOG("traderEvent init ok");
+  INFO_LOG("begin init trader event");
+  auto &trader_event = TraderEvent::GetInstance();
+  INFO_LOG("trader event init ok");
 
-  INFO_LOG("begin run");
-  traderEvent.Run();
+  trader_event.Run();
   return 0;
 }

@@ -17,6 +17,7 @@
 #include "trader/infra/recer/proxy_recer.h"
 
 #include "common/extern/log/log.h"
+#include "common/self/dci/role.h"
 
 struct Recer : ItpRecer, ProxyRecer {
   IMPL_ROLE(ItpRecer);
@@ -33,15 +34,16 @@ struct RecerSender : Recer, Sender {
   RecerSender(){};
   RecerSender(const RecerSender &) = delete;
   RecerSender &operator=(const RecerSender &) = delete;
-  static RecerSender &getInstance() {
+  static RecerSender &GetInstance() {
     static RecerSender instance;
     return instance;
   }
 
   bool Run() {
     // Turn on the accept proxy, called at the end of the main process
-    auto &zmqBase = BaseZmq::getInstance();
-    zmq_proxy(zmqBase.receiver, zmqBase.workers, NULL);
+    auto &zmq_base = BaseZmq::GetInstance();
+    zmq_proxy(zmq_base.receiver, zmq_base.workers, NULL);
+    return true;
   }
 
   IMPL_ROLE(Recer);

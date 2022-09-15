@@ -26,8 +26,8 @@ struct ProxyRecer {
  private:
   bool InitQueryReceiver(void);
   bool InitOrderReceiver(void);
-  void *query_receiver{nullptr};
-  void *order_receiver{nullptr};
+  void *query_receiver_{nullptr};
+  void *order_receiver_{nullptr};
 };
 
 #endif /* WORKSPACE_TRADER_INFRA_PROXYRECER_H_ */

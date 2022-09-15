@@ -25,7 +25,7 @@ struct StrategyEvent {
   void InstrumentReqHandle(utils::ItpMsg &msg);
 
  private:
-  std::map<std::string, std::function<void(utils::ItpMsg &msg)>> msg_func_map;
+  std::map<std::string, std::function<void(utils::ItpMsg &msg)>> msg_func_map_;
 };
 
 #endif /* WORKSPACE_TRADER_INTERFACE_STRATEGYEVENT_H_ */

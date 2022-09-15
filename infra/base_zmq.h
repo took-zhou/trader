@@ -14,7 +14,7 @@ struct BaseZmq {
   BaseZmq();
   BaseZmq(const BaseZmq &) = delete;
   BaseZmq &operator=(const BaseZmq &) = delete;
-  static BaseZmq &getInstance() {
+  static BaseZmq &GetInstance() {
     static BaseZmq instance;
     return instance;
   }

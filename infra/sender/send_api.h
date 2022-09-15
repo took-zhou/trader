@@ -8,9 +8,9 @@ struct SendApi {
   virtual bool ReqUserLogout() = 0;
   virtual bool InsertOrder(utils::OrderContent &content) = 0;
   virtual bool CancelOrder(utils::OrderContent &content) = 0;
-  virtual bool ReqAvailableFunds(const int requestId) = 0;
-  virtual bool ReqInstrumentInfo(const utils::InstrumtntID &ins_exch, const int requestId) = 0;
-  virtual bool ReqTransactionCost(const utils::InstrumtntID &ins_exch, const int requestId) = 0;
+  virtual bool ReqAvailableFunds(const int request_id) = 0;
+  virtual bool ReqInstrumentInfo(const utils::InstrumtntID &ins_exch, const int request_id) = 0;
+  virtual bool ReqTransactionCost(const utils::InstrumtntID &ins_exch, const int request_id) = 0;
   virtual bool LossConnection() = 0;
 };
 
