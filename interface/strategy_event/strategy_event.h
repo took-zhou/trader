@@ -22,7 +22,6 @@ struct StrategyEvent {
   void OrderCancelReqHandle(utils::ItpMsg &msg);
   void AccountStatusReqHandle(utils::ItpMsg &msg);
   void TransactionCostReqHandle(utils::ItpMsg &msg);
-  void InstrumentReqHandle(utils::ItpMsg &msg);
 
  private:
   std::map<std::string, std::function<void(utils::ItpMsg &msg)>> msg_func_map_;

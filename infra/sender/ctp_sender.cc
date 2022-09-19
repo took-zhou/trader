@@ -51,37 +51,43 @@ bool CtpSender::ReqUserLogin() {
     Release();
     ret = false;
   } else {
-    Authenticate();
+    if (Authenticate() == true) {
+      for (auto &item : ctp_api_spi_info_map) {
+        CThostFtdcReqUserLoginField req_user_login{0};
+        auto &json_cfg = utils::JsonConfig::GetInstance();
+        const std::string user_id = json_cfg.GetDeepConfig("users", item.first, "UserID").get<std::string>();
+        const std::string broker_id = json_cfg.GetDeepConfig("users", item.first, "BrokerID").get<std::string>();
+        const std::string pass_word = json_cfg.GetDeepConfig("users", item.first, "Password").get<std::string>();
+        strcpy(req_user_login.BrokerID, broker_id.c_str());
+        strcpy(req_user_login.UserID, user_id.c_str());
+        strcpy(req_user_login.Password, pass_word.c_str());
 
-    for (auto &item : ctp_api_spi_info_map) {
-      CThostFtdcReqUserLoginField req_user_login{0};
-      auto &json_cfg = utils::JsonConfig::GetInstance();
-      const std::string user_id = json_cfg.GetDeepConfig("users", item.first, "UserID").get<std::string>();
-      const std::string broker_id = json_cfg.GetDeepConfig("users", item.first, "BrokerID").get<std::string>();
-      const std::string pass_word = json_cfg.GetDeepConfig("users", item.first, "Password").get<std::string>();
-      strcpy(req_user_login.BrokerID, broker_id.c_str());
-      strcpy(req_user_login.UserID, user_id.c_str());
-      strcpy(req_user_login.Password, pass_word.c_str());
+        int result = item.second.trader_api->ReqUserLogin(&req_user_login, request_id_++);
 
-      auto &global_sem = GlobalSem::GetInstance();
-      int result = item.second.trader_api->ReqUserLogin(&req_user_login, request_id_++);
-      INFO_LOG("ReqUserLogin send result is [%d]", result);
-      global_sem.WaitSemBySemName(GlobalSem::kLoginLogout);
+        if (result != 0) {
+          INFO_LOG("ReqUserLogin send result is [%d]", result);
+          ret = false;
+        } else {
+          auto &global_sem = GlobalSem::GetInstance();
+          global_sem.WaitSemBySemName(GlobalSem::kLoginLogout);
 
-      CtpTraderInfo trader_info;
-      trader_info.front_id = item.second.trader_spi->front_id;
-      trader_info.user_id = user_id;
-      trader_info.user_name = item.first;
-      trader_info.trader_api = item.second.trader_api;
-      ctp_trader_info_map[item.second.trader_spi->session_id] = trader_info;
-      INFO_LOG("login ctp ok!");
+          CtpTraderInfo trader_info;
+          trader_info.front_id = item.second.trader_spi->front_id;
+          trader_info.user_id = user_id;
+          trader_info.user_name = item.first;
+          trader_info.trader_api = item.second.trader_api;
+          ctp_trader_info_map[item.second.trader_spi->session_id] = trader_info;
+          INFO_LOG("login ctp ok!");
+        }
+      }
+      Confirm();
     }
-    Confirm();
   }
   return true;
 }
 
 bool CtpSender::ReqUserLogout() {
+  INFO_LOG("logout time, is going to logout.");
   for (auto &item : ctp_api_spi_info_map) {
     CThostFtdcUserLogoutField log_out_field{0};
     auto &json_cfg = utils::JsonConfig::GetInstance();
@@ -90,11 +96,12 @@ bool CtpSender::ReqUserLogout() {
     strcpy(log_out_field.BrokerID, broker_id.c_str());
     strcpy(log_out_field.UserID, user_id.c_str());
 
-    auto &global_sem = GlobalSem::GetInstance();
-    int result = item.second.trader_api->ReqUserLogout(&log_out_field, request_id_++);
-    INFO_LOG("ReqUserLogout send result is [%d]", result);
-
-    global_sem.WaitSemBySemName(GlobalSem::kLoginLogout, 10);
+    if (item.second.trader_api != nullptr) {
+      int result = item.second.trader_api->ReqUserLogout(&log_out_field, request_id_++);
+      INFO_LOG("ReqUserLogout send result is [%d]", result);
+      auto &global_sem = GlobalSem::GetInstance();
+      global_sem.WaitSemBySemName(GlobalSem::kLoginLogout, 10);
+    }
   }
   Release();
   INFO_LOG("ctp log out ok!");
@@ -108,6 +115,7 @@ bool CtpSender::InsertOrder(utils::OrderContent &content) {
   auto pos = ctp_trader_info_map.find(content.session_id);
 
   if (pos != ctp_trader_info_map.end()) {
+    content.user_id = pos->second.user_id;
     BuildOrder(content, default_order_field);
     const std::string broker_id = json_cfg.GetDeepConfig("users", pos->second.user_name, "BrokerID").get<std::string>();
     const std::string investor_id = json_cfg.GetDeepConfig("users", pos->second.user_name, "InvestorID").get<std::string>();
@@ -119,6 +127,9 @@ bool CtpSender::InsertOrder(utils::OrderContent &content) {
 
     int result = pos->second.trader_api->ReqOrderInsert(&default_order_field, request_id_++);
     INFO_LOG("ReqOrderInsert send result is [%d], order_ref is[%s]", result, default_order_field.OrderRef);
+  } else {
+    ret = false;
+    ERROR_LOG("can not find session id: %ld", content.session_id);
   }
   return ret;
 }
@@ -191,7 +202,7 @@ bool CtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch, const in
     int result = item.second.trader_api->ReqQryInstrumentMarginRate(&margin_rate_field, request_id);
     INFO_LOG("ReqQryInstrumentMarginRate send result is [%d]", result);
 
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     CThostFtdcQryInstrumentCommissionRateField commisson_rate_field{0};
     strcpy(commisson_rate_field.BrokerID, broker_id.c_str());
     strcpy(commisson_rate_field.InvestorID, investor_id.c_str());
@@ -240,9 +251,11 @@ bool CtpSender::Init() {
       }
 
       ctp_api_spi_info_map[(std::string)user] = api_spi_info;
-      std::this_thread::sleep_for(10ms);
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
   }
+
+  is_init_ = true;
   return out;
 }
 
@@ -261,14 +274,17 @@ bool CtpSender::Authenticate(void) {
     strcpy(req_authenticate_field.AuthCode, auth_code.c_str());
     strcpy(req_authenticate_field.AppID, app_id.c_str());
 
-    auto &global_sem = GlobalSem::GetInstance();
     int result = item.second.trader_api->ReqAuthenticate(&req_authenticate_field, request_id_++);
-    INFO_LOG("ReqAuthenticate send result is [%d]", result);
-
-    global_sem.WaitSemBySemName(GlobalSem::kLoginLogout);
+    if (result != 0) {
+      INFO_LOG("ReqAuthenticate send result is [%d]", result);
+      ret = false;
+    } else {
+      auto &global_sem = GlobalSem::GetInstance();
+      global_sem.WaitSemBySemName(GlobalSem::kLoginLogout);
+      INFO_LOG("ReqAuthenticate ok");
+    }
   }
 
-  INFO_LOG("ReqAuthenticate ok");
   return ret;
 }
 
@@ -297,14 +313,17 @@ bool CtpSender::Confirm() {
       strcpy(request_msg.InvestorID, investor_id.c_str());
       strcpy(request_msg.BrokerID, broker_id.c_str());
 
-      auto &global_sem = GlobalSem::GetInstance();
       int result = item.second.trader_api->ReqSettlementInfoConfirm(&request_msg, request_id_++);
-      INFO_LOG("ReqSettlementInfoConfirm send result is [%d]", result);
-      global_sem.WaitSemBySemName(GlobalSem::kLoginLogout);
-
-      ofstream out(confirm_file);
-      if (out.is_open()) {
-        out << item.second.trader_api->GetTradingDay();
+      if (result != 0) {
+        INFO_LOG("ReqSettlementInfoConfirm send result is [%d]", result);
+        ret = false;
+      } else {
+        auto &global_sem = GlobalSem::GetInstance();
+        global_sem.WaitSemBySemName(GlobalSem::kLoginLogout);
+        ofstream out(confirm_file);
+        if (out.is_open()) {
+          out << item.second.trader_api->GetTradingDay();
+        }
       }
     }
   }
@@ -314,13 +333,18 @@ bool CtpSender::Confirm() {
 bool CtpSender::Release() {
   INFO_LOG("Is going to release trader_api.");
   for (auto &item : ctp_api_spi_info_map) {
-    item.second.trader_api->Release();
+    if (item.second.trader_api != nullptr) {
+      item.second.trader_api->Release();
+      item.second.trader_api = nullptr;
+    }
 
-    if (item.second.trader_spi) {
+    if (item.second.trader_spi != nullptr) {
       delete item.second.trader_spi;
-      item.second.trader_spi = NULL;
+      item.second.trader_spi = nullptr;
     }
   }
+  is_init_ = false;
+
   return true;
 }
 

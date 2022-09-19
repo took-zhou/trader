@@ -23,6 +23,7 @@ void TraderEvent::RegSessionFunc() {
   session_func_map["ctp_trader"] = [this](utils::ItpMsg msg) { ROLE(CtpEvent).Handle(msg); };
   session_func_map["xtp_trader"] = [this](utils::ItpMsg msg) { ROLE(XtpEvent).Handle(msg); };
   session_func_map["ctpview_trader"] = [this](utils::ItpMsg msg) { ROLE(CtpviewEvent).Handle(msg); };
+  session_func_map["btp_trader"] = [this](utils::ItpMsg msg) { ROLE(BtpEvent).Handle(msg); };
 
   for (auto &iter : session_func_map) {
     INFO_LOG("session_func_map[%d] key is [%s]", cnt, iter.first.c_str());
@@ -62,7 +63,7 @@ bool TraderEvent::Run() {
 
       if (session_func_map.find(msg.session_name) != session_func_map.end()) {
         session_func_map[msg.session_name](msg);
-        std::this_thread::sleep_for(1s);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
       } else {
         ERROR_LOG("can not find[%s] in session_func_map", msg.session_name.c_str());
       }

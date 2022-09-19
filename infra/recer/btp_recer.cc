@@ -1,0 +1,100 @@
+/*
+ * ctpRecer.cpp
+ *
+ *  Created on: 2020年10月23日
+ *      Author: Administrator
+ */
+#include "trader/infra/recer/btp_recer.h"
+#include "common/extern/log/log.h"
+#include "common/self/file_util.h"
+#include "common/self/protobuf/ipc.pb.h"
+#include "common/self/semaphore.h"
+#include "common/self/utils.h"
+#include "trader/infra/inner_zmq.h"
+#include "trader/infra/sender/btp_sender.h"
+
+void BtpTraderSpi::OnRspUserLogin(const BtpLoginLogoutStruct *login_info) {}
+
+void BtpTraderSpi::OnRspUserLogout(const BtpLoginLogoutStruct *login_info) {}
+
+void BtpTraderSpi::OnRtnTrade(const BtpOrderInfoStruct *trade_info) {
+  ipc::message req_msg;
+  auto send_msg = req_msg.mutable_itp_msg();
+  send_msg->set_address(reinterpret_cast<int64_t>(trade_info));
+  utils::ItpMsg msg;
+  req_msg.SerializeToString(&msg.pb_msg);
+  msg.session_name = "btp_trader";
+  msg.msg_name = "OnRtnTrade";
+
+  auto &global_sem = GlobalSem::GetInstance();
+  auto &inner_zmq = InnerZmq::GetInstance();
+  inner_zmq.PushTask(msg);
+  global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+}
+
+void BtpTraderSpi::OnRtnOrder(const BtpOrderInfoStruct *order_info) {
+  ipc::message req_msg;
+  auto send_msg = req_msg.mutable_itp_msg();
+  send_msg->set_address(reinterpret_cast<int64_t>(order_info));
+  utils::ItpMsg msg;
+  req_msg.SerializeToString(&msg.pb_msg);
+  msg.session_name = "btp_trader";
+  msg.msg_name = "OnRtnOrder";
+
+  auto &global_sem = GlobalSem::GetInstance();
+  auto &inner_zmq = InnerZmq::GetInstance();
+  inner_zmq.PushTask(msg);
+  global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+}
+
+void BtpTraderSpi::OnRspTradingAccount(const BtpAccountInfo *account_info) {
+  ipc::message req_msg;
+  auto send_msg = req_msg.mutable_itp_msg();
+  send_msg->set_address(reinterpret_cast<int64_t>(account_info));
+  send_msg->set_user_id(account_info->user_id);
+  send_msg->set_session_id(account_info->session_id);
+  send_msg->set_request_id(account_info->prid);
+  utils::ItpMsg msg;
+  req_msg.SerializeToString(&msg.pb_msg);
+  msg.session_name = "btp_trader";
+  msg.msg_name = "OnRspTradingAccount";
+
+  auto &global_sem = GlobalSem::GetInstance();
+  auto &inner_zmq = InnerZmq::GetInstance();
+  inner_zmq.PushTask(msg);
+  global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+}
+
+void BtpTraderSpi::OnRspMarginRate(const BtpMarginInfo *margin_info) {
+  ipc::message req_msg;
+  auto send_msg = req_msg.mutable_itp_msg();
+  send_msg->set_address(reinterpret_cast<int64_t>(margin_info));
+  send_msg->set_user_id(margin_info->user_id);
+  send_msg->set_request_id(margin_info->prid);
+  utils::ItpMsg msg;
+  req_msg.SerializeToString(&msg.pb_msg);
+  msg.session_name = "btp_trader";
+  msg.msg_name = "OnRspMarginRate";
+
+  auto &global_sem = GlobalSem::GetInstance();
+  auto &inner_zmq = InnerZmq::GetInstance();
+  inner_zmq.PushTask(msg);
+  global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+}
+
+void BtpTraderSpi::OnRspCommissionRate(const BtpCommissionInfo *commission_info) {
+  ipc::message req_msg;
+  auto send_msg = req_msg.mutable_itp_msg();
+  send_msg->set_address(reinterpret_cast<int64_t>(commission_info));
+  send_msg->set_user_id(commission_info->user_id);
+  send_msg->set_request_id(commission_info->prid);
+  utils::ItpMsg msg;
+  req_msg.SerializeToString(&msg.pb_msg);
+  msg.session_name = "btp_trader";
+  msg.msg_name = "OnRspCommissionRate";
+
+  auto &global_sem = GlobalSem::GetInstance();
+  auto &inner_zmq = InnerZmq::GetInstance();
+  inner_zmq.PushTask(msg);
+  global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+}

@@ -62,13 +62,15 @@ bool XtpSender::ReqUserLogout() {
 
   auto &json_cfg = utils::JsonConfig::GetInstance();
   for (auto &item : xtp_trader_info_map) {
-    const std::string user_id = json_cfg.GetDeepConfig("users", item.second.user_id, "UserID").get<std::string>();
-    int result = trader_api->Logout(item.first);
-    INFO_LOG("ReqUserLogout send result is [%d]", result);
+    const std::string user_id = json_cfg.GetDeepConfig("users", item.second.user_name, "UserID").get<std::string>();
+    if (trader_api != nullptr) {
+      int result = trader_api->Logout(item.first);
+      INFO_LOG("ReqUserLogout send result is [%d]", result);
 
-    auto &global_sem = GlobalSem::GetInstance();
-    if (global_sem.WaitSemBySemName(GlobalSem::kLoginLogout, 3) != 0) {
-      trader_spi->OnRspUserLogout();
+      auto &global_sem = GlobalSem::GetInstance();
+      if (global_sem.WaitSemBySemName(GlobalSem::kLoginLogout, 3) != 0) {
+        trader_spi->OnRspUserLogout();
+      }
     }
   }
 
@@ -80,6 +82,7 @@ bool XtpSender::InsertOrder(utils::OrderContent &content) {
   bool ret = true;
   auto pos = xtp_trader_info_map.find(content.session_id);
   if (pos != xtp_trader_info_map.end()) {
+    content.user_id = pos->second.user_id;
     XTPOrderInsertInfo orderinfo;
     orderinfo.order_client_id = stoi(content.order_ref);
     strcpy(orderinfo.ticker, content.instrument_id.c_str());
@@ -105,6 +108,9 @@ bool XtpSender::InsertOrder(utils::OrderContent &content) {
     orderinfo.business_type = (XTP_BUSINESS_TYPE)0;
     orderinfo.position_effect = (XTP_POSITION_EFFECT_TYPE)0;
     content.xtp_order_id = trader_api->InsertOrder(&orderinfo, pos->first);
+  } else {
+    ret = false;
+    ERROR_LOG("can not find session id: %ld", content.session_id);
   }
   return ret;
 }
@@ -151,14 +157,17 @@ bool XtpSender::Init(void) {
 bool XtpSender::Release() {
   INFO_LOG("Is going to release traderApi.");
 
-  trader_api->Release();
-  trader_api = nullptr;
+  if (trader_api != nullptr) {
+    trader_api->Release();
+    trader_api = nullptr;
+  }
 
   // 释放UserSpi实例
-  if (trader_spi) {
+  if (trader_spi != nullptr) {
     delete trader_spi;
     trader_spi = NULL;
   }
+  is_init_ = false;
 
   return true;
 }

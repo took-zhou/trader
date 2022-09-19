@@ -22,7 +22,6 @@ struct MarketEvent {
   void RegMsgFun();
 
   void QryInstrumentReqHandle(utils::ItpMsg &msg);
-  void PubQryInstrumentRsp(CThostFtdcInstrumentField *field, bool result, bool is_finish);
 
   std::map<std::string, std::function<void(utils::ItpMsg &msg)>> msg_func_map;
 };

@@ -35,7 +35,7 @@ int main(int argc, char *agrv[]) {
   auto &trader_server = TraderSevice::GetInstance();
   INFO_LOG("trader server init ok");
 
-  std::this_thread::sleep_for(5s);
+  std::this_thread::sleep_for(std::chrono::seconds(5));
 
   INFO_LOG("begin init trader event");
   auto &trader_event = TraderEvent::GetInstance();

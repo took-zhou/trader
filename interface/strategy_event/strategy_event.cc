@@ -34,7 +34,6 @@ void StrategyEvent::RegMsgFun() {
   msg_func_map_["AccountStatusReq"] = [this](utils::ItpMsg &msg) { AccountStatusReqHandle(msg); };
   msg_func_map_["OrderCancelReq"] = [this](utils::ItpMsg &msg) { OrderCancelReqHandle(msg); };
   msg_func_map_["TransactionCostReq"] = [this](utils::ItpMsg &msg) { TransactionCostReqHandle(msg); };
-  msg_func_map_["InstrumentReq"] = [this](utils::ItpMsg &msg) { InstrumentReqHandle(msg); };
 
   for (auto &iter : msg_func_map_) {
     INFO_LOG("msg_func_map_[%d] key is [%s]", cnt, iter.first.c_str());
@@ -115,7 +114,10 @@ void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {
   order_manage.BuildOrder(order_insert_req.order_ref(), content);
 
   auto &recer_sender = RecerSender::GetInstance();
-  recer_sender.ROLE(Sender).ROLE(ItpSender).InsertOrder(*content.get());
+  bool result = recer_sender.ROLE(Sender).ROLE(ItpSender).InsertOrder(*content.get());
+  if (result == false) {
+    order_manage.DelOrder(content->order_ref);
+  }
 
   return;
 }
@@ -155,22 +157,4 @@ void StrategyEvent::TransactionCostReqHandle(utils::ItpMsg &msg) {
   ins_exch.exch = message.transaction_cost_req().instrument_info().exchange_id();
 
   recer_sender.ROLE(Sender).ROLE(ItpSender).ReqTransactionCost(ins_exch, stoi(process_random_id));
-}
-
-void StrategyEvent::InstrumentReqHandle(utils::ItpMsg &msg) {
-  strategy_trader::message message;
-  message.ParseFromString(msg.pb_msg);
-  auto prid = message.instrument_req().process_random_id();
-  auto &trader_ser = TraderSevice::GetInstance();
-  if (trader_ser.login_state != kLoginState) {
-    ERROR_LOG("itp not login!");
-    return;
-  }
-
-  utils::InstrumtntID ins_exch;
-  ins_exch.ins = message.instrument_req().instrument_info().instrument_id();
-  ins_exch.exch = message.instrument_req().instrument_info().exchange_id();
-
-  auto &recer_sender = RecerSender::GetInstance();
-  recer_sender.ROLE(Sender).ROLE(ItpSender).ReqInstrumentInfo(ins_exch, stoi(prid));
 }

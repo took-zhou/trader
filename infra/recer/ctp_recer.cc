@@ -21,7 +21,9 @@ void CtpTraderSpi::OnFrontConnected() {
 }
 
 void CtpTraderSpi::OnFrontDisconnected(int reason) {
-  ERROR_LOG("front_disconnected, ErrorCode:%#x", reason);
+  if (reason != 0x1001) {
+    ERROR_LOG("front_disconnected, ErrorCode:%#x", reason);
+  }
   front_disconnected = true;
 }
 
