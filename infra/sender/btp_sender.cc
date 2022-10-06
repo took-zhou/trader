@@ -124,7 +124,7 @@ bool BtpSender::Release() {
 
 bool BtpSender::ReqAvailableFunds(const int request_id) {
   int result = trader_api->QryTradingAccount(request_id);
-  INFO_LOG("ReqQryInstrument send result is [%d]", result);
+  INFO_LOG("ReqAvailableFunds send result is [%d]", result);
   return true;
 }
 
@@ -139,7 +139,7 @@ bool BtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch, const in
   strcpy(field.instrument_id, ins_exch.ins.c_str());
 
   int result = trader_api->QryTransactionCost(&field, request_id);
-  INFO_LOG("ReqQryInstrument send result is [%d]", result);
+  INFO_LOG("ReqTransactionCost send result is [%d]", result);
   return true;
 }
 
