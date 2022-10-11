@@ -219,6 +219,12 @@ void CtpEvent::OnRspQryInstrumentHandle(utils::ItpMsg &msg) {
   instrument_rsp->set_instrument_id(instrument_field->InstrumentID);
   instrument_rsp->set_exchange_id(instrument_field->ExchangeID);
   instrument_rsp->set_ticksize(instrument_field->PriceTick);
+  instrument_rsp->set_tradeuint(instrument_field->VolumeMultiple);
+  instrument_rsp->set_is_trade(instrument_field->IsTrading);
+  instrument_rsp->set_max_limit_volume(instrument_field->MaxLimitOrderVolume);
+  instrument_rsp->set_max_market_volume(instrument_field->MaxMarketOrderVolume);
+  instrument_rsp->set_min_limit_volume(instrument_field->MinLimitOrderVolume);
+  instrument_rsp->set_min_market_volume(instrument_field->MinMarketOrderVolume);
   instrument_rsp->set_result(market_trader::Result::success);
   instrument_rsp->set_finish_flag(itp_msg.is_last());
 

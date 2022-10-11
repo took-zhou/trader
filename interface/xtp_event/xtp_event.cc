@@ -211,7 +211,7 @@ bool XtpEvent::SendEmail(const utils::OrderContent &content) {
   save_content += "成交价格: " + std::to_string(content.traded_order.price) + "\n";
   save_content += "成交日期: " + content.traded_order.date + "\n";
   save_content += "成交时间: " + content.traded_order.time + "\n";
-  std::string direction = (content.traded_order.direction == "0") ? "BUY" : "SELL";
+  std::string direction = (content.traded_order.direction == "1") ? "BUY" : "SELL";
   save_content += "方向: " + direction + "\n";
   save_content += "下单数量: " + std::to_string(content.total_volume) + "\n";
   save_content += "本批成交数量: " + std::to_string(content.traded_order.volume) + "\n";
