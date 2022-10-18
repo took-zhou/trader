@@ -14,18 +14,15 @@ ProxyRecer::ProxyRecer() {
   topic_list.clear();
   // strategy_trader
   topic_list.push_back("strategy_trader.OrderInsertReq");
-  topic_list.push_back("strategy_trader.AccountStatusReq");
+  topic_list.push_back("strategy_trader.SubAccountStatus");
+  topic_list.push_back("strategy_trader.UnsubAccountStatus");
   topic_list.push_back("strategy_trader.OrderCancelReq");
   topic_list.push_back("strategy_trader.TransactionCostReq");
-  topic_list.push_back("strategy_trader.InstrumentReq");
   // trader_trader
   topic_list.push_back("trader_trader.HeartBeat");
 
   // market_trader
   topic_list.push_back("market_trader.QryInstrumentReq");
-
-  // manage_trader
-  topic_list.push_back("manage_trader.AccountStatusReq");
 
   topic_list.push_back("ctpview_trader.LoginControl");
   topic_list.push_back("ctpview_trader.BugInjection");
@@ -44,11 +41,10 @@ ProxyRecer::ProxyRecer() {
 bool ProxyRecer::InitQueryReceiver(void) {
   query_topic_list.clear();
 
-  query_topic_list.push_back("strategy_trader.AccountStatusReq");
+  query_topic_list.push_back("strategy_trader.SubAccountStatus");
+  query_topic_list.push_back("strategy_trader.UnsubAccountStatus");
   query_topic_list.push_back("strategy_trader.TransactionCostReq");
-  query_topic_list.push_back("strategy_trader.InstrumentReq");
   query_topic_list.push_back("market_trader.QryInstrumentReq");
-  query_topic_list.push_back("manage_trader.AccountStatusReq");
   query_topic_list.push_back("ctpview_trader.LoginControl");
   query_topic_list.push_back("ctpview_trader.BugInjection");
 

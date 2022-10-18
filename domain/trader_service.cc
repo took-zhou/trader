@@ -35,6 +35,10 @@ TraderSevice::TraderSevice() {
     auto login_state_run = [&]() { ROLE(TraderTimeState).Update(); };
     std::thread(login_state_run).detach();
 
+    // 开启发布线程
+    auto pub_account_status_run = [&]() { ROLE(PubAccountStatus).ReqCycle(); };
+    std::thread(pub_account_status_run).detach();
+
     auto trader_log_in_out_fuc = [&]() {
       auto &recer_sender = RecerSender::GetInstance();
       while (1) {

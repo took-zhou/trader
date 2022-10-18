@@ -31,7 +31,8 @@ void StrategyEvent::RegMsgFun() {
   int cnt = 0;
   msg_func_map_.clear();
   msg_func_map_["OrderInsertReq"] = [this](utils::ItpMsg &msg) { OrderInsertReqHandle(msg); };
-  msg_func_map_["AccountStatusReq"] = [this](utils::ItpMsg &msg) { AccountStatusReqHandle(msg); };
+  msg_func_map_["SubAccountStatus"] = [this](utils::ItpMsg &msg) { SubAccountStatusHandle(msg); };
+  msg_func_map_["UnsubAccountStatus"] = [this](utils::ItpMsg &msg) { UnsubAccountStatusHandle(msg); };
   msg_func_map_["OrderCancelReq"] = [this](utils::ItpMsg &msg) { OrderCancelReqHandle(msg); };
   msg_func_map_["TransactionCostReq"] = [this](utils::ItpMsg &msg) { TransactionCostReqHandle(msg); };
 
@@ -66,20 +67,22 @@ void StrategyEvent::OrderCancelReqHandle(utils::ItpMsg &msg) {
   }
 }
 
-void StrategyEvent::AccountStatusReqHandle(utils::ItpMsg &msg) {
+void StrategyEvent::SubAccountStatusHandle(utils::ItpMsg &msg) {
   strategy_trader::message message;
   message.ParseFromString(msg.pb_msg);
-  auto req_info = message.account_status_req();
-  auto prid = req_info.process_random_id();
+  auto sub_info = message.sub_account_status();
+  auto prid = sub_info.process_random_id();
   auto &trader_ser = TraderSevice::GetInstance();
+  trader_ser.ROLE(ControlPara).InsertControlPara(prid);
+}
 
-  if (trader_ser.login_state != kLoginState) {
-    ERROR_LOG("itp not login!");
-    return;
-  }
-
-  auto &recer_sender = RecerSender::GetInstance();
-  recer_sender.ROLE(Sender).ROLE(ItpSender).ReqAvailableFunds(stoi(prid));
+void StrategyEvent::UnsubAccountStatusHandle(utils::ItpMsg &msg) {
+  strategy_trader::message message;
+  message.ParseFromString(msg.pb_msg);
+  auto unsub_info = message.unsub_account_status();
+  auto prid = unsub_info.process_random_id();
+  auto &trader_ser = TraderSevice::GetInstance();
+  trader_ser.ROLE(ControlPara).InsertControlPara(prid);
 }
 
 void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {

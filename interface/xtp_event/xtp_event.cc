@@ -11,7 +11,6 @@
 #include "common/extern/log/log.h"
 #include "common/extern/xtp/inc/xtp_trader_api.h"
 #include "common/self/protobuf/ipc.pb.h"
-#include "common/self/protobuf/manage-trader.pb.h"
 #include "common/self/protobuf/market-trader.pb.h"
 #include "common/self/protobuf/strategy-trader.pb.h"
 #include "common/self/semaphore.h"
@@ -167,37 +166,20 @@ void XtpEvent::OnQueryAssetHandle(utils::ItpMsg &msg) {
   auto asset_rsp = reinterpret_cast<XTPQueryAssetRsp *>(itp_msg.address());
   auto &trader_ser = TraderSevice::GetInstance();
 
-  if (itp_msg.request_id() == 0) {
-    manage_trader::message rsp;
-    auto *account_rsp = rsp.mutable_account_status_rsp();
-    account_rsp->set_result(manage_trader::Result::success);
-    account_rsp->set_user_id(itp_msg.user_id());
-    account_rsp->set_session_id(itp_msg.session_id());
-    account_rsp->set_balance(asset_rsp->total_asset);
-    account_rsp->set_available(asset_rsp->buying_power);
+  strategy_trader::message rsp;
+  auto *account_rsp = rsp.mutable_account_status_rsp();
+  account_rsp->set_result(strategy_trader::Result::success);
+  account_rsp->set_user_id(itp_msg.user_id());
+  account_rsp->set_session_id(itp_msg.session_id());
+  account_rsp->set_balance(asset_rsp->total_asset);
+  account_rsp->set_available(asset_rsp->buying_power);
 
-    utils::ItpMsg msg;
-    rsp.SerializeToString(&msg.pb_msg);
-    msg.session_name = "manage_trader";
-    msg.msg_name = "AccountStatusRsp.0000000000";
-    auto &recer_sender = RecerSender::GetInstance();
-    recer_sender.ROLE(Sender).ROLE(ProxySender).Send(msg);
-  } else {
-    strategy_trader::message rsp;
-    auto *account_rsp = rsp.mutable_account_status_rsp();
-    account_rsp->set_result(strategy_trader::Result::success);
-    account_rsp->set_user_id(itp_msg.user_id());
-    account_rsp->set_session_id(itp_msg.session_id());
-    account_rsp->set_balance(asset_rsp->total_asset);
-    account_rsp->set_available(asset_rsp->buying_power);
-
-    utils::ItpMsg msg;
-    rsp.SerializeToString(&msg.pb_msg);
-    msg.session_name = "strategy_trader";
-    msg.msg_name = "AccountStatusRsp." + std::to_string(itp_msg.request_id());
-    auto &recer_sender = RecerSender::GetInstance();
-    recer_sender.ROLE(Sender).ROLE(ProxySender).Send(msg);
-  }
+  utils::ItpMsg send_msg;
+  rsp.SerializeToString(&send_msg.pb_msg);
+  send_msg.session_name = "strategy_trader";
+  send_msg.msg_name = "AccountStatusRsp." + std::to_string(itp_msg.request_id());
+  auto &recer_sender = RecerSender::GetInstance();
+  recer_sender.ROLE(Sender).ROLE(ProxySender).Send(send_msg);
 }
 
 bool XtpEvent::SendEmail(const utils::OrderContent &content) {

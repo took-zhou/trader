@@ -168,7 +168,7 @@ bool CtpSender::ReqAvailableFunds(const int request_id) {
     strcpy(request_msg.CurrencyID, "CNY");
 
     int result = item.second.trader_api->ReqQryTradingAccount(&request_msg, request_id);
-    if (request_id != 0) {
+    if (result != 0) {
       INFO_LOG("ReqQryTradingAccount send result is [%d]", result);
     }
   }
@@ -191,6 +191,8 @@ bool CtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch, const int
 bool CtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch, const int request_id) {
   auto &json_cfg = utils::JsonConfig::GetInstance();
   for (auto &item : ctp_api_spi_info_map) {
+    item.second.trader_spi->req_transaction_cost_exchange = ins_exch.exch;
+    item.second.trader_spi->req_transaction_cost_instrument = ins_exch.ins;
     CThostFtdcQryInstrumentMarginRateField margin_rate_field{0};
     const std::string investor_id = json_cfg.GetDeepConfig("users", item.first, "InvestorID").get<std::string>();
     const std::string broker_id = json_cfg.GetDeepConfig("users", item.first, "BrokerID").get<std::string>();

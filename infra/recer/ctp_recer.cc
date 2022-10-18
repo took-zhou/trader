@@ -148,6 +148,10 @@ void CtpTraderSpi::OnRspQryInstrumentMarginRate(CThostFtdcInstrumentMarginRateFi
   send_msg->set_user_id(user_id);
   send_msg->set_request_id(request_id);
   send_msg->set_is_last(is_last);
+
+  // fix bug of exch ins not right
+  strcpy(instrument_margin_rate->ExchangeID, req_transaction_cost_exchange.c_str());
+  strcpy(instrument_margin_rate->InstrumentID, req_transaction_cost_instrument.c_str());
   utils::ItpMsg msg;
   req_msg.SerializeToString(&msg.pb_msg);
   msg.session_name = "ctp_trader";
@@ -167,6 +171,10 @@ void CtpTraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissi
   send_msg->set_user_id(user_id);
   send_msg->set_request_id(request_id);
   send_msg->set_is_last(is_last);
+
+  // fix bug of exch ins not right
+  strcpy(instrument_commission_rate->ExchangeID, req_transaction_cost_exchange.c_str());
+  strcpy(instrument_commission_rate->InstrumentID, req_transaction_cost_instrument.c_str());
   utils::ItpMsg msg;
   req_msg.SerializeToString(&msg.pb_msg);
   msg.session_name = "ctp_trader";

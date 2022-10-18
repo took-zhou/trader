@@ -10,7 +10,6 @@
 #include <mutex>
 #include "common/extern/log/log.h"
 #include "common/self/protobuf/ipc.pb.h"
-#include "common/self/protobuf/manage-trader.pb.h"
 #include "common/self/protobuf/market-trader.pb.h"
 #include "common/self/protobuf/strategy-trader.pb.h"
 #include "common/self/semaphore.h"
@@ -173,37 +172,20 @@ void CtpEvent::OnRspQryTradingAccountHandle(utils::ItpMsg &msg) {
   auto trade_account = reinterpret_cast<CThostFtdcTradingAccountField *>(itp_msg.address());
   auto &trader_ser = TraderSevice::GetInstance();
 
-  if (itp_msg.request_id() == 0) {
-    manage_trader::message message;
-    auto *account_rsp = message.mutable_account_status_rsp();
-    account_rsp->set_result(manage_trader::Result::success);
-    account_rsp->set_user_id(itp_msg.user_id());
-    account_rsp->set_session_id(itp_msg.session_id());
-    account_rsp->set_balance(trade_account->Balance);
-    account_rsp->set_available(trade_account->Available);
+  strategy_trader::message rsp;
+  auto *account_rsp = rsp.mutable_account_status_rsp();
+  account_rsp->set_result(strategy_trader::Result::success);
+  account_rsp->set_user_id(itp_msg.user_id());
+  account_rsp->set_session_id(itp_msg.session_id());
+  account_rsp->set_balance(trade_account->Balance);
+  account_rsp->set_available(trade_account->Available);
 
-    utils::ItpMsg msg;
-    message.SerializeToString(&msg.pb_msg);
-    msg.session_name = "manage_trader";
-    msg.msg_name = "AccountStatusRsp.0000000000";
-    auto &recer_sender = RecerSender::GetInstance();
-    recer_sender.ROLE(Sender).ROLE(ProxySender).Send(msg);
-  } else {
-    strategy_trader::message rsp;
-    auto *account_rsp = rsp.mutable_account_status_rsp();
-    account_rsp->set_result(strategy_trader::Result::success);
-    account_rsp->set_user_id(itp_msg.user_id());
-    account_rsp->set_session_id(itp_msg.session_id());
-    account_rsp->set_balance(trade_account->Balance);
-    account_rsp->set_available(trade_account->Available);
-
-    utils::ItpMsg msg;
-    rsp.SerializeToString(&msg.pb_msg);
-    msg.session_name = "strategy_trader";
-    msg.msg_name = "AccountStatusRsp." + std::to_string(itp_msg.request_id());
-    auto &recer_sender = RecerSender::GetInstance();
-    recer_sender.ROLE(Sender).ROLE(ProxySender).Send(msg);
-  }
+  utils::ItpMsg send_msg;
+  rsp.SerializeToString(&send_msg.pb_msg);
+  send_msg.session_name = "strategy_trader";
+  send_msg.msg_name = "AccountStatusRsp." + std::to_string(itp_msg.request_id());
+  auto &recer_sender = RecerSender::GetInstance();
+  recer_sender.ROLE(Sender).ROLE(ProxySender).Send(send_msg);
 }
 
 void CtpEvent::OnRspQryInstrumentHandle(utils::ItpMsg &msg) {
@@ -246,6 +228,8 @@ void CtpEvent::OnRspQryInstrumentMarginRateHandle(utils::ItpMsg &msg) {
   strategy_trader::message rsp;
   auto *margin_rate_rsp = rsp.mutable_margin_rate_rsp();
 
+  margin_rate_rsp->set_exchange_id(margin_rate_field->ExchangeID);
+  margin_rate_rsp->set_instrument_id(margin_rate_field->InstrumentID);
   margin_rate_rsp->set_user_id(itp_msg.user_id());
   margin_rate_rsp->set_result(strategy_trader::Result::success);
   margin_rate_rsp->set_longmarginratiobymoney(margin_rate_field->LongMarginRatioByMoney);
@@ -272,6 +256,8 @@ void CtpEvent::OnRspQryInstrumentCommissionRateHandle(utils::ItpMsg &msg) {
   auto *commission_rate_rsp = rsp.mutable_commission_rate_rsp();
   auto &trader_ser = TraderSevice::GetInstance();
 
+  commission_rate_rsp->set_exchange_id(commission_rate_field->ExchangeID);
+  commission_rate_rsp->set_instrument_id(commission_rate_field->InstrumentID);
   commission_rate_rsp->set_user_id(itp_msg.user_id());
   commission_rate_rsp->set_result(strategy_trader::Result::success);
   commission_rate_rsp->set_openratiobymoney(commission_rate_field->CloseRatioByMoney);

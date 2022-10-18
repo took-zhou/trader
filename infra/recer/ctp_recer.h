@@ -457,6 +457,8 @@ class CtpTraderSpi : public CThostFtdcTraderSpi {
   int session_id = 0;
   int front_id = 0;
   std::string user_id;
+  std::string req_transaction_cost_exchange;
+  std::string req_transaction_cost_instrument;
 };
 
 #endif /* WORKSPACE_TRADER_INFRA_CTPRECER_H_ */

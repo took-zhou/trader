@@ -20,7 +20,8 @@ struct StrategyEvent {
 
   void OrderInsertReqHandle(utils::ItpMsg &msg);
   void OrderCancelReqHandle(utils::ItpMsg &msg);
-  void AccountStatusReqHandle(utils::ItpMsg &msg);
+  void SubAccountStatusHandle(utils::ItpMsg &msg);
+  void UnsubAccountStatusHandle(utils::ItpMsg &msg);
   void TransactionCostReqHandle(utils::ItpMsg &msg);
 
  private:

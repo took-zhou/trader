@@ -19,7 +19,6 @@ void TraderEvent::RegSessionFunc() {
   session_func_map.clear();
   session_func_map["market_trader"] = [this](utils::ItpMsg msg) { ROLE(MarketEvent).Handle(msg); };
   session_func_map["strategy_trader"] = [this](utils::ItpMsg msg) { ROLE(StrategyEvent).Handle(msg); };
-  session_func_map["manage_trader"] = [this](utils::ItpMsg msg) { ROLE(ManageEvent).Handle(msg); };
   session_func_map["ctp_trader"] = [this](utils::ItpMsg msg) { ROLE(CtpEvent).Handle(msg); };
   session_func_map["xtp_trader"] = [this](utils::ItpMsg msg) { ROLE(XtpEvent).Handle(msg); };
   session_func_map["ctpview_trader"] = [this](utils::ItpMsg msg) { ROLE(CtpviewEvent).Handle(msg); };
