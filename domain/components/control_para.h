@@ -10,7 +10,7 @@ struct ControlPara {
   ControlPara();
   ~ControlPara(){};
 
-  std::set<std::string> &GetPridList(void);
+  std::set<std::string> GetPridList(void);
 
   bool InsertControlPara(const std::string &prid);
   bool EraseControlPara(const std::string &prid);

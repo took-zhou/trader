@@ -25,7 +25,7 @@ ControlPara::ControlPara() {
   }
 }
 
-std::set<std::string> &ControlPara::GetPridList(void) { return publish_paras_; }
+std::set<std::string> ControlPara::GetPridList(void) { return publish_paras_; }
 
 bool ControlPara::InsertControlPara(const std::string &prid) {
   publish_paras_.emplace(prid);

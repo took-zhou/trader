@@ -82,7 +82,7 @@ void StrategyEvent::UnsubAccountStatusHandle(utils::ItpMsg &msg) {
   auto unsub_info = message.unsub_account_status();
   auto prid = unsub_info.process_random_id();
   auto &trader_ser = TraderSevice::GetInstance();
-  trader_ser.ROLE(ControlPara).InsertControlPara(prid);
+  trader_ser.ROLE(ControlPara).EraseControlPara(prid);
 }
 
 void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {

@@ -14,14 +14,14 @@ void PubAccountStatus::ReqCycle(void) {
   auto &trader_ser = TraderSevice::GetInstance();
 
   while (1) {
-    if (trader_ser.login_state == kLoginState) {
-      auto &prid_list = trader_ser.ROLE(ControlPara).GetPridList();
-      for (auto &item : prid_list) {
-        auto &recer_sender = RecerSender::GetInstance();
+    auto prid_list = trader_ser.ROLE(ControlPara).GetPridList();
+    for (auto &item : prid_list) {
+      auto &recer_sender = RecerSender::GetInstance();
+      if (trader_ser.login_state == kLoginState) {
         recer_sender.ROLE(Sender).ROLE(ItpSender).ReqAvailableFunds(stoi(item));
-        std::this_thread::sleep_for(std::chrono::seconds(10));
       }
+
+      std::this_thread::sleep_for(std::chrono::seconds(10));
     }
-    std::this_thread::sleep_for(std::chrono::seconds(10));
   }
 }
