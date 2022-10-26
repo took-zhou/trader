@@ -20,6 +20,7 @@ struct CtpviewEvent {
 
   void LoginControlHandle(utils::ItpMsg &msg);
   void BugInjectionHandle(utils::ItpMsg &msg);
+  void CheckStrategyAliveHandle(utils::ItpMsg &msg);
 
   std::map<std::string, std::function<void(utils::ItpMsg &msg)>> msg_func_map;
 };

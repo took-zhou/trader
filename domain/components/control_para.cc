@@ -30,6 +30,7 @@ std::set<std::string> ControlPara::GetPridList(void) { return publish_paras_; }
 bool ControlPara::InsertControlPara(const std::string &prid) {
   publish_paras_.emplace(prid);
 
+  INFO_LOG("insert prid: %s.", prid.c_str());
   WriteToJson();
   return true;
 }
@@ -45,6 +46,7 @@ bool ControlPara::EraseControlPara(const std::string &prid) {
     publish_paras_.erase(prid);
   }
 
+  INFO_LOG("erase prid: %s.", prid.c_str());
   WriteToJson();
   return ret;
 }
