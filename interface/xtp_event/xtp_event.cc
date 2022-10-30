@@ -85,6 +85,8 @@ void XtpEvent::OnOrderEventHandle(utils::ItpMsg &msg) {
 
       order_manage.DelOrder(std::to_string(order_info->order_client_id));
     }
+  } else {
+    ERROR_LOG("not find order ref: %d", order_info->order_client_id);
   }
 }
 
@@ -130,6 +132,8 @@ void XtpEvent::OnTradeEventHandle(utils::ItpMsg &msg) {
       INFO_LOG("the order was finished, ref[%d],identity[%s]", trade_report->order_client_id, content->prid.c_str());
       order_manage.DelOrder(std::to_string(trade_report->order_client_id));
     }
+  } else {
+    ERROR_LOG("not find order ref: %d", trade_report->order_client_id);
   }
 }
 
@@ -155,6 +159,8 @@ void XtpEvent::OnCancelOrderErrorHandle(utils::ItpMsg &msg) {
     msg.msg_name = "OrderCancelRsp." + content->prid;
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(Sender).ROLE(ProxySender).Send(msg);
+  } else {
+    ERROR_LOG("not find order ref: %ld", cancel_info->order_xtp_id);
   }
 }
 

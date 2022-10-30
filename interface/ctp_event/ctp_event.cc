@@ -58,7 +58,7 @@ void CtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
   if (content != nullptr) {
     if (order->OrderStatus == THOST_FTDC_OST_Canceled) {
 #ifdef BENCH_TEST
-      ScopedTimer t("OnRtnOrderHandle");
+      ScopedTimer timer("OnRtnOrderHandle");
 #endif
       auto &recer_sender = RecerSender::GetInstance();
       {
@@ -90,6 +90,8 @@ void CtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
       INFO_LOG("the order be canceled, order ref: %s, prid: %s.", order->OrderRef, content->prid.c_str());
       order_manage.DelOrder(order->OrderRef);
     }
+  } else {
+    ERROR_LOG("not find order ref: %s", order->OrderRef);
   }
 }
 
@@ -136,6 +138,8 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
       INFO_LOG("the order was finished, order ref: %s, prid: %s.", trade->OrderRef, content->prid.c_str());
       order_manage.DelOrder(trade->OrderRef);
     }
+  } else {
+    ERROR_LOG("not find order ref: %s", trade->OrderRef);
   }
 }
 
@@ -161,6 +165,8 @@ void CtpEvent::OnRspOrderActionHandle(utils::ItpMsg &msg) {
     msg.msg_name = "OrderCancelRsp." + content->prid;
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(Sender).ROLE(ProxySender).Send(msg);
+  } else {
+    ERROR_LOG("not find order ref: %s", order_action_rsp->OrderRef);
   }
 }
 

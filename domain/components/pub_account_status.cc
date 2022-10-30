@@ -37,7 +37,7 @@ void PubAccountStatus::ReqCycle(void) {
         recer_sender.ROLE(Sender).ROLE(ItpSender).ReqAvailableFunds(stoi(item));
       }
 
-      std::this_thread::sleep_for(std::chrono::seconds(10));
+      std::this_thread::sleep_for(std::chrono::seconds(1));
     }
   }
 }

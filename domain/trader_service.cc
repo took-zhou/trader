@@ -14,6 +14,10 @@ TraderSevice::TraderSevice() {
   auto &json_cfg = utils::JsonConfig::GetInstance();
   auto api_type = json_cfg.GetConfig("common", "ApiType");
   if (api_type == "btp") {
+    // 开启发布线程
+    auto pub_account_status_run = [&]() { ROLE(PubAccountStatus).ReqCycle(); };
+    std::thread(pub_account_status_run).detach();
+
     auto trader_log_in_out_fuc = [&]() {
       auto &recer_sender = RecerSender::GetInstance();
       while (1) {

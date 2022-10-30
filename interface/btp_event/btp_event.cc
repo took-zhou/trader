@@ -85,6 +85,8 @@ void BtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
 
       order_manage.DelOrder(std::to_string(order_info->order_ref));
     }
+  } else {
+    ERROR_LOG("not find order ref: %d", order_info->order_ref);
   }
 }
 
@@ -98,7 +100,7 @@ void BtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
   auto &order_manage = trader_ser.ROLE(OrderManage);
 
 #ifdef BENCH_TEST
-  ScopedTimer t("OnRtnTradeHandle");
+  ScopedTimer timer("OnRtnTradeHandle");
 #endif
   auto content = order_manage.GetOrder(std::to_string(trade_report->order_ref));
   if (content != nullptr) {
@@ -130,6 +132,8 @@ void BtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
       INFO_LOG("the order was finished, ref[%d],identity[%s]", trade_report->order_ref, content->prid.c_str());
       order_manage.DelOrder(std::to_string(trade_report->order_ref));
     }
+  } else {
+    ERROR_LOG("not find order ref: %d", trade_report->order_ref);
   }
 }
 

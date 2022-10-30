@@ -124,7 +124,6 @@ bool BtpSender::Release() {
 
 bool BtpSender::ReqAvailableFunds(const int request_id) {
   int result = trader_api->QryTradingAccount(request_id);
-  INFO_LOG("ReqAvailableFunds send result is [%d]", result);
   return true;
 }
 
