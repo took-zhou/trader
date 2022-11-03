@@ -252,7 +252,7 @@ class CtpTraderSpi : public CThostFtdcTraderSpi {
 
   ///请求查询期权合约手续费响应
   void OnRspQryOptionInstrCommRate(CThostFtdcOptionInstrCommRateField *option_instr_comm_rate, CThostFtdcRspInfoField *rsp_info,
-                                   int request_id, bool is_last){};
+                                   int request_id, bool is_last);
 
   ///请求查询执行宣告响应
   void OnRspQryExecOrder(CThostFtdcExecOrderField *exec_order, CThostFtdcRspInfoField *rsp_info, int request_id, bool is_last){};

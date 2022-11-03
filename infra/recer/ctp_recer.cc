@@ -193,3 +193,30 @@ void CtpTraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissi
     ERROR_LOG("instrument_commission_rate is null.");
   }
 };
+
+void CtpTraderSpi::OnRspQryOptionInstrCommRate(CThostFtdcOptionInstrCommRateField *option_instr_comm_rate, CThostFtdcRspInfoField *rsp_info,
+                                               int request_id, bool is_last) {
+  if (option_instr_comm_rate != nullptr) {
+    ipc::message req_msg;
+    auto send_msg = req_msg.mutable_itp_msg();
+    send_msg->set_address(reinterpret_cast<int64_t>(option_instr_comm_rate));
+    send_msg->set_user_id(user_id);
+    send_msg->set_request_id(request_id);
+    send_msg->set_is_last(is_last);
+
+    // fix bug of exch ins not right
+    strcpy(option_instr_comm_rate->ExchangeID, req_transaction_cost_exchange.c_str());
+    strcpy(option_instr_comm_rate->InstrumentID, req_transaction_cost_instrument.c_str());
+    utils::ItpMsg msg;
+    req_msg.SerializeToString(&msg.pb_msg);
+    msg.session_name = "ctp_trader";
+    msg.msg_name = "OnRspQryOptionInstrCommRate";
+
+    auto &global_sem = GlobalSem::GetInstance();
+    auto &inner_zmq = InnerZmq::GetInstance();
+    inner_zmq.PushTask(msg);
+    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+  } else {
+    ERROR_LOG("mm_option_instr_comm_rate is null.");
+  }
+};

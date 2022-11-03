@@ -29,6 +29,7 @@ void CtpEvent::RegMsgFun() {
   msg_func_map_["OnRspQryTradingAccount"] = [this](utils::ItpMsg &msg) { OnRspQryTradingAccountHandle(msg); };
   msg_func_map_["OnRspQryInstrumentMarginRate"] = [this](utils::ItpMsg &msg) { OnRspQryInstrumentMarginRateHandle(msg); };
   msg_func_map_["OnRspQryInstrumentCommissionRate"] = [this](utils::ItpMsg &msg) { OnRspQryInstrumentCommissionRateHandle(msg); };
+  msg_func_map_["OnRspQryOptionInstrCommRate"] = [this](utils::ItpMsg &msg) { OnRspQryOptionInstrCommRateHandle(msg); };
 
   for (auto &iter : msg_func_map_) {
     INFO_LOG("msg_func_map_[%d] key is [%s]", cnt, iter.first.c_str());
@@ -257,6 +258,36 @@ void CtpEvent::OnRspQryInstrumentCommissionRateHandle(utils::ItpMsg &msg) {
   auto &itp_msg = message.itp_msg();
 
   auto commission_rate_field = reinterpret_cast<CThostFtdcInstrumentCommissionRateField *>(itp_msg.address());
+
+  strategy_trader::message rsp;
+  auto *commission_rate_rsp = rsp.mutable_commission_rate_rsp();
+  auto &trader_ser = TraderSevice::GetInstance();
+
+  commission_rate_rsp->set_exchange_id(commission_rate_field->ExchangeID);
+  commission_rate_rsp->set_instrument_id(commission_rate_field->InstrumentID);
+  commission_rate_rsp->set_user_id(itp_msg.user_id());
+  commission_rate_rsp->set_result(strategy_trader::Result::success);
+  commission_rate_rsp->set_openratiobymoney(commission_rate_field->CloseRatioByMoney);
+  commission_rate_rsp->set_openratiobyvolume(commission_rate_field->CloseRatioByVolume);
+  commission_rate_rsp->set_closeratiobymoney(commission_rate_field->CloseTodayRatioByMoney);
+  commission_rate_rsp->set_closeratiobyvolume(commission_rate_field->CloseTodayRatioByVolume);
+  commission_rate_rsp->set_closetodayratiobymoney(commission_rate_field->OpenRatioByMoney);
+  commission_rate_rsp->set_closetodayratiobyvolume(commission_rate_field->OpenRatioByVolume);
+
+  utils::ItpMsg sendmsg;
+  rsp.SerializeToString(&sendmsg.pb_msg);
+  sendmsg.session_name = "strategy_trader";
+  sendmsg.msg_name = "CommissionRateRsp." + std::to_string(itp_msg.request_id());
+  auto &recer_sender = RecerSender::GetInstance();
+  recer_sender.ROLE(Sender).ROLE(ProxySender).Send(sendmsg);
+}
+
+void CtpEvent::OnRspQryOptionInstrCommRateHandle(utils::ItpMsg &msg) {
+  ipc::message message;
+  message.ParseFromString(msg.pb_msg);
+  auto &itp_msg = message.itp_msg();
+
+  auto commission_rate_field = reinterpret_cast<CThostFtdcOptionInstrCommRateField *>(itp_msg.address());
 
   strategy_trader::message rsp;
   auto *commission_rate_rsp = rsp.mutable_commission_rate_rsp();

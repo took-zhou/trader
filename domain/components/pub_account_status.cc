@@ -13,6 +13,7 @@ PubAccountStatus::PubAccountStatus() {
 
 void PubAccountStatus::ReqCycle(void) {
   auto &trader_ser = TraderSevice::GetInstance();
+  std::this_thread::sleep_for(std::chrono::seconds(10));
 
   while (1) {
     auto prid_list = trader_ser.ROLE(ControlPara).GetPridList();

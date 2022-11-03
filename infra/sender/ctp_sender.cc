@@ -193,25 +193,35 @@ bool CtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch, const in
   for (auto &item : ctp_api_spi_info_map) {
     item.second.trader_spi->req_transaction_cost_exchange = ins_exch.exch;
     item.second.trader_spi->req_transaction_cost_instrument = ins_exch.ins;
-    CThostFtdcQryInstrumentMarginRateField margin_rate_field{0};
     const std::string investor_id = json_cfg.GetDeepConfig("users", item.first, "InvestorID").get<std::string>();
     const std::string broker_id = json_cfg.GetDeepConfig("users", item.first, "BrokerID").get<std::string>();
-    strcpy(margin_rate_field.BrokerID, broker_id.c_str());
-    strcpy(margin_rate_field.InvestorID, investor_id.c_str());
-    strcpy(margin_rate_field.ExchangeID, ins_exch.exch.c_str());
-    strcpy(margin_rate_field.InstrumentID, ins_exch.ins.c_str());
-    margin_rate_field.HedgeFlag = THOST_FTDC_HF_Speculation;
-    int result = item.second.trader_api->ReqQryInstrumentMarginRate(&margin_rate_field, request_id);
-    INFO_LOG("ReqQryInstrumentMarginRate send result is [%d]", result);
+    if (ins_exch.ins.size() <= 6) {
+      CThostFtdcQryInstrumentMarginRateField margin_rate_field{0};
+      strcpy(margin_rate_field.BrokerID, broker_id.c_str());
+      strcpy(margin_rate_field.InvestorID, investor_id.c_str());
+      strcpy(margin_rate_field.ExchangeID, ins_exch.exch.c_str());
+      strcpy(margin_rate_field.InstrumentID, ins_exch.ins.c_str());
+      margin_rate_field.HedgeFlag = THOST_FTDC_HF_Speculation;
+      int result = item.second.trader_api->ReqQryInstrumentMarginRate(&margin_rate_field, request_id);
+      INFO_LOG("ReqQryInstrumentMarginRate send result is [%d]", result);
 
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    CThostFtdcQryInstrumentCommissionRateField commisson_rate_field{0};
-    strcpy(commisson_rate_field.BrokerID, broker_id.c_str());
-    strcpy(commisson_rate_field.InvestorID, investor_id.c_str());
-    strcpy(commisson_rate_field.ExchangeID, ins_exch.exch.c_str());
-    strcpy(commisson_rate_field.InstrumentID, ins_exch.ins.c_str());
-    result = item.second.trader_api->ReqQryInstrumentCommissionRate(&commisson_rate_field, request_id);
-    INFO_LOG("ReqQryInstrumentCommissionRate send result is [%d]", result);
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+      CThostFtdcQryInstrumentCommissionRateField commisson_rate_field{0};
+      strcpy(commisson_rate_field.BrokerID, broker_id.c_str());
+      strcpy(commisson_rate_field.InvestorID, investor_id.c_str());
+      strcpy(commisson_rate_field.ExchangeID, ins_exch.exch.c_str());
+      strcpy(commisson_rate_field.InstrumentID, ins_exch.ins.c_str());
+      result = item.second.trader_api->ReqQryInstrumentCommissionRate(&commisson_rate_field, request_id);
+      INFO_LOG("ReqQryInstrumentCommissionRate send result is [%d]", result);
+    } else {
+      CThostFtdcQryOptionInstrCommRateField commisson_rate_field{0};
+      strcpy(commisson_rate_field.BrokerID, broker_id.c_str());
+      strcpy(commisson_rate_field.InvestorID, investor_id.c_str());
+      strcpy(commisson_rate_field.ExchangeID, ins_exch.exch.c_str());
+      strcpy(commisson_rate_field.InstrumentID, ins_exch.ins.c_str());
+      int result = item.second.trader_api->ReqQryOptionInstrCommRate(&commisson_rate_field, request_id);
+      INFO_LOG("ReqQryOptionInstrCommRate send result is [%d]", result);
+    }
   }
 
   return true;
