@@ -51,7 +51,7 @@ void ActiveSafety::ReqAlive() {
     recer_sender.ROLE(Sender).ROLE(ProxySender).Send(msg);
 
     auto &global_sem = GlobalSem::GetInstance();
-    if (global_sem.WaitSemBySemName(GlobalSem::kViewDebug, 3) != 0) {
+    if (global_sem.WaitSemBySemName(GlobalSem::kStrategyRsp, 3) != 0) {
       ReqAliveTimeout(keyname);
     }
     std::this_thread::sleep_for(std::chrono::seconds(1));

@@ -145,4 +145,4 @@ void StrategyEvent::TransactionCostReqHandle(utils::ItpMsg &msg) {
   recer_sender.ROLE(Sender).ROLE(ItpSender).ReqTransactionCost(ins_exch, stoi(process_random_id));
 }
 
-void StrategyEvent::StrategyAliveRspHandle(utils::ItpMsg &msg) { GlobalSem::GetInstance().PostSemBySemName(GlobalSem::kViewDebug); }
+void StrategyEvent::StrategyAliveRspHandle(utils::ItpMsg &msg) { GlobalSem::GetInstance().PostSemBySemName(GlobalSem::kStrategyRsp); }

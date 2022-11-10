@@ -37,8 +37,8 @@ void PubAccountStatus::ReqCycle(void) {
         recer_sender.ROLE(Sender).ROLE(ProxySender).Send(itp_msg);
         recer_sender.ROLE(Sender).ROLE(ItpSender).ReqAvailableFunds(stoi(item));
       }
-
       std::this_thread::sleep_for(std::chrono::seconds(1));
     }
+    std::this_thread::sleep_for(std::chrono::seconds(1));
   }
 }
