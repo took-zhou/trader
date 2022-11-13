@@ -32,6 +32,9 @@ struct TraderSevice : OrderManage, TraderTimeState, PubAccountStatus, ControlPar
   IMPL_ROLE(ActiveSafety);
 
   TraderLoginState login_state = kLogoutState;
+
+ private:
+  bool HandleAccountExitException();
 };
 
 #endif /* WORKSPACE_TRADER_DOMAIN_TRADERSERVICE_H_ */

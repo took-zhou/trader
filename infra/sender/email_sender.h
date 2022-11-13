@@ -6,7 +6,6 @@
  */
 #ifndef WORKSPACE_TRADER_INFRA_EMAILSENDER_H_
 #define WORKSPACE_TRADER_INFRA_EMAILSENDER_H_
-#include <string>
 
 #include "common/extern/csmtp/csmtp.h"
 
