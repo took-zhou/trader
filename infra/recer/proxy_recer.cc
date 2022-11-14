@@ -19,6 +19,7 @@ ProxyRecer::ProxyRecer() {
   topic_list.push_back("strategy_trader.OrderCancelReq");
   topic_list.push_back("strategy_trader.TransactionCostReq");
   topic_list.push_back("strategy_trader.ActiveSafetyRsp");
+  topic_list.push_back("strategy_trader.AccountStatusReq");
   // trader_trader
   topic_list.push_back("trader_trader.HeartBeat");
 
@@ -47,6 +48,7 @@ bool ProxyRecer::InitQueryReceiver(void) {
   query_topic_list.push_back("strategy_trader.InsertControlParaReq");
   query_topic_list.push_back("strategy_trader.EraseControlParaReq");
   query_topic_list.push_back("strategy_trader.TransactionCostReq");
+  query_topic_list.push_back("strategy_trader.AccountStatusReq");
   query_topic_list.push_back("market_trader.QryInstrumentReq");
   query_topic_list.push_back("ctpview_trader.LoginControl");
   query_topic_list.push_back("ctpview_trader.BugInjection");

@@ -185,6 +185,7 @@ bool CtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch, const int
 
     int result = item.second.trader_api->ReqQryInstrument(&request_msg, request_id);
     INFO_LOG("ReqQryInstrument send result is [%d]", result);
+    break;
   }
 
   return true;

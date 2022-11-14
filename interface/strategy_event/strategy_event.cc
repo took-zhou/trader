@@ -36,6 +36,7 @@ void StrategyEvent::RegMsgFun() {
   msg_func_map_["OrderCancelReq"] = [this](utils::ItpMsg &msg) { OrderCancelReqHandle(msg); };
   msg_func_map_["TransactionCostReq"] = [this](utils::ItpMsg &msg) { TransactionCostReqHandle(msg); };
   msg_func_map_["ActiveSafetyRsp"] = [this](utils::ItpMsg &msg) { StrategyAliveRspHandle(msg); };
+  msg_func_map_["AccountStatusReq"] = [this](utils::ItpMsg &msg) { AccountStatusReqHandle(msg); };
 
   for (auto &iter : msg_func_map_) {
     INFO_LOG("msg_func_map_[%d] key is [%s]", cnt, iter.first.c_str());
@@ -146,3 +147,28 @@ void StrategyEvent::TransactionCostReqHandle(utils::ItpMsg &msg) {
 }
 
 void StrategyEvent::StrategyAliveRspHandle(utils::ItpMsg &msg) { GlobalSem::GetInstance().PostSemBySemName(GlobalSem::kStrategyRsp); }
+
+void StrategyEvent::AccountStatusReqHandle(utils::ItpMsg &msg) {
+  strategy_trader::message recv_message;
+  recv_message.ParseFromString(msg.pb_msg);
+  auto process_random_id = recv_message.account_status_req().process_random_id();
+
+  strategy_trader::message send_message;
+  auto *accound_set_rsp = send_message.mutable_account_set_rsp();
+  auto &json_cfg = utils::JsonConfig::GetInstance();
+  auto users = json_cfg.GetConfig("trader", "User");
+  for (auto &user : users) {
+    std::string user_id = json_cfg.GetDeepConfig("users", user, "UserID").get<std::string>();
+    accound_set_rsp->add_account(user_id);
+  }
+
+  utils::ItpMsg itp_msg;
+  send_message.SerializeToString(&itp_msg.pb_msg);
+
+  itp_msg.session_name = "strategy_trader";
+  itp_msg.msg_name = "AccountSetRsp." + process_random_id;
+
+  auto &recer_sender = RecerSender::GetInstance();
+  recer_sender.ROLE(Sender).ROLE(ProxySender).Send(itp_msg);
+  recer_sender.ROLE(Sender).ROLE(ItpSender).ReqAvailableFunds(stoi(process_random_id));
+}

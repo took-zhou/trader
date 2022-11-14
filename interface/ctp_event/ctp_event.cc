@@ -112,7 +112,11 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
   if (content != nullptr) {
     content->traded_order.price = trade->Price;
     content->traded_order.volume = trade->Volume;
-    content->traded_order.direction = std::to_string(trade->Direction);
+    if (trade->Direction == '0') {
+      content->traded_order.direction = 1;
+    } else {
+      content->traded_order.direction = 2;
+    }
     content->traded_order.date = trade->TradeDate;
     content->traded_order.time = trade->TradeTime;
 
@@ -317,20 +321,22 @@ bool CtpEvent::SendEmail(const utils::OrderContent &content) {
   char save_content[200];
   sprintf(subject_content, "%s transaction notice", content.instrument_id.c_str());
 
-  if (content.traded_order.direction == "0") {
+  if (content.traded_order.direction == 1) {
     sprintf(save_content,
             "account: %s\ninstrument: %s\norder price: %f\ntransaction price: "
             "%f\ndate: %s\ntime: %s\ndirection: BUY\norder volume: "
             "%d\ntransaction volume: %d",
             content.user_id.c_str(), content.instrument_id.c_str(), content.limit_price, content.traded_order.price,
             content.traded_order.date.c_str(), content.traded_order.time.c_str(), content.total_volume, content.traded_order.volume);
-  } else {
+  } else if (content.traded_order.direction == 2) {
     sprintf(save_content,
             "account: %s\ninstrument: %s\norder price: %f\ntransaction price: "
             "%f\ndate: %s\ntime: %s\ndirection: SELL\norder volume: "
             "%d\ntransaction volume: %d",
             content.user_id.c_str(), content.instrument_id.c_str(), content.limit_price, content.traded_order.price,
             content.traded_order.date.c_str(), content.traded_order.time.c_str(), content.total_volume, content.traded_order.volume);
+  } else {
+    ERROR("invalid direction: %d", content.traded_order.direction);
   }
 
   auto &recer_sender = RecerSender::GetInstance();
