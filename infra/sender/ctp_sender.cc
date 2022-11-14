@@ -160,16 +160,18 @@ bool CtpSender::ReqAvailableFunds(const int request_id) {
   auto &json_cfg = utils::JsonConfig::GetInstance();
 
   for (auto &item : ctp_api_spi_info_map) {
-    CThostFtdcQryTradingAccountField request_msg{0};
-    const std::string broker_id = json_cfg.GetDeepConfig("users", item.first, "BrokerID").get<std::string>();
-    const std::string investor_id = json_cfg.GetDeepConfig("users", item.first, "InvestorID").get<std::string>();
-    strcpy(request_msg.InvestorID, investor_id.c_str());
-    strcpy(request_msg.BrokerID, broker_id.c_str());
-    strcpy(request_msg.CurrencyID, "CNY");
+    if (item.second.trader_api != nullptr) {
+      CThostFtdcQryTradingAccountField request_msg{0};
+      const std::string broker_id = json_cfg.GetDeepConfig("users", item.first, "BrokerID").get<std::string>();
+      const std::string investor_id = json_cfg.GetDeepConfig("users", item.first, "InvestorID").get<std::string>();
+      strcpy(request_msg.InvestorID, investor_id.c_str());
+      strcpy(request_msg.BrokerID, broker_id.c_str());
+      strcpy(request_msg.CurrencyID, "CNY");
 
-    int result = item.second.trader_api->ReqQryTradingAccount(&request_msg, request_id);
-    if (result != 0) {
-      INFO_LOG("ReqQryTradingAccount send result is [%d]", result);
+      int result = item.second.trader_api->ReqQryTradingAccount(&request_msg, request_id);
+      if (result != 0) {
+        INFO_LOG("ReqQryTradingAccount send result is [%d]", result);
+      }
     }
   }
   return true;

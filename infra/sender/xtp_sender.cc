@@ -175,7 +175,9 @@ bool XtpSender::Release() {
 bool XtpSender::ReqAvailableFunds(const int request_id) {
   bool ret = true;
   for (auto &item : xtp_trader_info_map) {
-    ret = trader_api->QueryAsset(item.first, request_id);
+    if (trader_api != nullptr) {
+      ret = trader_api->QueryAsset(item.first, request_id);
+    }
   }
   return ret;
 }

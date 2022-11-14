@@ -219,23 +219,28 @@ void BtpEvent::OnRspCommissionRateHandle(utils::ItpMsg &msg) {
 }
 
 bool BtpEvent::SendEmail(const utils::OrderContent &content) {
-  std::string subject_content = "";
-  subject_content += content.instrument_id + "成交通知";
+  char subject_content[30];
+  char save_content[200];
+  sprintf(subject_content, "%s transaction notice", content.instrument_id.c_str());
 
-  std::string save_content = "";
-  save_content += "账户: " + content.user_id + "\n";
-  save_content += "合约: " + content.instrument_id + "\n";
-  save_content += "下单价格: " + std::to_string(content.limit_price) + "\n";
-  save_content += "成交价格: " + std::to_string(content.traded_order.price) + "\n";
-  save_content += "成交日期: " + content.traded_order.date + "\n";
-  save_content += "成交时间: " + content.traded_order.time + "\n";
-  std::string direction = (content.traded_order.direction == "1") ? "BUY" : "SELL";
-  save_content += "方向: " + direction + "\n";
-  save_content += "下单数量: " + std::to_string(content.total_volume) + "\n";
-  save_content += "本批成交数量: " + std::to_string(content.traded_order.volume) + "\n";
+  if (content.traded_order.direction == "1") {
+    sprintf(save_content,
+            "account: %s\ninstrument: %s\norder price: %f\ntransaction price: "
+            "%f\ndate: %s\ntime: %s\ndirection: BUY\norder volume: "
+            "%d\ntransaction volume: %d",
+            content.user_id.c_str(), content.instrument_id.c_str(), content.limit_price, content.traded_order.price,
+            content.traded_order.date.c_str(), content.traded_order.time.c_str(), content.total_volume, content.traded_order.volume);
+  } else {
+    sprintf(save_content,
+            "account: %s\ninstrument: %s\norder price: %f\ntransaction price: "
+            "%f\ndate: %s\ntime: %s\ndirection: SELL\norder volume: "
+            "%d\ntransaction volume: %d",
+            content.user_id.c_str(), content.instrument_id.c_str(), content.limit_price, content.traded_order.price,
+            content.traded_order.date.c_str(), content.traded_order.time.c_str(), content.total_volume, content.traded_order.volume);
+  }
 
   auto &recer_sender = RecerSender::GetInstance();
-  recer_sender.ROLE(Sender).ROLE(EmailSender).Send(subject_content.c_str(), save_content.c_str());
+  recer_sender.ROLE(Sender).ROLE(EmailSender).Send(subject_content, save_content);
 
   return true;
 }

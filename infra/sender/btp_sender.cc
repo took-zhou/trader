@@ -123,7 +123,10 @@ bool BtpSender::Release() {
 }
 
 bool BtpSender::ReqAvailableFunds(const int request_id) {
-  int result = trader_api->QryTradingAccount(request_id);
+  if (trader_api != nullptr) {
+    int result = trader_api->QryTradingAccount(request_id);
+  }
+
   return true;
 }
 

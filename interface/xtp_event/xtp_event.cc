@@ -202,7 +202,7 @@ bool XtpEvent::SendEmail(const utils::OrderContent &content) {
             content.traded_order.date.c_str(), content.traded_order.time.c_str(), content.total_volume, content.traded_order.volume);
   } else {
     sprintf(save_content,
-            "account11: %s\ninstrument: %s\norder price: %f\ntransaction price: "
+            "account: %s\ninstrument: %s\norder price: %f\ntransaction price: "
             "%f\ndate: %s\ntime: %s\ndirection: SELL\norder volume: "
             "%d\ntransaction volume: %d",
             content.user_id.c_str(), content.instrument_id.c_str(), content.limit_price, content.traded_order.price,
