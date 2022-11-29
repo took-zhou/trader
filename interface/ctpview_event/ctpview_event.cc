@@ -7,6 +7,7 @@
 #include "trader/interface/ctpview_event/ctpview_event.h"
 #include <thread>
 #include "common/extern/log/log.h"
+#include "common/self/profiler.h"
 #include "common/self/protobuf/ctpview-trader.pb.h"
 #include "trader/domain/trader_service.h"
 #include "trader/infra/recer_sender.h"
@@ -19,6 +20,7 @@ void CtpviewEvent::RegMsgFun() {
   msg_func_map["LoginControl"] = [this](utils::ItpMsg &msg) { LoginControlHandle(msg); };
   msg_func_map["BugInjection"] = [this](utils::ItpMsg &msg) { BugInjectionHandle(msg); };
   msg_func_map["CheckStrategyAlive"] = [this](utils::ItpMsg &msg) { CheckStrategyAliveHandle(msg); };
+  msg_func_map["ProfilerControl"] = [this](utils::ItpMsg &msg) { ProfilerControlHandle(msg); };
 
   for (auto &iter : msg_func_map) {
     INFO_LOG("msg_func_map[%d] key is [%s]", cnt, iter.first.c_str());
@@ -78,5 +80,20 @@ void CtpviewEvent::CheckStrategyAliveHandle(utils::ItpMsg &msg) {
     auto active_safety_func = [&]() { trader_ser.ROLE(ActiveSafety).ReqAlive(); };
     INFO_LOG("ActiveSafetyFunc prepare ok");
     std::thread(active_safety_func).detach();
+  }
+}
+
+void CtpviewEvent::ProfilerControlHandle(utils::ItpMsg &msg) {
+  ctpview_trader::message message;
+  message.ParseFromString(msg.pb_msg);
+  auto control = message.profiler_control();
+
+  auto action = control.profiler_action();
+  if (action == ctpview_trader::ProfilerControl::start_write) {
+    profiler::FlameGraphWriter::Instance().StartAddData();
+    INFO_LOG("start write tracepoint");
+  } else if (action == ctpview_trader::ProfilerControl::stop_write) {
+    profiler::FlameGraphWriter::Instance().StopAddData();
+    INFO_LOG("stop write tracepoint");
   }
 }

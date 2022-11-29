@@ -10,6 +10,7 @@
 #include <thread>
 #include "common/extern/log/log.h"
 #include "common/self/file_util.h"
+#include "common/self/profiler.h"
 #include "common/self/utils.h"
 #include "trader/domain/trader_service.h"
 #include "trader/infra/base_zmq.h"
@@ -25,6 +26,10 @@ int main(int argc, char *agrv[]) {
   utils::CreatFolder(trader_log_path);
   LOG_INIT(trader_log_path.c_str(), "traderlog", 6);
   INFO_LOG("trade log path is %s", trader_log_path.c_str());
+
+  std::string trader_data_path = json_cfg.GetConfig("trader", "ControlParaFilePath").get<std::string>();
+  utils::CreatFolder(trader_data_path);
+  profiler::FlameGraphWriter::Instance().SetFilePath(trader_data_path);
 
   // 打印版本信息
   std::string compile_time = utils::GetCompileTime();

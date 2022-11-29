@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <mutex>
 #include "common/extern/log/log.h"
+#include "common/self/profiler.h"
 #include "common/self/protobuf/ipc.pb.h"
 #include "common/self/protobuf/market-trader.pb.h"
 #include "common/self/protobuf/strategy-trader.pb.h"
@@ -97,6 +98,7 @@ void CtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
 }
 
 void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
+  PZone("OnRtnTradeHandle");
   ipc::message message;
   message.ParseFromString(msg.pb_msg);
   auto &itp_msg = message.itp_msg();
@@ -110,6 +112,7 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
 #endif
   auto content = order_manage.GetOrder(trade->OrderRef);
   if (content != nullptr) {
+    PZone("SendResult");
     content->traded_order.price = trade->Price;
     content->traded_order.volume = trade->Volume;
     if (trade->Direction == '0') {

@@ -8,6 +8,7 @@
 #include "common/extern/log/log.h"
 #include "common/extern/protobuf/src/google/protobuf/text_format.h"
 #include "common/self/file_util.h"
+#include "common/self/profiler.h"
 #include "common/self/protobuf/strategy-trader.pb.h"
 #include "common/self/semaphore.h"
 #include "common/self/utils.h"
@@ -88,6 +89,7 @@ void StrategyEvent::EraseControlParaReqHandle(utils::ItpMsg &msg) {
 }
 
 void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {
+  PZone("OrderInsertReqHandle");
 #ifdef BENCH_TEST
   ScopedTimer t("OrderInsertReqHandle");
 #endif
@@ -118,10 +120,13 @@ void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {
   auto &order_manage = trader_ser.ROLE(OrderManage);
   order_manage.BuildOrder(order_insert_req.order_ref(), content);
 
-  auto &recer_sender = RecerSender::GetInstance();
-  bool result = recer_sender.ROLE(Sender).ROLE(ItpSender).InsertOrder(*content.get());
-  if (result == false) {
-    order_manage.DelOrder(content->order_ref);
+  {
+    PZone("InsertOrder");
+    auto &recer_sender = RecerSender::GetInstance();
+    bool result = recer_sender.ROLE(Sender).ROLE(ItpSender).InsertOrder(*content.get());
+    if (result == false) {
+      order_manage.DelOrder(content->order_ref);
+    }
   }
 
   return;

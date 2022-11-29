@@ -29,6 +29,7 @@ ProxyRecer::ProxyRecer() {
   topic_list.push_back("ctpview_trader.LoginControl");
   topic_list.push_back("ctpview_trader.BugInjection");
   topic_list.push_back("ctpview_trader.CheckStrategyAlive");
+  topic_list.push_back("ctpview_trader.ProfilerControl");
 
   auto &zmq_base = BaseZmq::GetInstance();
   for (auto &topic : topic_list) {
@@ -53,6 +54,7 @@ bool ProxyRecer::InitQueryReceiver(void) {
   query_topic_list.push_back("ctpview_trader.LoginControl");
   query_topic_list.push_back("ctpview_trader.BugInjection");
   query_topic_list.push_back("ctpview_trader.CheckStrategyAlive");
+  query_topic_list.push_back("ctpview_trader.ProfilerControl");
 
   auto &zmq_base = BaseZmq::GetInstance();
   query_receiver_ = zmq_socket(zmq_base.context, ZMQ_SUB);
