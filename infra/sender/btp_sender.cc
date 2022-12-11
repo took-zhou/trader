@@ -61,6 +61,7 @@ bool BtpSender::InsertOrder(utils::OrderContent &content) {
     orderinfo.price = content.limit_price;
     orderinfo.volume = content.total_volume;
     orderinfo.side = content.direction;
+    orderinfo.comboffset = content.comboffset;
 
     trader_api->ReqOrderInsert(&orderinfo);
   } else {

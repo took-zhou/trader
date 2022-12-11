@@ -120,6 +120,11 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
     } else {
       content->traded_order.direction = 2;
     }
+    if (trade->OffsetFlag == '0') {
+      content->traded_order.comboffset = 1;
+    } else {
+      content->traded_order.comboffset = 2;
+    }
     content->traded_order.date = trade->TradeDate;
     content->traded_order.time = trade->TradeTime;
 
@@ -324,23 +329,13 @@ bool CtpEvent::SendEmail(const utils::OrderContent &content) {
   char save_content[200];
   sprintf(subject_content, "%s transaction notice", content.instrument_id.c_str());
 
-  if (content.traded_order.direction == 1) {
-    sprintf(save_content,
-            "account: %s\ninstrument: %s\norder price: %f\ntransaction price: "
-            "%f\ndate: %s\ntime: %s\ndirection: BUY\norder volume: "
-            "%d\ntransaction volume: %d",
-            content.user_id.c_str(), content.instrument_id.c_str(), content.limit_price, content.traded_order.price,
-            content.traded_order.date.c_str(), content.traded_order.time.c_str(), content.total_volume, content.traded_order.volume);
-  } else if (content.traded_order.direction == 2) {
-    sprintf(save_content,
-            "account: %s\ninstrument: %s\norder price: %f\ntransaction price: "
-            "%f\ndate: %s\ntime: %s\ndirection: SELL\norder volume: "
-            "%d\ntransaction volume: %d",
-            content.user_id.c_str(), content.instrument_id.c_str(), content.limit_price, content.traded_order.price,
-            content.traded_order.date.c_str(), content.traded_order.time.c_str(), content.total_volume, content.traded_order.volume);
-  } else {
-    ERROR("invalid direction: %d", content.traded_order.direction);
-  }
+  sprintf(save_content,
+          "account: %s\ninstrument: %s\norder price: %f\ntransaction price: "
+          "%f\ndate: %s\ntime: %s\ndirection: %s\ncomboffset: %s\norder volume: "
+          "%d\ntransaction volume: %d",
+          content.user_id.c_str(), content.instrument_id.c_str(), content.limit_price, content.traded_order.price,
+          content.traded_order.date.c_str(), content.traded_order.time.c_str(), content.traded_order.direction == 1 ? "BUY" : "SELL",
+          content.traded_order.comboffset == 1 ? "OPEN" : "CLOSE", content.total_volume, content.traded_order.volume);
 
   auto &recer_sender = RecerSender::GetInstance();
   recer_sender.ROLE(Sender).ROLE(EmailSender).Send(subject_content, save_content);
