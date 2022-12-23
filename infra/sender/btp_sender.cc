@@ -1,4 +1,5 @@
 #include "trader/infra/sender/btp_sender.h"
+#include <cstring>
 #include <string>
 #include <thread>
 #include "common/extern/log/log.h"
@@ -22,9 +23,11 @@ bool BtpSender::ReqUserLogin() {
   for (auto &user : users) {
     const std::string user_id = json_cfg.GetDeepConfig("users", user, "UserID").get<std::string>();
 
-    int result = trader_api->Login();
-    INFO_LOG("ReqUserLogin send result is [%d]", result);
-    int session = 1234567890;
+    BtpLoginLogoutStruct login;
+    strcpy(login.user_id, user_id.c_str());
+    uint64_t session = trader_api->Login(login);
+    INFO_LOG("%s login ok", user_id.c_str());
+
     BtpTraderInfo trader_info;
     trader_info.user_id = user_id;
     trader_info.user_name = user;
@@ -40,9 +43,13 @@ bool BtpSender::ReqUserLogout() {
   auto &json_cfg = utils::JsonConfig::GetInstance();
   for (auto &item : btp_trader_info_map) {
     const std::string user_id = json_cfg.GetDeepConfig("users", item.second.user_name, "UserID").get<std::string>();
+
+    BtpLoginLogoutStruct logout;
+    strcpy(logout.user_id, user_id.c_str());
+
     if (trader_api != nullptr) {
-      int result = trader_api->Logout();
-      INFO_LOG("ReqUserLogout send result is [%d]", result);
+      trader_api->Logout(logout);
+      INFO_LOG("%s logout ok", user_id.c_str());
     }
   }
 
