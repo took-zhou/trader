@@ -40,7 +40,7 @@ struct CtpSender : SendApi {
   bool ReqTransactionCost(const utils::InstrumtntID &ins_exch, const int request_id);
   bool LossConnection();
 
-  static std::map<int, CtpTraderInfo> ctp_trader_info_map;
+  static std::map<uint64_t, CtpTraderInfo> ctp_trader_info_map;
 
  private:
   bool BuildOrder(utils::OrderContent &content, CThostFtdcInputOrderField &order);

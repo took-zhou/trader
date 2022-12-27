@@ -126,8 +126,6 @@ void BtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(Sender).ROLE(ProxySender).Send(msg);
 
-    SendEmail(*content);
-
     content->left_volume -= trade_report->volume;
     if (content->left_volume == 0) {
       INFO_LOG("the order was finished, ref[%d],identity[%s]", trade_report->order_ref, content->prid.c_str());

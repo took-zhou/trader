@@ -28,48 +28,64 @@ void XtpTraderSpi::OnRspUserLogin() { front_disconnected = false; }
 void XtpTraderSpi::OnRspUserLogout() {}
 
 void XtpTraderSpi::OnOrderEvent(XTPOrderInfo *order_info, XTPRI *error_info, uint64_t session_id) {
-  ipc::message req_msg;
-  auto send_msg = req_msg.mutable_itp_msg();
-  send_msg->set_address(reinterpret_cast<int64_t>(order_info));
-  utils::ItpMsg msg;
-  req_msg.SerializeToString(&msg.pb_msg);
-  msg.session_name = "xtp_trader";
-  msg.msg_name = "OnOrderEvent";
+  OnError(error_info);
 
-  auto &global_sem = GlobalSem::GetInstance();
-  auto &inner_zmq = InnerZmq::GetInstance();
-  inner_zmq.PushTask(msg);
-  global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+  if (order_info != nullptr) {
+    ipc::message req_msg;
+    auto send_msg = req_msg.mutable_itp_msg();
+    send_msg->set_address(reinterpret_cast<int64_t>(order_info));
+    utils::ItpMsg msg;
+    req_msg.SerializeToString(&msg.pb_msg);
+    msg.session_name = "xtp_trader";
+    msg.msg_name = "OnOrderEvent";
+
+    auto &global_sem = GlobalSem::GetInstance();
+    auto &inner_zmq = InnerZmq::GetInstance();
+    inner_zmq.PushTask(msg);
+    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+  } else {
+    ERROR_LOG("order_info is nullptr");
+  }
 }
 
 void XtpTraderSpi::OnTradeEvent(XTPTradeReport *trade_info, uint64_t session_id) {
-  ipc::message req_msg;
-  auto send_msg = req_msg.mutable_itp_msg();
-  send_msg->set_address(reinterpret_cast<int64_t>(trade_info));
-  utils::ItpMsg msg;
-  req_msg.SerializeToString(&msg.pb_msg);
-  msg.session_name = "xtp_trader";
-  msg.msg_name = "OnTradeEvent";
+  if (trade_info != nullptr) {
+    ipc::message req_msg;
+    auto send_msg = req_msg.mutable_itp_msg();
+    send_msg->set_address(reinterpret_cast<int64_t>(trade_info));
+    utils::ItpMsg msg;
+    req_msg.SerializeToString(&msg.pb_msg);
+    msg.session_name = "xtp_trader";
+    msg.msg_name = "OnTradeEvent";
 
-  auto &global_sem = GlobalSem::GetInstance();
-  auto &inner_zmq = InnerZmq::GetInstance();
-  inner_zmq.PushTask(msg);
-  global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    auto &global_sem = GlobalSem::GetInstance();
+    auto &inner_zmq = InnerZmq::GetInstance();
+    inner_zmq.PushTask(msg);
+    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+  } else {
+    ERROR_LOG("trade_info is nullptr");
+  }
 }
 
 void XtpTraderSpi::OnCancelOrderError(XTPOrderCancelInfo *cancel_info, XTPRI *error_info, uint64_t session_id) {
-  ipc::message req_msg;
-  auto send_msg = req_msg.mutable_itp_msg();
-  send_msg->set_address(reinterpret_cast<int64_t>(cancel_info));
-  utils::ItpMsg msg;
-  req_msg.SerializeToString(&msg.pb_msg);
-  msg.session_name = "xtp_trader";
-  msg.msg_name = "XTPOrderCancelInfo";
+  OnError(error_info);
 
-  auto &global_sem = GlobalSem::GetInstance();
-  auto &inner_zmq = InnerZmq::GetInstance();
-  inner_zmq.PushTask(msg);
-  global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+  if (cancel_info != nullptr) {
+    ipc::message req_msg;
+    auto send_msg = req_msg.mutable_itp_msg();
+    send_msg->set_address(reinterpret_cast<int64_t>(cancel_info));
+    utils::ItpMsg msg;
+    req_msg.SerializeToString(&msg.pb_msg);
+    msg.session_name = "xtp_trader";
+    msg.msg_name = "XTPOrderCancelInfo";
+
+    auto &global_sem = GlobalSem::GetInstance();
+    auto &inner_zmq = InnerZmq::GetInstance();
+    inner_zmq.PushTask(msg);
+    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+  } else {
+    ERROR_LOG("cancel_info is nullptr");
+  }
 }
 
 void XtpTraderSpi::OnQueryOrder(XTPQueryOrderRsp *order_info, XTPRI *error_info, int request_id, bool is_last, uint64_t session_id) {}
@@ -80,24 +96,30 @@ void XtpTraderSpi::OnQueryPosition(XTPQueryStkPositionRsp *investor_position, XT
                                    uint64_t session_id) {}
 
 void XtpTraderSpi::OnQueryAsset(XTPQueryAssetRsp *trading_account, XTPRI *error_info, int request_id, bool is_last, uint64_t session_id) {
-  auto pos = XtpSender::xtp_trader_info_map.find(session_id);
-  if (pos != XtpSender::xtp_trader_info_map.end()) {
-    ipc::message req_msg;
-    auto send_msg = req_msg.mutable_itp_msg();
-    send_msg->set_address(reinterpret_cast<int64_t>(trading_account));
-    send_msg->set_user_id(pos->second.user_id);
-    send_msg->set_session_id(session_id);
-    send_msg->set_request_id(request_id);
-    send_msg->set_is_last(is_last);
-    utils::ItpMsg msg;
-    req_msg.SerializeToString(&msg.pb_msg);
-    msg.session_name = "xtp_trader";
-    msg.msg_name = "OnQueryAsset";
+  OnError(error_info);
 
-    auto &global_sem = GlobalSem::GetInstance();
-    auto &inner_zmq = InnerZmq::GetInstance();
-    inner_zmq.PushTask(msg);
-    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+  if (trading_account != nullptr) {
+    auto pos = XtpSender::xtp_trader_info_map.find(session_id);
+    if (pos != XtpSender::xtp_trader_info_map.end()) {
+      ipc::message req_msg;
+      auto send_msg = req_msg.mutable_itp_msg();
+      send_msg->set_address(reinterpret_cast<int64_t>(trading_account));
+      send_msg->set_user_id(pos->second.user_id);
+      send_msg->set_session_id(session_id);
+      send_msg->set_request_id(request_id);
+      send_msg->set_is_last(is_last);
+      utils::ItpMsg msg;
+      req_msg.SerializeToString(&msg.pb_msg);
+      msg.session_name = "xtp_trader";
+      msg.msg_name = "OnQueryAsset";
+
+      auto &global_sem = GlobalSem::GetInstance();
+      auto &inner_zmq = InnerZmq::GetInstance();
+      inner_zmq.PushTask(msg);
+      global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    }
+  } else {
+    ERROR_LOG("trading_account is nullptr");
   }
 }
 

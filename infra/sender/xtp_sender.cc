@@ -167,6 +167,8 @@ bool XtpSender::Release() {
     delete trader_spi;
     trader_spi = NULL;
   }
+
+  xtp_trader_info_map.erase(xtp_trader_info_map.begin(), xtp_trader_info_map.end());
   is_init_ = false;
 
   return true;

@@ -454,7 +454,7 @@ class CtpTraderSpi : public CThostFtdcTraderSpi {
 
   bool front_disconnected = false;
   int re_connect = 0;
-  int session_id = 0;
+  uint64_t session_id = 0;
   int front_id = 0;
   std::string user_id;
   std::string req_transaction_cost_exchange;

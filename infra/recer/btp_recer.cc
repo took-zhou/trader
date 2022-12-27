@@ -18,83 +18,103 @@ void BtpTraderSpi::OnRspUserLogin(const BtpLoginLogoutStruct *login_info) {}
 void BtpTraderSpi::OnRspUserLogout(const BtpLoginLogoutStruct *login_info) {}
 
 void BtpTraderSpi::OnRtnTrade(const BtpOrderInfoStruct *trade_info) {
-  ipc::message req_msg;
-  auto send_msg = req_msg.mutable_itp_msg();
-  send_msg->set_address(reinterpret_cast<int64_t>(trade_info));
-  utils::ItpMsg msg;
-  req_msg.SerializeToString(&msg.pb_msg);
-  msg.session_name = "btp_trader";
-  msg.msg_name = "OnRtnTrade";
+  if (trade_info != nullptr) {
+    ipc::message req_msg;
+    auto send_msg = req_msg.mutable_itp_msg();
+    send_msg->set_address(reinterpret_cast<int64_t>(trade_info));
+    utils::ItpMsg msg;
+    req_msg.SerializeToString(&msg.pb_msg);
+    msg.session_name = "btp_trader";
+    msg.msg_name = "OnRtnTrade";
 
-  auto &global_sem = GlobalSem::GetInstance();
-  auto &inner_zmq = InnerZmq::GetInstance();
-  inner_zmq.PushTask(msg);
-  global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    auto &global_sem = GlobalSem::GetInstance();
+    auto &inner_zmq = InnerZmq::GetInstance();
+    inner_zmq.PushTask(msg);
+    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+  } else {
+    ERROR_LOG("trade_info is nullptr");
+  }
 }
 
 void BtpTraderSpi::OnRtnOrder(const BtpOrderInfoStruct *order_info) {
-  ipc::message req_msg;
-  auto send_msg = req_msg.mutable_itp_msg();
-  send_msg->set_address(reinterpret_cast<int64_t>(order_info));
-  utils::ItpMsg msg;
-  req_msg.SerializeToString(&msg.pb_msg);
-  msg.session_name = "btp_trader";
-  msg.msg_name = "OnRtnOrder";
+  if (order_info != nullptr) {
+    ipc::message req_msg;
+    auto send_msg = req_msg.mutable_itp_msg();
+    send_msg->set_address(reinterpret_cast<int64_t>(order_info));
+    utils::ItpMsg msg;
+    req_msg.SerializeToString(&msg.pb_msg);
+    msg.session_name = "btp_trader";
+    msg.msg_name = "OnRtnOrder";
 
-  auto &global_sem = GlobalSem::GetInstance();
-  auto &inner_zmq = InnerZmq::GetInstance();
-  inner_zmq.PushTask(msg);
-  global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    auto &global_sem = GlobalSem::GetInstance();
+    auto &inner_zmq = InnerZmq::GetInstance();
+    inner_zmq.PushTask(msg);
+    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+  } else {
+    ERROR_LOG("order_info is nullptr");
+  }
 }
 
 void BtpTraderSpi::OnRspTradingAccount(const BtpAccountInfo *account_info) {
-  ipc::message req_msg;
-  auto send_msg = req_msg.mutable_itp_msg();
-  send_msg->set_address(reinterpret_cast<int64_t>(account_info));
-  send_msg->set_user_id(account_info->user_id);
-  send_msg->set_session_id(account_info->session_id);
-  send_msg->set_request_id(account_info->prid);
-  utils::ItpMsg msg;
-  req_msg.SerializeToString(&msg.pb_msg);
-  msg.session_name = "btp_trader";
-  msg.msg_name = "OnRspTradingAccount";
+  if (account_info != nullptr) {
+    ipc::message req_msg;
+    auto send_msg = req_msg.mutable_itp_msg();
+    send_msg->set_address(reinterpret_cast<int64_t>(account_info));
+    send_msg->set_user_id(account_info->user_id);
+    send_msg->set_session_id(account_info->session_id);
+    send_msg->set_request_id(account_info->prid);
+    utils::ItpMsg msg;
+    req_msg.SerializeToString(&msg.pb_msg);
+    msg.session_name = "btp_trader";
+    msg.msg_name = "OnRspTradingAccount";
 
-  auto &global_sem = GlobalSem::GetInstance();
-  auto &inner_zmq = InnerZmq::GetInstance();
-  inner_zmq.PushTask(msg);
-  global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    auto &global_sem = GlobalSem::GetInstance();
+    auto &inner_zmq = InnerZmq::GetInstance();
+    inner_zmq.PushTask(msg);
+    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+  } else {
+    ERROR_LOG("account_info is nullptr");
+  }
 }
 
 void BtpTraderSpi::OnRspMarginRate(const BtpMarginInfo *margin_info) {
-  ipc::message req_msg;
-  auto send_msg = req_msg.mutable_itp_msg();
-  send_msg->set_address(reinterpret_cast<int64_t>(margin_info));
-  send_msg->set_user_id(margin_info->user_id);
-  send_msg->set_request_id(margin_info->prid);
-  utils::ItpMsg msg;
-  req_msg.SerializeToString(&msg.pb_msg);
-  msg.session_name = "btp_trader";
-  msg.msg_name = "OnRspMarginRate";
+  if (margin_info != nullptr) {
+    ipc::message req_msg;
+    auto send_msg = req_msg.mutable_itp_msg();
+    send_msg->set_address(reinterpret_cast<int64_t>(margin_info));
+    send_msg->set_user_id(margin_info->user_id);
+    send_msg->set_request_id(margin_info->prid);
+    utils::ItpMsg msg;
+    req_msg.SerializeToString(&msg.pb_msg);
+    msg.session_name = "btp_trader";
+    msg.msg_name = "OnRspMarginRate";
 
-  auto &global_sem = GlobalSem::GetInstance();
-  auto &inner_zmq = InnerZmq::GetInstance();
-  inner_zmq.PushTask(msg);
-  global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    auto &global_sem = GlobalSem::GetInstance();
+    auto &inner_zmq = InnerZmq::GetInstance();
+    inner_zmq.PushTask(msg);
+    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+  } else {
+    ERROR_LOG("margin_info is nullptr");
+  }
 }
 
 void BtpTraderSpi::OnRspCommissionRate(const BtpCommissionInfo *commission_info) {
-  ipc::message req_msg;
-  auto send_msg = req_msg.mutable_itp_msg();
-  send_msg->set_address(reinterpret_cast<int64_t>(commission_info));
-  send_msg->set_user_id(commission_info->user_id);
-  send_msg->set_request_id(commission_info->prid);
-  utils::ItpMsg msg;
-  req_msg.SerializeToString(&msg.pb_msg);
-  msg.session_name = "btp_trader";
-  msg.msg_name = "OnRspCommissionRate";
+  if (commission_info != nullptr) {
+    ipc::message req_msg;
+    auto send_msg = req_msg.mutable_itp_msg();
+    send_msg->set_address(reinterpret_cast<int64_t>(commission_info));
+    send_msg->set_user_id(commission_info->user_id);
+    send_msg->set_request_id(commission_info->prid);
+    utils::ItpMsg msg;
+    req_msg.SerializeToString(&msg.pb_msg);
+    msg.session_name = "btp_trader";
+    msg.msg_name = "OnRspCommissionRate";
 
-  auto &global_sem = GlobalSem::GetInstance();
-  auto &inner_zmq = InnerZmq::GetInstance();
-  inner_zmq.PushTask(msg);
-  global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    auto &global_sem = GlobalSem::GetInstance();
+    auto &inner_zmq = InnerZmq::GetInstance();
+    inner_zmq.PushTask(msg);
+    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+  } else {
+    ERROR_LOG("commission_info is nullptr");
+  }
 }

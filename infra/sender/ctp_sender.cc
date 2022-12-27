@@ -18,7 +18,7 @@
 #include "trader/infra/recer/ctp_recer.h"
 
 std::map<std::string, CtpApiSpiInfo> CtpSender::ctp_api_spi_info_map;
-std::map<int, CtpTraderInfo> CtpSender::ctp_trader_info_map;
+std::map<uint64_t, CtpTraderInfo> CtpSender::ctp_trader_info_map;
 CThostFtdcInputOrderField CtpSender::default_order_field;
 
 CtpSender::CtpSender(void) {
@@ -53,7 +53,7 @@ bool CtpSender::ReqUserLogin() {
   } else {
     if (Authenticate() == true) {
       for (auto &item : ctp_api_spi_info_map) {
-        CThostFtdcReqUserLoginField req_user_login;
+        CThostFtdcReqUserLoginField req_user_login{{0}};
         auto &json_cfg = utils::JsonConfig::GetInstance();
         const std::string user_id = json_cfg.GetDeepConfig("users", item.first, "UserID").get<std::string>();
         const std::string broker_id = json_cfg.GetDeepConfig("users", item.first, "BrokerID").get<std::string>();
@@ -89,7 +89,7 @@ bool CtpSender::ReqUserLogin() {
 bool CtpSender::ReqUserLogout() {
   INFO_LOG("logout time, is going to logout.");
   for (auto &item : ctp_api_spi_info_map) {
-    CThostFtdcUserLogoutField log_out_field;
+    CThostFtdcUserLogoutField log_out_field{{0}};
     auto &json_cfg = utils::JsonConfig::GetInstance();
     const std::string user_id = json_cfg.GetDeepConfig("users", item.first, "UserID").get<std::string>();
     const std::string broker_id = json_cfg.GetDeepConfig("users", item.first, "BrokerID").get<std::string>();
@@ -139,7 +139,7 @@ bool CtpSender::CancelOrder(utils::OrderContent &content) {
   auto &json_cfg = utils::JsonConfig::GetInstance();
   auto pos = ctp_trader_info_map.find(content.session_id);
   if (pos != ctp_trader_info_map.end()) {
-    CThostFtdcInputOrderActionField order_action_req;
+    CThostFtdcInputOrderActionField order_action_req{{0}};
     strcpy(order_action_req.OrderRef, content.order_ref.c_str());
     order_action_req.FrontID = pos->second.front_id;
     order_action_req.SessionID = pos->first;
@@ -161,7 +161,7 @@ bool CtpSender::ReqAvailableFunds(const int request_id) {
 
   for (auto &item : ctp_api_spi_info_map) {
     if (item.second.trader_api != nullptr) {
-      CThostFtdcQryTradingAccountField request_msg;
+      CThostFtdcQryTradingAccountField request_msg{{0}};
       const std::string broker_id = json_cfg.GetDeepConfig("users", item.first, "BrokerID").get<std::string>();
       const std::string investor_id = json_cfg.GetDeepConfig("users", item.first, "InvestorID").get<std::string>();
       strcpy(request_msg.InvestorID, investor_id.c_str());
@@ -179,7 +179,7 @@ bool CtpSender::ReqAvailableFunds(const int request_id) {
 
 bool CtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch, const int request_id) {
   for (auto &item : ctp_api_spi_info_map) {
-    CThostFtdcQryInstrumentField request_msg;
+    CThostFtdcQryInstrumentField request_msg{{0}};
     std::strcpy(request_msg.ExchangeID, ins_exch.exch.c_str());
     std::strcpy(request_msg.InstrumentID, ins_exch.ins.c_str());
 
@@ -199,7 +199,7 @@ bool CtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch, const in
     const std::string investor_id = json_cfg.GetDeepConfig("users", item.first, "InvestorID").get<std::string>();
     const std::string broker_id = json_cfg.GetDeepConfig("users", item.first, "BrokerID").get<std::string>();
     if (ins_exch.ins.size() <= 6) {
-      CThostFtdcQryInstrumentMarginRateField margin_rate_field;
+      CThostFtdcQryInstrumentMarginRateField margin_rate_field{{0}};
       strcpy(margin_rate_field.BrokerID, broker_id.c_str());
       strcpy(margin_rate_field.InvestorID, investor_id.c_str());
       strcpy(margin_rate_field.ExchangeID, ins_exch.exch.c_str());
@@ -209,7 +209,7 @@ bool CtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch, const in
       INFO_LOG("ReqQryInstrumentMarginRate send result is [%d]", result);
 
       std::this_thread::sleep_for(std::chrono::seconds(1));
-      CThostFtdcQryInstrumentCommissionRateField commisson_rate_field;
+      CThostFtdcQryInstrumentCommissionRateField commisson_rate_field{{0}};
       strcpy(commisson_rate_field.BrokerID, broker_id.c_str());
       strcpy(commisson_rate_field.InvestorID, investor_id.c_str());
       strcpy(commisson_rate_field.ExchangeID, ins_exch.exch.c_str());
@@ -217,7 +217,7 @@ bool CtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch, const in
       result = item.second.trader_api->ReqQryInstrumentCommissionRate(&commisson_rate_field, request_id);
       INFO_LOG("ReqQryInstrumentCommissionRate send result is [%d]", result);
     } else {
-      CThostFtdcQryOptionInstrCommRateField commisson_rate_field;
+      CThostFtdcQryOptionInstrCommRateField commisson_rate_field{{0}};
       strcpy(commisson_rate_field.BrokerID, broker_id.c_str());
       strcpy(commisson_rate_field.InvestorID, investor_id.c_str());
       strcpy(commisson_rate_field.ExchangeID, ins_exch.exch.c_str());
@@ -276,7 +276,7 @@ bool CtpSender::Init() {
 
 bool CtpSender::Authenticate(void) {
   bool ret = true;
-  CThostFtdcReqAuthenticateField req_authenticate_field;
+  CThostFtdcReqAuthenticateField req_authenticate_field{{0}};
   auto &json_cfg = utils::JsonConfig::GetInstance();
   for (auto &item : ctp_api_spi_info_map) {
     const std::string auth_code = json_cfg.GetDeepConfig("users", item.first, "AuthCode").get<std::string>();
@@ -321,7 +321,7 @@ bool CtpSender::Confirm() {
     if (strcmp(buffer, item.second.trader_api->GetTradingDay()) == 0) {
       INFO_LOG("settlement today has been confirmed before!");
     } else {
-      CThostFtdcSettlementInfoConfirmField request_msg;
+      CThostFtdcSettlementInfoConfirmField request_msg{{0}};
       auto &json_cfg = utils::JsonConfig::GetInstance();
       const std::string broker_id = json_cfg.GetDeepConfig("users", item.first, "BrokerID").get<std::string>();
       const std::string investor_id = json_cfg.GetDeepConfig("users", item.first, "InvestorID").get<std::string>();
@@ -358,6 +358,9 @@ bool CtpSender::Release() {
       item.second.trader_spi = nullptr;
     }
   }
+
+  ctp_api_spi_info_map.erase(ctp_api_spi_info_map.begin(), ctp_api_spi_info_map.end());
+  ctp_trader_info_map.erase(ctp_trader_info_map.begin(), ctp_trader_info_map.end());
   is_init_ = false;
 
   return true;

@@ -120,6 +120,8 @@ bool BtpSender::Release() {
     delete trader_spi;
     trader_spi = NULL;
   }
+
+  btp_trader_info_map.erase(btp_trader_info_map.begin(), btp_trader_info_map.end());
   is_init_ = false;
 
   return true;
