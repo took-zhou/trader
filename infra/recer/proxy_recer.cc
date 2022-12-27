@@ -14,8 +14,7 @@ ProxyRecer::ProxyRecer() {
   topic_list.clear();
   // strategy_trader
   topic_list.push_back("strategy_trader.OrderInsertReq");
-  topic_list.push_back("strategy_trader.InsertControlParaReq");
-  topic_list.push_back("strategy_trader.EraseControlParaReq");
+  topic_list.push_back("strategy_trader.ControlParaReq");
   topic_list.push_back("strategy_trader.OrderCancelReq");
   topic_list.push_back("strategy_trader.TransactionCostReq");
   topic_list.push_back("strategy_trader.ActiveSafetyRsp");
@@ -46,8 +45,7 @@ bool ProxyRecer::InitQueryReceiver(void) {
   query_topic_list.clear();
 
   query_topic_list.push_back("strategy_trader.ActiveSafetyRsp");
-  query_topic_list.push_back("strategy_trader.InsertControlParaReq");
-  query_topic_list.push_back("strategy_trader.EraseControlParaReq");
+  query_topic_list.push_back("strategy_trader.ControlParaReq");
   query_topic_list.push_back("strategy_trader.TransactionCostReq");
   query_topic_list.push_back("strategy_trader.AccountStatusReq");
   query_topic_list.push_back("market_trader.QryInstrumentReq");
@@ -123,7 +121,6 @@ bool ProxyRecer::ReceQueryMsg(utils::ItpMsg &msg) {
         seg_index++;
       } else if (recv_string[i] == ' ') {
         if (seg_index == 1) {
-          i = i;
           msg.msg_name.resize(i - start_index);
           memcpy(&msg.msg_name[0], &recv_string[start_index], (i - start_index));
         }
@@ -164,7 +161,6 @@ bool ProxyRecer::ReceOrderMsg(utils::ItpMsg &msg) {
         seg_index++;
       } else if (recv_string[i] == ' ') {
         if (seg_index == 1) {
-          i = i;
           msg.msg_name.resize(i - start_index);
           memcpy(&msg.msg_name[0], &recv_string[start_index], (i - start_index));
         }

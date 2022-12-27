@@ -171,7 +171,6 @@ void XtpEvent::OnQueryAssetHandle(utils::ItpMsg &msg) {
   auto &itp_msg = message.itp_msg();
 
   auto asset_rsp = reinterpret_cast<XTPQueryAssetRsp *>(itp_msg.address());
-  auto &trader_ser = TraderSevice::GetInstance();
 
   strategy_trader::message rsp;
   auto *account_rsp = rsp.mutable_account_status_rsp();

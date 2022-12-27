@@ -193,11 +193,9 @@ bool XtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch, const in
 
 bool XtpSender::LossConnection() {
   bool ret = false;
-  for (auto &item : xtp_trader_info_map) {
-    if (trader_spi != nullptr && trader_spi->front_disconnected == true) {
-      ret = true;
-    }
-    break;
+  if (trader_spi != nullptr && trader_spi->front_disconnected == true) {
+    ret = true;
   }
+
   return ret;
 }

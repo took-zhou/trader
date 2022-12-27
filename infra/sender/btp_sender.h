@@ -40,7 +40,6 @@ struct BtpSender : SendApi {
   static btp::api::TraderApi *trader_api;
   static BtpTraderSpi *trader_spi;
 
-  int request_id_ = 0;
   bool is_init_ = false;
 };
 

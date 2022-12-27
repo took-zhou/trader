@@ -189,7 +189,6 @@ void CtpEvent::OnRspQryTradingAccountHandle(utils::ItpMsg &msg) {
   auto &itp_msg = message.itp_msg();
 
   auto trade_account = reinterpret_cast<CThostFtdcTradingAccountField *>(itp_msg.address());
-  auto &trader_ser = TraderSevice::GetInstance();
 
   strategy_trader::message rsp;
   auto *account_rsp = rsp.mutable_account_status_rsp();
@@ -273,7 +272,6 @@ void CtpEvent::OnRspQryInstrumentCommissionRateHandle(utils::ItpMsg &msg) {
 
   strategy_trader::message rsp;
   auto *commission_rate_rsp = rsp.mutable_commission_rate_rsp();
-  auto &trader_ser = TraderSevice::GetInstance();
 
   commission_rate_rsp->set_exchange_id(commission_rate_field->ExchangeID);
   commission_rate_rsp->set_instrument_id(commission_rate_field->InstrumentID);
@@ -303,7 +301,6 @@ void CtpEvent::OnRspQryOptionInstrCommRateHandle(utils::ItpMsg &msg) {
 
   strategy_trader::message rsp;
   auto *commission_rate_rsp = rsp.mutable_commission_rate_rsp();
-  auto &trader_ser = TraderSevice::GetInstance();
 
   commission_rate_rsp->set_exchange_id(commission_rate_field->ExchangeID);
   commission_rate_rsp->set_instrument_id(commission_rate_field->InstrumentID);

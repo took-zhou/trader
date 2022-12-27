@@ -40,7 +40,6 @@ struct XtpSender : SendApi {
   static XTP::API::TraderApi *trader_api;
   static XtpTraderSpi *trader_spi;
 
-  int request_id_ = 0;
   bool is_init_ = false;
 };
 

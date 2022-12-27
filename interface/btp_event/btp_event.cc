@@ -144,7 +144,6 @@ void BtpEvent::OnRspTradingAccountHandle(utils::ItpMsg &msg) {
   auto &itp_msg = message.itp_msg();
 
   auto account_info = reinterpret_cast<BtpAccountInfo *>(itp_msg.address());
-  auto &trader_ser = TraderSevice::GetInstance();
 
   strategy_trader::message rsp;
   auto *account_rsp = rsp.mutable_account_status_rsp();
@@ -198,7 +197,6 @@ void BtpEvent::OnRspCommissionRateHandle(utils::ItpMsg &msg) {
 
   strategy_trader::message rsp;
   auto *commission_rate_rsp = rsp.mutable_commission_rate_rsp();
-  auto &trader_ser = TraderSevice::GetInstance();
 
   commission_rate_rsp->set_exchange_id(commission_info->exchange_id);
   commission_rate_rsp->set_instrument_id(commission_info->instrument_id);

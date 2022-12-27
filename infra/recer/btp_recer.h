@@ -6,7 +6,7 @@
 
 class BtpTraderSpi : public btp::api::TraderSpi {
  public:
-  ~BtpTraderSpi(){};
+  virtual ~BtpTraderSpi(){};
 
   virtual void OnRspUserLogin(const BtpLoginLogoutStruct *login_info);
   virtual void OnRspUserLogout(const BtpLoginLogoutStruct *logout_info);

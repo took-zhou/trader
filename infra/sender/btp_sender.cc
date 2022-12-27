@@ -95,17 +95,12 @@ bool BtpSender::Init(void) {
   bool out = true;
 
   if (is_init_ == false) {
-    auto &json_cfg = utils::JsonConfig::GetInstance();
-    auto users = json_cfg.GetConfig("trader", "User");
-    for (auto &user : users) {
-      INFO_LOG("begin BtpTraderApi init");
-      trader_api = btp::api::TraderApi::CreateTraderApi();
+    INFO_LOG("begin BtpTraderApi init");
+    trader_api = btp::api::TraderApi::CreateTraderApi();
 
-      trader_spi = new BtpTraderSpi();
-      trader_api->RegisterSpi(trader_spi);
-      INFO_LOG("traderApi init ok.");
-      break;
-    }
+    trader_spi = new BtpTraderSpi();
+    trader_api->RegisterSpi(trader_spi);
+    INFO_LOG("traderApi init ok.");
     is_init_ = true;
   }
 
@@ -132,7 +127,7 @@ bool BtpSender::Release() {
 
 bool BtpSender::ReqAvailableFunds(const int request_id) {
   if (trader_api != nullptr) {
-    int result = trader_api->QryTradingAccount(request_id);
+    trader_api->QryTradingAccount(request_id);
   }
 
   return true;

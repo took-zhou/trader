@@ -37,7 +37,7 @@ int main(int argc, char *agrv[]) {
   INFO_LOG("program last build at %s.", compile_time.c_str());
 
   INFO_LOG("begin init trader server");
-  auto &trader_server = TraderSevice::GetInstance();
+  TraderSevice::GetInstance();
   INFO_LOG("trader server init ok");
 
   std::this_thread::sleep_for(std::chrono::seconds(5));

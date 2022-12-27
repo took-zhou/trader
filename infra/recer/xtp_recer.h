@@ -6,7 +6,7 @@
 
 class XtpTraderSpi : public XTP::API::TraderSpi {
  public:
-  ~XtpTraderSpi(){};
+  virtual ~XtpTraderSpi(){};
 
   virtual void OnDisconnected(uint64_t session_id, int reason);
 

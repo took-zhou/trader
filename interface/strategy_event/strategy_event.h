@@ -20,8 +20,7 @@ struct StrategyEvent {
 
   void OrderInsertReqHandle(utils::ItpMsg &msg);
   void OrderCancelReqHandle(utils::ItpMsg &msg);
-  void InsertControlParaReqHandle(utils::ItpMsg &msg);
-  void EraseControlParaReqHandle(utils::ItpMsg &msg);
+  void ControlParaReqHandle(utils::ItpMsg &msg);
   void TransactionCostReqHandle(utils::ItpMsg &msg);
   void StrategyAliveRspHandle(utils::ItpMsg &msg);
   void AccountStatusReqHandle(utils::ItpMsg &msg);
