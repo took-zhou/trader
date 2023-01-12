@@ -70,7 +70,7 @@ void XtpEvent::OnOrderEventHandle(utils::ItpMsg &msg) {
         message.SerializeToString(&msg.pb_msg);
         msg.session_name = "strategy_trader";
         msg.msg_name = "OrderCancelRsp." + content->prid;
-        recer_sender.ROLE(Sender).ROLE(ProxySender).Send(msg);
+        recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(msg);
       }
       strategy_trader::message rsp;
       auto *insert_rsp = rsp.mutable_order_insert_rsp();
@@ -80,7 +80,7 @@ void XtpEvent::OnOrderEventHandle(utils::ItpMsg &msg) {
       rsp.SerializeToString(&msg.pb_msg);
       msg.session_name = "strategy_trader";
       msg.msg_name = "OrderInsertRsp." + content->prid;
-      recer_sender.ROLE(Sender).ROLE(ProxySender).Send(msg);
+      recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(msg);
       INFO_LOG("the order be canceled, orderRef: %d, prid: %s.", order_info->order_client_id, content->prid.c_str());
 
       order_manage.DelOrder(std::to_string(order_info->order_client_id));
@@ -124,7 +124,7 @@ void XtpEvent::OnTradeEventHandle(utils::ItpMsg &msg) {
     msg.session_name = "strategy_trader";
     msg.msg_name = "OrderInsertRsp." + content->prid;
     auto &recer_sender = RecerSender::GetInstance();
-    recer_sender.ROLE(Sender).ROLE(ProxySender).Send(msg);
+    recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(msg);
 
     content->left_volume -= trade_report->quantity;
     if (content->left_volume == 0) {
@@ -157,7 +157,7 @@ void XtpEvent::OnCancelOrderErrorHandle(utils::ItpMsg &msg) {
     msg.session_name = "strategy_trader";
     msg.msg_name = "OrderCancelRsp." + content->prid;
     auto &recer_sender = RecerSender::GetInstance();
-    recer_sender.ROLE(Sender).ROLE(ProxySender).Send(msg);
+    recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(msg);
   } else {
     ERROR_LOG("not find order ref: %ld", cancel_info->order_xtp_id);
   }
@@ -183,7 +183,7 @@ void XtpEvent::OnQueryAssetHandle(utils::ItpMsg &msg) {
   send_msg.session_name = "strategy_trader";
   send_msg.msg_name = "AccountStatusRsp." + std::to_string(itp_msg.request_id());
   auto &recer_sender = RecerSender::GetInstance();
-  recer_sender.ROLE(Sender).ROLE(ProxySender).Send(send_msg);
+  recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(send_msg);
 }
 
 bool XtpEvent::SendEmail(const utils::OrderContent &content) {

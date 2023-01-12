@@ -32,7 +32,6 @@ void StrategyEvent::RegMsgFun() {
   int cnt = 0;
   msg_func_map_.clear();
   msg_func_map_["OrderInsertReq"] = [this](utils::ItpMsg &msg) { OrderInsertReqHandle(msg); };
-  msg_func_map_["ControlParaReq"] = [this](utils::ItpMsg &msg) { ControlParaReqHandle(msg); };
   msg_func_map_["OrderCancelReq"] = [this](utils::ItpMsg &msg) { OrderCancelReqHandle(msg); };
   msg_func_map_["TransactionCostReq"] = [this](utils::ItpMsg &msg) { TransactionCostReqHandle(msg); };
   msg_func_map_["ActiveSafetyRsp"] = [this](utils::ItpMsg &msg) { StrategyAliveRspHandle(msg); };
@@ -66,20 +65,6 @@ void StrategyEvent::OrderCancelReqHandle(utils::ItpMsg &msg) {
 
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(Sender).ROLE(ItpSender).CancelOrder(*content);
-  }
-}
-
-void StrategyEvent::ControlParaReqHandle(utils::ItpMsg &msg) {
-  strategy_trader::message message;
-  message.ParseFromString(msg.pb_msg);
-  auto para_req = message.control_para_req();
-  auto prid = para_req.process_random_id();
-  auto action = para_req.action();
-  auto &trader_ser = TraderSevice::GetInstance();
-  if (action == strategy_trader::ControlParaReq::insert) {
-    trader_ser.ROLE(ControlPara).InsertControlPara(prid);
-  } else if (action == strategy_trader::ControlParaReq::erase) {
-    trader_ser.ROLE(ControlPara).EraseControlPara(prid);
   }
 }
 
@@ -171,7 +156,7 @@ void StrategyEvent::AccountStatusReqHandle(utils::ItpMsg &msg) {
     send_message.SerializeToString(&itp_msg.pb_msg);
     itp_msg.session_name = "strategy_trader";
     itp_msg.msg_name = "AccountSetRsp." + process_random_id;
-    recer_sender.ROLE(Sender).ROLE(ProxySender).Send(itp_msg);
+    recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(itp_msg);
   }
   login_stete = trader_ser.login_state;
 

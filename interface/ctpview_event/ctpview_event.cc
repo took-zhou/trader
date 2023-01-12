@@ -19,7 +19,6 @@ void CtpviewEvent::RegMsgFun() {
   msg_func_map.clear();
   msg_func_map["LoginControl"] = [this](utils::ItpMsg &msg) { LoginControlHandle(msg); };
   msg_func_map["BugInjection"] = [this](utils::ItpMsg &msg) { BugInjectionHandle(msg); };
-  msg_func_map["CheckStrategyAlive"] = [this](utils::ItpMsg &msg) { CheckStrategyAliveHandle(msg); };
   msg_func_map["ProfilerControl"] = [this](utils::ItpMsg &msg) { ProfilerControlHandle(msg); };
 
   for (auto &iter : msg_func_map) {
@@ -63,23 +62,6 @@ void CtpviewEvent::BugInjectionHandle(utils::ItpMsg &msg) {
     int *temp_a = new int;
     std::shared_ptr<int> ptr(temp_a);
     delete temp_a;
-  }
-}
-
-void CtpviewEvent::CheckStrategyAliveHandle(utils::ItpMsg &msg) {
-  string command = "";
-  ctpview_trader::message check_alive;
-  check_alive.ParseFromString(msg.pb_msg);
-  auto indication = check_alive.check_alive();
-
-  command = indication.check();
-  auto &trader_ser = TraderSevice::GetInstance();
-
-  if (command == "yes") {
-    // 开启检测合约是否存活线程
-    auto active_safety_func = [&]() { trader_ser.ROLE(ActiveSafety).ReqAlive(); };
-    INFO_LOG("ActiveSafetyFunc prepare ok");
-    std::thread(active_safety_func).detach();
   }
 }
 

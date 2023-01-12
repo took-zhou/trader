@@ -24,6 +24,7 @@ struct CtpEvent {
 
   void OnRtnOrderHandle(utils::ItpMsg &msg);
   void OnRtnTradeHandle(utils::ItpMsg &msg);
+  void OnRspOrderInsertHandle(utils::ItpMsg &msg);
   void OnRspOrderActionHandle(utils::ItpMsg &msg);
 
   void OnRspQryTradingAccountHandle(utils::ItpMsg &msg);

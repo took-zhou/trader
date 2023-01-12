@@ -10,7 +10,7 @@
 #include "common/self/protobuf/ipc.pb.h"
 #include "common/self/semaphore.h"
 #include "common/self/utils.h"
-#include "trader/infra/inner_zmq.h"
+#include "trader/infra/recer_sender.h"
 
 void CtpTraderSpi::OnFrontConnected() {
   INFO_LOG("OnFrontConnected():is excuted, re_connect : %d.", re_connect);
@@ -73,8 +73,8 @@ void CtpTraderSpi::OnRtnOrder(CThostFtdcOrderField *order) {
     msg.msg_name = "OnRtnOrder";
 
     auto &global_sem = GlobalSem::GetInstance();
-    auto &inner_zmq = InnerZmq::GetInstance();
-    inner_zmq.PushTask(msg);
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
   } else {
     ERROR_LOG("order is nullptr");
@@ -92,8 +92,8 @@ void CtpTraderSpi::OnRtnTrade(CThostFtdcTradeField *trade) {
     msg.msg_name = "OnRtnTrade";
 
     auto &global_sem = GlobalSem::GetInstance();
-    auto &inner_zmq = InnerZmq::GetInstance();
-    inner_zmq.PushTask(msg);
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
   } else {
     ERROR_LOG("trade is nullptr");
@@ -120,8 +120,8 @@ void CtpTraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *trading
     msg.msg_name = "OnRspQryTradingAccount";
 
     auto &global_sem = GlobalSem::GetInstance();
-    auto &inner_zmq = InnerZmq::GetInstance();
-    inner_zmq.PushTask(msg);
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
   } else {
     ERROR_LOG("trading_account is nullptr");
@@ -146,11 +146,37 @@ void CtpTraderSpi::OnRspQryInstrument(CThostFtdcInstrumentField *instrument, CTh
     msg.msg_name = "OnRspQryInstrument";
 
     auto &global_sem = GlobalSem::GetInstance();
-    auto &inner_zmq = InnerZmq::GetInstance();
-    inner_zmq.PushTask(msg);
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
   } else {
     ERROR_LOG("instrument is nullptr");
+  }
+}
+
+void CtpTraderSpi::OnRspOrderInsert(CThostFtdcInputOrderField *input_order, CThostFtdcRspInfoField *rsp_info, int request_id,
+                                    bool is_last) {
+  if (rsp_info != nullptr && rsp_info->ErrorID != 0) {
+    ERROR_LOG("id: %d, msg: %s.", rsp_info->ErrorID, rsp_info->ErrorMsg);
+  }
+
+  if (input_order != nullptr) {
+    ipc::message req_msg;
+    auto send_msg = req_msg.mutable_itp_msg();
+    send_msg->set_address(reinterpret_cast<int64_t>(input_order));
+    send_msg->set_request_id(request_id);
+    send_msg->set_is_last(is_last);
+    utils::ItpMsg msg;
+    req_msg.SerializeToString(&msg.pb_msg);
+    msg.session_name = "ctp_trader";
+    msg.msg_name = "OnRspOrderInsert";
+
+    auto &global_sem = GlobalSem::GetInstance();
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(InnerSender).SendMsg(msg);
+    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+  } else {
+    ERROR_LOG("input_order_action is nullptr");
   }
 }
 
@@ -172,8 +198,8 @@ void CtpTraderSpi::OnRspOrderAction(CThostFtdcInputOrderActionField *input_order
     msg.msg_name = "OnRspOrderAction";
 
     auto &global_sem = GlobalSem::GetInstance();
-    auto &inner_zmq = InnerZmq::GetInstance();
-    inner_zmq.PushTask(msg);
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
   } else {
     ERROR_LOG("input_order_action is nullptr");
@@ -203,8 +229,8 @@ void CtpTraderSpi::OnRspQryInstrumentMarginRate(CThostFtdcInstrumentMarginRateFi
     msg.msg_name = "OnRspQryInstrumentMarginRate";
 
     auto &global_sem = GlobalSem::GetInstance();
-    auto &inner_zmq = InnerZmq::GetInstance();
-    inner_zmq.PushTask(msg);
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
   } else {
     ERROR_LOG("instrument_margin_rate is null.");
@@ -234,8 +260,8 @@ void CtpTraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissi
     msg.msg_name = "OnRspQryInstrumentCommissionRate";
 
     auto &global_sem = GlobalSem::GetInstance();
-    auto &inner_zmq = InnerZmq::GetInstance();
-    inner_zmq.PushTask(msg);
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
   } else {
     ERROR_LOG("instrument_commission_rate is null.");
@@ -265,8 +291,8 @@ void CtpTraderSpi::OnRspQryOptionInstrCommRate(CThostFtdcOptionInstrCommRateFiel
     msg.msg_name = "OnRspQryOptionInstrCommRate";
 
     auto &global_sem = GlobalSem::GetInstance();
-    auto &inner_zmq = InnerZmq::GetInstance();
-    inner_zmq.PushTask(msg);
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
   } else {
     ERROR_LOG("mm_option_instr_comm_rate is null.");

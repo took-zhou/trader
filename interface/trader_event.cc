@@ -74,7 +74,7 @@ bool TraderEvent::Run() {
   auto itp_rec_run = [&]() {
     utils::ItpMsg msg;
     while (1) {
-      if (recer_sender.ROLE(Recer).ROLE(ItpRecer).ReceMsg(msg) == false) {
+      if (recer_sender.ROLE(Recer).ROLE(InnerRecer).ReceMsg(msg) == false) {
         ERROR_LOG(" invalid msg, session is [%s], msg_name is [%s]", msg.session_name.c_str(), msg.msg_name.c_str());
         GlobalSem::GetInstance().PostSemBySemName(GlobalSem::kApiRecv);
         continue;

@@ -20,6 +20,7 @@
 
 int main(int argc, char *agrv[]) {
   auto &json_cfg = utils::JsonConfig::GetInstance();
+  json_cfg.SetFileName("/etc/marktrade/config.json");
 
   //开启log
   std::string trader_log_path = json_cfg.GetConfig("trader", "LogPath").get<std::string>();

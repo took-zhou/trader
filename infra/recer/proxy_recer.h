@@ -10,22 +10,24 @@
 
 #include <vector>
 #include "common/self/utils.h"
-#include "trader/infra/base_zmq.h"
 
 struct ProxyRecer {
  public:
   ProxyRecer();
   bool ReceQueryMsg(utils::ItpMsg &msg);
   bool ReceOrderMsg(utils::ItpMsg &msg);
-  bool IsTopicInSubTopics(std::string);
-
-  std::vector<std::string> topic_list;
+  bool IsTopicInQuerySubTopics(std::string);
+  bool IsTopicInOrderSubTopics(std::string);
   std::vector<std::string> query_topic_list;
   std::vector<std::string> order_topic_list;
 
  private:
   bool InitQueryReceiver(void);
   bool InitOrderReceiver(void);
+  void SubscribeQueryTopic();
+  void UnSubscribeQueryTopic();
+  void SubscribeOrderTopic();
+  void UnSubscribeOrderTopic();
   void *query_receiver_{nullptr};
   void *order_receiver_{nullptr};
 };

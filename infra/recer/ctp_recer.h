@@ -62,7 +62,7 @@ class CtpTraderSpi : public CThostFtdcTraderSpi {
   void OnRspGenUserText(CThostFtdcRspGenUserTextField *rsp_gen_user_text, CThostFtdcRspInfoField *rsp_info, int request_id, bool is_last){};
 
   ///报单录入请求响应
-  void OnRspOrderInsert(CThostFtdcInputOrderField *input_order, CThostFtdcRspInfoField *rsp_info, int request_id, bool is_last){};
+  void OnRspOrderInsert(CThostFtdcInputOrderField *input_order, CThostFtdcRspInfoField *rsp_info, int request_id, bool is_last);
 
   ///预埋单录入请求响应
   void OnRspParkedOrderInsert(CThostFtdcParkedOrderField *parked_order, CThostFtdcRspInfoField *rsp_info, int request_id, bool is_last){};

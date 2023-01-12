@@ -10,7 +10,7 @@
 #include "common/self/protobuf/ipc.pb.h"
 #include "common/self/semaphore.h"
 #include "common/self/utils.h"
-#include "trader/infra/inner_zmq.h"
+#include "trader/infra/recer_sender.h"
 #include "trader/infra/sender/xtp_sender.h"
 
 void XtpTraderSpi::OnError(XTPRI *error_info) {
@@ -40,8 +40,8 @@ void XtpTraderSpi::OnOrderEvent(XTPOrderInfo *order_info, XTPRI *error_info, uin
     msg.msg_name = "OnOrderEvent";
 
     auto &global_sem = GlobalSem::GetInstance();
-    auto &inner_zmq = InnerZmq::GetInstance();
-    inner_zmq.PushTask(msg);
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
   } else {
     ERROR_LOG("order_info is nullptr");
@@ -59,8 +59,8 @@ void XtpTraderSpi::OnTradeEvent(XTPTradeReport *trade_info, uint64_t session_id)
     msg.msg_name = "OnTradeEvent";
 
     auto &global_sem = GlobalSem::GetInstance();
-    auto &inner_zmq = InnerZmq::GetInstance();
-    inner_zmq.PushTask(msg);
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
   } else {
     ERROR_LOG("trade_info is nullptr");
@@ -80,8 +80,8 @@ void XtpTraderSpi::OnCancelOrderError(XTPOrderCancelInfo *cancel_info, XTPRI *er
     msg.msg_name = "XTPOrderCancelInfo";
 
     auto &global_sem = GlobalSem::GetInstance();
-    auto &inner_zmq = InnerZmq::GetInstance();
-    inner_zmq.PushTask(msg);
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
   } else {
     ERROR_LOG("cancel_info is nullptr");
@@ -114,8 +114,8 @@ void XtpTraderSpi::OnQueryAsset(XTPQueryAssetRsp *trading_account, XTPRI *error_
       msg.msg_name = "OnQueryAsset";
 
       auto &global_sem = GlobalSem::GetInstance();
-      auto &inner_zmq = InnerZmq::GetInstance();
-      inner_zmq.PushTask(msg);
+      auto &recer_sender = RecerSender::GetInstance();
+      recer_sender.ROLE(InnerSender).SendMsg(msg);
       global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
     }
   } else {

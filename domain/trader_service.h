@@ -7,16 +7,13 @@
 #ifndef WORKSPACE_TRADER_DOMAIN_TRADERSERVICE_H_
 #define WORKSPACE_TRADER_DOMAIN_TRADERSERVICE_H_
 
-#include "trader/domain/components/active_safety.h"
-#include "trader/domain/components/control_para.h"
 #include "trader/domain/components/order_manage.h"
-#include "trader/domain/components/pub_account_status.h"
 #include "trader/domain/components/trader_time_state.h"
 #include "trader/infra/recer_sender.h"
 
 enum TraderLoginState { kErrorState = 0, kLoginState = 1, kLogoutState = 2 };
 
-struct TraderSevice : OrderManage, TraderTimeState, PubAccountStatus, ControlPara, ActiveSafety {
+struct TraderSevice : OrderManage, TraderTimeState {
   TraderSevice();
   TraderSevice(const TraderSevice &) = delete;
   TraderSevice &operator=(const TraderSevice &) = delete;
@@ -27,9 +24,6 @@ struct TraderSevice : OrderManage, TraderTimeState, PubAccountStatus, ControlPar
 
   IMPL_ROLE(OrderManage);
   IMPL_ROLE(TraderTimeState);
-  IMPL_ROLE(PubAccountStatus);
-  IMPL_ROLE(ControlPara);
-  IMPL_ROLE(ActiveSafety);
 
   TraderLoginState login_state = kLogoutState;
 
