@@ -15,9 +15,12 @@ TraderSevice::TraderSevice() {
   auto api_type = json_cfg.GetConfig("common", "ApiType");
   if (api_type == "btp") {
     auto trader_period_task = [&]() {
+      uint32_t period_count = 0;
       while (1) {
         // trader_period_task begin
-
+        if (period_count % 10 == 0) {
+          ROLE(AccountStatus).ReqAccountStatus();
+        }
         // trader_period_task end
 
         auto &recer_sender = RecerSender::GetInstance();
@@ -29,15 +32,20 @@ TraderSevice::TraderSevice() {
           }
         }
         std::this_thread::sleep_for(std::chrono::seconds(1));
+        period_count++;
       }
     };
     std::thread(trader_period_task).detach();
     INFO_LOG("trader period task prepare ok");
   } else {
     auto trader_period_task = [&]() {
+      uint32_t period_count = 0;
       while (1) {
         // trader_period_task begin
         ROLE(TraderTimeState).Update();
+        if (period_count % 10 == 0) {
+          ROLE(AccountStatus).ReqAccountStatus();
+        }
         // trader_period_task end
 
         auto &recer_sender = RecerSender::GetInstance();
@@ -54,6 +62,7 @@ TraderSevice::TraderSevice() {
           HandleAccountExitException();
         }
         std::this_thread::sleep_for(std::chrono::seconds(1));
+        period_count++;
       }
     };
     std::thread(trader_period_task).detach();

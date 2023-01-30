@@ -10,11 +10,12 @@
 #include "common/extern/csmtp/csmtp.h"
 
 struct EmailSender {
+ public:
   EmailSender();
   void Send(const char *head, const char *msg);
 
-  std::string mail_title;
-  std::string mail_body;
+ private:
+  CSmtp mail_;
 };
 
 #endif /* WORKSPACE_TRADER_INFRA_EMAILSENDER_H_ */

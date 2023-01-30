@@ -70,7 +70,6 @@ void ProxyRecer::SubscribeQueryTopic() {
 
   query_topic_list.push_back("strategy_trader.ActiveSafetyRsp");
   query_topic_list.push_back("strategy_trader.TransactionCostReq");
-  query_topic_list.push_back("strategy_trader.AccountStatusReq");
   query_topic_list.push_back("market_trader.QryInstrumentReq");
   query_topic_list.push_back("ctpview_trader.LoginControl");
   query_topic_list.push_back("ctpview_trader.BugInjection");

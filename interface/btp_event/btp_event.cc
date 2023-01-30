@@ -75,6 +75,8 @@ void BtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
       strategy_trader::message rsp;
       auto *insert_rsp = rsp.mutable_order_insert_rsp();
       insert_rsp->set_order_ref(content->order_ref);
+      insert_rsp->set_instrument(content->instrument_id);
+      insert_rsp->set_index(content->index);
       insert_rsp->set_result(strategy_trader::Result::failed);
       insert_rsp->set_reason(strategy_trader::FailedReason::Order_Cancel);
       rsp.SerializeToString(&msg.pb_msg);
@@ -115,6 +117,8 @@ void BtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
     auto *insert_rsp = rsp.mutable_order_insert_rsp();
     insert_rsp->set_order_ref(std::to_string(trade_report->order_ref));
     insert_rsp->set_result(strategy_trader::Result::success);
+    insert_rsp->set_instrument(content->instrument_id);
+    insert_rsp->set_index(content->index);
 
     auto *succ_info = insert_rsp->mutable_info();
     succ_info->set_orderprice(content->traded_order.price);
@@ -128,6 +132,7 @@ void BtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
 
     content->left_volume -= trade_report->volume;
     if (content->left_volume == 0) {
+      SendEmail(*content);
       INFO_LOG("the order was finished, ref[%d],identity[%s]", trade_report->order_ref, content->prid.c_str());
       order_manage.DelOrder(std::to_string(trade_report->order_ref));
     }
@@ -141,22 +146,13 @@ void BtpEvent::OnRspTradingAccountHandle(utils::ItpMsg &msg) {
   message.ParseFromString(msg.pb_msg);
   auto &itp_msg = message.itp_msg();
 
-  auto account_info = reinterpret_cast<BtpAccountInfo *>(itp_msg.address());
-
-  strategy_trader::message rsp;
-  auto *account_rsp = rsp.mutable_account_status_rsp();
-  account_rsp->set_result(strategy_trader::Result::success);
-  account_rsp->set_user_id(itp_msg.user_id());
-  account_rsp->set_session_id(itp_msg.session_id());
-  account_rsp->set_balance(account_info->balance);
-  account_rsp->set_available(account_info->available);
-
-  utils::ItpMsg send_msg;
-  rsp.SerializeToString(&send_msg.pb_msg);
-  send_msg.session_name = "strategy_trader";
-  send_msg.msg_name = "AccountStatusRsp." + std::to_string(itp_msg.request_id());
-  auto &recer_sender = RecerSender::GetInstance();
-  recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(send_msg);
+  auto account = reinterpret_cast<BtpAccountInfo *>(itp_msg.address());
+  auto &trader_ser = TraderSevice::GetInstance();
+  char time_array[64];
+  auto timenow = trader_ser.ROLE(TraderTimeState).GetTimeNow();
+  strftime(time_array, sizeof(time_array), "%Y-%m-%d %H:%M:%S", timenow);
+  trader_ser.ROLE(AccountStatus)
+      .UpdateAccountStatus(time_array, account->balance, account->available, itp_msg.session_id(), itp_msg.user_id());
 }
 
 void BtpEvent::OnRspMarginRateHandle(utils::ItpMsg &msg) {
@@ -229,7 +225,16 @@ bool BtpEvent::SendEmail(const utils::OrderContent &content) {
           content.traded_order.comboffset == 1 ? "OPEN" : "CLOSE", content.total_volume, content.traded_order.volume);
 
   auto &recer_sender = RecerSender::GetInstance();
-  recer_sender.ROLE(Sender).ROLE(EmailSender).Send(subject_content, save_content);
+  ipc::message send_message;
+  auto *send_email = send_message.mutable_send_email();
+  send_email->set_head(subject_content);
+  send_email->set_body(save_content);
+
+  utils::ItpMsg itp_msg;
+  send_message.SerializeToString(&itp_msg.pb_msg);
+  itp_msg.session_name = "trader_trader";
+  itp_msg.msg_name = "SendEmail";
+  recer_sender.ROLE(Sender).ROLE(InnerSender).SendMsg(itp_msg);
 
   return true;
 }
