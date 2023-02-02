@@ -17,6 +17,7 @@ void AccountStatus::UpdateAccountStatus(const std::string &value1, double value2
     account_info_map[value5]->balance = value2;
     account_info_map[value5]->available = value3;
     account_info_map[value5]->session_id = value4;
+    // INFO_LOG("%s, %lu", value5.c_str(), value4);
   } else {
     account_info_map[value5] = std::make_shared<AccountInfo>(value1, value2, value3, value4, 0);
     INFO_LOG("add account status %s", value5.c_str());
@@ -56,7 +57,8 @@ void AccountStatus::ReqAccountStatus(void) {
     send_message.SerializeToString(&itp_msg.pb_msg);
     itp_msg.session_name = "trader_trader";
     itp_msg.msg_name = "AccountStatusReq";
-    recer_sender.ROLE(Sender).ROLE(InnerSender).SendMsg(itp_msg);
+    // 因为查询接口存在1s1次的限制，所以只能走ProxySender的接口
+    recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(itp_msg);
   } else {
     first_login_flag = false;
   }
@@ -66,7 +68,7 @@ void AccountStatus::SelectAccountStatus(uint64_t *session_id, std::string *order
   uint32_t select_count = account_info_map.size();
   static auto pos = account_info_map.begin();
   for (auto &item : account_info_map) {
-    INFO_LOG("%ld %s", item.second->session_id, item.first.c_str());
+    INFO_LOG("session id %ld, user id %s", item.second->session_id, item.first.c_str());
   }
   while (select_count-- > 0) {
     if (pos == account_info_map.end()) {

@@ -118,6 +118,7 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
     PZone("SendResult");
     content->traded_order.price = trade->Price;
     content->traded_order.volume = trade->Volume;
+    // content->traded_order.volume = content->total_volume;
     if (trade->Direction == '0') {
       content->traded_order.direction = 1;
     } else {
@@ -150,6 +151,7 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
     recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(msg);
 
     content->left_volume -= trade->Volume;
+    // content->left_volume -= content->traded_order.volume;
     if (content->left_volume == 0) {
       SendEmail(*content);
       INFO_LOG("the order was finished, order ref: %s, prid: %s.", trade->OrderRef, content->prid.c_str());
@@ -166,6 +168,7 @@ void CtpEvent::OnRspOrderInsertHandle(utils::ItpMsg &msg) {
   auto &itp_msg = message.itp_msg();
 
   auto order_insert_rsp = reinterpret_cast<CThostFtdcInputOrderField *>(itp_msg.address());
+  auto rsp_info = reinterpret_cast<CThostFtdcRspInfoField *>(itp_msg.rsp_info());
   auto &trader_ser = TraderSevice::GetInstance();
   auto &order_manage = trader_ser.ROLE(OrderManage);
   auto content = order_manage.GetOrder(order_insert_rsp->OrderRef);
@@ -176,7 +179,11 @@ void CtpEvent::OnRspOrderInsertHandle(utils::ItpMsg &msg) {
     insert_rsp->set_instrument(content->instrument_id);
     insert_rsp->set_index(content->index);
     insert_rsp->set_result(strategy_trader::Result::failed);
-    insert_rsp->set_reason(strategy_trader::FailedReason::Order_Fill_Error);
+    if (rsp_info->ErrorID == 31) {
+      insert_rsp->set_reason(strategy_trader::FailedReason::Fund_Shortage_Error);
+    } else {
+      insert_rsp->set_reason(strategy_trader::FailedReason::Order_Fill_Error);
+    }
 
     message.SerializeToString(&msg.pb_msg);
     msg.session_name = "strategy_trader";

@@ -12,25 +12,21 @@
 
 TraderSevice::TraderSevice() {
   auto &json_cfg = utils::JsonConfig::GetInstance();
-  auto api_type = json_cfg.GetConfig("common", "ApiType");
-  if (api_type == "btp") {
+  if (json_cfg.GetConfig("common", "RunMode").get<std::string>() == "fastback") {
+    run_mode = kFastBack;
+  } else {
+    run_mode = kRealTime;
+  }
+  if (run_mode == kFastBack) {
     auto trader_period_task = [&]() {
       uint32_t period_count = 0;
       while (1) {
         // trader_period_task begin
         if (period_count % 10 == 0) {
           ROLE(AccountStatus).ReqAccountStatus();
+          FastBackLoginLogoutChange();
         }
         // trader_period_task end
-
-        auto &recer_sender = RecerSender::GetInstance();
-        if (login_state == kLogoutState) {
-          if (recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogin()) {
-            login_state = kLoginState;
-          } else {
-            login_state = kErrorState;
-          }
-        }
         std::this_thread::sleep_for(std::chrono::seconds(1));
         period_count++;
       }
@@ -46,21 +42,9 @@ TraderSevice::TraderSevice() {
         if (period_count % 10 == 0) {
           ROLE(AccountStatus).ReqAccountStatus();
         }
+        RealTimeLoginLogoutChange();
         // trader_period_task end
 
-        auto &recer_sender = RecerSender::GetInstance();
-        if (ROLE(TraderTimeState).GetTimeState() == kLoginTime && login_state == kLogoutState) {
-          if (recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogin()) {
-            login_state = kLoginState;
-          } else {
-            login_state = kErrorState;
-          }
-        } else if (ROLE(TraderTimeState).GetTimeState() == kLogoutTime && login_state != kLogoutState) {
-          recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogout();
-          login_state = kLogoutState;
-        } else if (recer_sender.ROLE(Sender).ROLE(ItpSender).LossConnection() && login_state != kLogoutState) {
-          HandleAccountExitException();
-        }
         std::this_thread::sleep_for(std::chrono::seconds(1));
         period_count++;
       }
@@ -69,6 +53,37 @@ TraderSevice::TraderSevice() {
     INFO_LOG("trader period task prepare ok");
   }
 };
+
+bool TraderSevice::RealTimeLoginLogoutChange() {
+  auto &recer_sender = RecerSender::GetInstance();
+  if (ROLE(TraderTimeState).GetTimeState() == kLoginTime && login_state == kLogoutState) {
+    if (recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogin()) {
+      login_state = kLoginState;
+    } else {
+      login_state = kErrorState;
+    }
+  } else if (ROLE(TraderTimeState).GetTimeState() == kLogoutTime && login_state != kLogoutState) {
+    recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogout();
+    login_state = kLogoutState;
+  } else if (recer_sender.ROLE(Sender).ROLE(ItpSender).LossConnection() && login_state != kLogoutState) {
+    HandleAccountExitException();
+  }
+
+  return 0;
+}
+
+bool TraderSevice::FastBackLoginLogoutChange() {
+  auto &recer_sender = RecerSender::GetInstance();
+  if (login_state == kLogoutState) {
+    if (recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogin()) {
+      login_state = kLoginState;
+    } else {
+      login_state = kErrorState;
+    }
+  }
+
+  return 0;
+}
 
 bool TraderSevice::HandleAccountExitException() {
   bool ret = true;

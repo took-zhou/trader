@@ -164,6 +164,7 @@ void CtpTraderSpi::OnRspOrderInsert(CThostFtdcInputOrderField *input_order, CTho
     ipc::message req_msg;
     auto send_msg = req_msg.mutable_itp_msg();
     send_msg->set_address(reinterpret_cast<int64_t>(input_order));
+    send_msg->set_rsp_info(reinterpret_cast<int64_t>(rsp_info));
     send_msg->set_request_id(request_id);
     send_msg->set_is_last(is_last);
     utils::ItpMsg msg;

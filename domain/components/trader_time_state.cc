@@ -114,6 +114,9 @@ void TraderTimeState::Step() {
         } else if (IsDuringDayPrepareTime()) {
           sub_time_state_ = kInDayPrePare;
           time_state_ = kLogoutTime;
+        } else if (IsDuringNightPrepareTime()) {
+          sub_time_state_ = kInNightPrePare;
+          time_state_ = kLogoutTime;
         }
         break;
 
@@ -153,6 +156,9 @@ void TraderTimeState::Step() {
         } else if (IsDuringNightPrepareTime()) {
           sub_time_state_ = kInNightPrePare;
           time_state_ = kLogoutTime;
+        } else if (IsDuringDayPrepareTime()) {
+          sub_time_state_ = kInDayPrePare;
+          time_state_ = kLogoutTime;
         }
         break;
 
@@ -187,7 +193,7 @@ void TraderTimeState::SetSubTimeState(int command) { INFO_LOG("not support"); }
 TraderTimeState::TraderTimeState() {
   auto &json_cfg = utils::JsonConfig::GetInstance();
 
-  string time_str = json_cfg.GetConfig("market", "LogInTimeList").get<std::string>();
+  string time_str = json_cfg.GetConfig("trader", "LogInTimeList").get<std::string>();
   vector<string> time_duration_splited = utils::SplitString(time_str, ";");
   if (time_duration_splited.size() == 1) {
     vector<string> day_time_str_split = utils::SplitString(time_duration_splited[0], "-");
