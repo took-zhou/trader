@@ -12,6 +12,8 @@ class BtpTraderSpi : public btp::api::TraderSpi {
   virtual void OnRspUserLogout(const BtpLoginLogoutStruct *logout_info);
   virtual void OnRtnTrade(const BtpOrderInfoStruct *trade_info);
   virtual void OnRtnOrder(const BtpOrderInfoStruct *order_info);
+  virtual void OnRtnOrderInsert(const BtpOrderInfoStruct *trade_info);
+  virtual void OnRtnOrderAction(const BtpOrderInfoStruct *order_info);
   virtual void OnRspTradingAccount(const BtpAccountInfo *account_info);
   virtual void OnRspMarginRate(const BtpMarginInfo *margin_info);
   virtual void OnRspCommissionRate(const BtpCommissionInfo *commission_info);

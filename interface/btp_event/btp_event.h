@@ -15,13 +15,15 @@
 #include "common/self/dci/role.h"
 #include "common/self/utils.h"
 
-struct BtpEvent {
+struct BtpEvent  {
   BtpEvent();
   void Handle(utils::ItpMsg &msg);
   void RegMsgFun();
 
   void OnRtnTradeHandle(utils::ItpMsg &msg);
   void OnRtnOrderHandle(utils::ItpMsg &msg);
+  void OnRtnOrderInsertHandle(utils::ItpMsg &msg);
+  void OnRtnOrderActionHandle(utils::ItpMsg &msg);
   void OnRspTradingAccountHandle(utils::ItpMsg &msg);
   void OnRspMarginRateHandle(utils::ItpMsg &msg);
   void OnRspCommissionRateHandle(utils::ItpMsg &msg);

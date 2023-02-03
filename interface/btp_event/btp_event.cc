@@ -25,6 +25,8 @@ void BtpEvent::RegMsgFun() {
   msg_func_map_.clear();
   msg_func_map_["OnRtnOrder"] = [this](utils::ItpMsg &msg) { OnRtnOrderHandle(msg); };
   msg_func_map_["OnRtnTrade"] = [this](utils::ItpMsg &msg) { OnRtnTradeHandle(msg); };
+  msg_func_map_["OnRtnOrderInsert"] = [this](utils::ItpMsg &msg) { OnRtnOrderInsertHandle(msg); };
+  msg_func_map_["OnRtnOrderAction"] = [this](utils::ItpMsg &msg) { OnRtnOrderActionHandle(msg); };
   msg_func_map_["OnRspTradingAccount"] = [this](utils::ItpMsg &msg) { OnRspTradingAccountHandle(msg); };
   msg_func_map_["OnRspMarginRate"] = [this](utils::ItpMsg &msg) { OnRspMarginRateHandle(msg); };
   msg_func_map_["OnRspCommissionRate"] = [this](utils::ItpMsg &msg) { OnRspCommissionRateHandle(msg); };
@@ -63,7 +65,8 @@ void BtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
       if (content->active_cancle_indication) {
         strategy_trader::message message;
         auto *order_cancel_rsp = message.mutable_order_cancel_rsp();
-        order_cancel_rsp->set_order_ref(std::to_string(order_info->order_ref));
+        order_cancel_rsp->set_instrument(content->instrument_id);
+        order_cancel_rsp->set_index(content->index);
         order_cancel_rsp->set_result(strategy_trader::Result::success);
 
         utils::ItpMsg msg;
@@ -74,7 +77,6 @@ void BtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
       }
       strategy_trader::message rsp;
       auto *insert_rsp = rsp.mutable_order_insert_rsp();
-      insert_rsp->set_order_ref(content->order_ref);
       insert_rsp->set_instrument(content->instrument_id);
       insert_rsp->set_index(content->index);
       insert_rsp->set_result(strategy_trader::Result::failed);
@@ -100,6 +102,7 @@ void BtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
   auto trade_report = reinterpret_cast<BtpOrderInfoStruct *>(itp_msg.address());
   auto &trader_ser = TraderSevice::GetInstance();
   auto &order_manage = trader_ser.ROLE(OrderManage);
+  auto &order_lookup = trader_ser.ROLE(OrderLookup);
 
 #ifdef BENCH_TEST
   ScopedTimer timer("OnRtnTradeHandle");
@@ -115,7 +118,6 @@ void BtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
 
     strategy_trader::message rsp;
     auto *insert_rsp = rsp.mutable_order_insert_rsp();
-    insert_rsp->set_order_ref(std::to_string(trade_report->order_ref));
     insert_rsp->set_result(strategy_trader::Result::success);
     insert_rsp->set_instrument(content->instrument_id);
     insert_rsp->set_index(content->index);
@@ -131,13 +133,80 @@ void BtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
     recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(msg);
 
     content->left_volume -= trade_report->volume;
+    SendEmail(*content);
     if (content->left_volume == 0) {
-      SendEmail(*content);
+      if (content->comboffset != 1) {
+        std::string temp_key;
+        temp_key += content->prid;
+        temp_key += ".";
+        temp_key += content->instrument_id;
+        temp_key += ".";
+        temp_key += content->index;
+        order_lookup.DelOrderIndex(temp_key);
+      }
       INFO_LOG("the order was finished, ref[%d],identity[%s]", trade_report->order_ref, content->prid.c_str());
       order_manage.DelOrder(std::to_string(trade_report->order_ref));
     }
   } else {
     ERROR_LOG("not find order ref: %d", trade_report->order_ref);
+  }
+}
+
+void BtpEvent::OnRtnOrderInsertHandle(utils::ItpMsg &msg) {
+  ipc::message message;
+  message.ParseFromString(msg.pb_msg);
+  auto &itp_msg = message.itp_msg();
+
+  auto order_insert = reinterpret_cast<BtpOrderInfoStruct *>(itp_msg.address());
+  auto &trader_ser = TraderSevice::GetInstance();
+  auto &order_manage = trader_ser.ROLE(OrderManage);
+  auto content = order_manage.GetOrder(std::to_string(order_insert->order_ref));
+  if (content != nullptr) {
+    strategy_trader::message message;
+    auto *insert_rsp = message.mutable_order_insert_rsp();
+    insert_rsp->set_instrument(content->instrument_id);
+    insert_rsp->set_index(content->index);
+    insert_rsp->set_result(strategy_trader::Result::failed);
+    insert_rsp->set_reason(strategy_trader::FailedReason::Fund_Shortage_Error);
+
+    message.SerializeToString(&msg.pb_msg);
+    msg.session_name = "strategy_trader";
+    msg.msg_name = "OrderInsertRsp." + content->prid;
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(msg);
+    INFO_LOG("the order be canceled, orderRef: %d, prid: %s.", order_insert->order_ref, content->prid.c_str());
+
+    order_manage.DelOrder(std::to_string(order_insert->order_ref));
+  } else {
+    ERROR_LOG("not find order ref: %d", order_insert->order_ref);
+  }
+}
+
+void BtpEvent::OnRtnOrderActionHandle(utils::ItpMsg &msg) {
+  ipc::message message;
+  message.ParseFromString(msg.pb_msg);
+  auto &itp_msg = message.itp_msg();
+
+  auto order_action_rsp = reinterpret_cast<BtpOrderInfoStruct *>(itp_msg.address());
+  auto &trader_ser = TraderSevice::GetInstance();
+  auto &order_manage = trader_ser.ROLE(OrderManage);
+  auto content = order_manage.GetOrder(std::to_string(order_action_rsp->order_ref));
+  if (content != nullptr) {
+    strategy_trader::message message;
+    auto *order_cancel_rsp = message.mutable_order_cancel_rsp();
+    order_cancel_rsp->set_instrument(content->instrument_id);
+    order_cancel_rsp->set_index(content->index);
+    order_cancel_rsp->set_result(strategy_trader::Result::failed);
+    order_cancel_rsp->set_failedreason("INVALID");
+
+    utils::ItpMsg msg;
+    message.SerializeToString(&msg.pb_msg);
+    msg.session_name = "strategy_trader";
+    msg.msg_name = "OrderCancelRsp." + content->prid;
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(msg);
+  } else {
+    ERROR_LOG("not find order ref: %d", order_action_rsp->order_ref);
   }
 }
 
@@ -148,11 +217,7 @@ void BtpEvent::OnRspTradingAccountHandle(utils::ItpMsg &msg) {
 
   auto account = reinterpret_cast<BtpAccountInfo *>(itp_msg.address());
   auto &trader_ser = TraderSevice::GetInstance();
-  char time_array[64];
-  auto timenow = trader_ser.ROLE(TraderTimeState).GetTimeNow();
-  strftime(time_array, sizeof(time_array), "%Y-%m-%d %H:%M:%S", timenow);
-  trader_ser.ROLE(AccountStatus)
-      .UpdateAccountStatus(time_array, account->balance, account->available, itp_msg.session_id(), itp_msg.user_id());
+  trader_ser.ROLE(AccountAssign).UpdateAccountStatus(account->balance, account->available, itp_msg.session_id(), itp_msg.user_id());
 }
 
 void BtpEvent::OnRspMarginRateHandle(utils::ItpMsg &msg) {
@@ -213,16 +278,16 @@ void BtpEvent::OnRspCommissionRateHandle(utils::ItpMsg &msg) {
 
 bool BtpEvent::SendEmail(const utils::OrderContent &content) {
   char subject_content[30];
-  char save_content[200];
+  char save_content[180];
   sprintf(subject_content, "%s transaction notice", content.instrument_id.c_str());
 
   sprintf(save_content,
           "account: %s\ninstrument: %s\norder price: %f\ntransaction price: "
-          "%f\ndate: %s\ntime: %s\ndirection: %s\ncomboffset: %s\norder volume: "
+          "%f\ndirection: %s\ncomboffset: %s\norder volume: "
           "%d\ntransaction volume: %d",
           content.user_id.c_str(), content.instrument_id.c_str(), content.limit_price, content.traded_order.price,
-          content.traded_order.date.c_str(), content.traded_order.time.c_str(), content.traded_order.direction == 1 ? "BUY" : "SELL",
-          content.traded_order.comboffset == 1 ? "OPEN" : "CLOSE", content.total_volume, content.traded_order.volume);
+          content.traded_order.direction == 1 ? "BUY" : "SELL", content.traded_order.comboffset == 1 ? "OPEN" : "CLOSE",
+          content.total_volume, content.traded_order.volume);
 
   auto &recer_sender = RecerSender::GetInstance();
   ipc::message send_message;
@@ -234,7 +299,8 @@ bool BtpEvent::SendEmail(const utils::OrderContent &content) {
   send_message.SerializeToString(&itp_msg.pb_msg);
   itp_msg.session_name = "trader_trader";
   itp_msg.msg_name = "SendEmail";
-  recer_sender.ROLE(Sender).ROLE(InnerSender).SendMsg(itp_msg);
+  // innerSenders专为itp设计，所以只能走ProxySender的接口
+  recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(itp_msg);
 
   return true;
 }

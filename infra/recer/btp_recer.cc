@@ -55,6 +55,44 @@ void BtpTraderSpi::OnRtnOrder(const BtpOrderInfoStruct *order_info) {
   }
 }
 
+void BtpTraderSpi::OnRtnOrderInsert(const BtpOrderInfoStruct *order_info) {
+  if (order_info != nullptr) {
+    ipc::message req_msg;
+    auto send_msg = req_msg.mutable_itp_msg();
+    send_msg->set_address(reinterpret_cast<int64_t>(order_info));
+    utils::ItpMsg msg;
+    req_msg.SerializeToString(&msg.pb_msg);
+    msg.session_name = "btp_trader";
+    msg.msg_name = "OnRtnOrderInsert";
+
+    auto &global_sem = GlobalSem::GetInstance();
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(InnerSender).SendMsg(msg);
+    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+  } else {
+    ERROR_LOG("order_info is nullptr");
+  }
+}
+
+void BtpTraderSpi::OnRtnOrderAction(const BtpOrderInfoStruct *order_info) {
+  if (order_info != nullptr) {
+    ipc::message req_msg;
+    auto send_msg = req_msg.mutable_itp_msg();
+    send_msg->set_address(reinterpret_cast<int64_t>(order_info));
+    utils::ItpMsg msg;
+    req_msg.SerializeToString(&msg.pb_msg);
+    msg.session_name = "btp_trader";
+    msg.msg_name = "OnRtnOrderAction";
+
+    auto &global_sem = GlobalSem::GetInstance();
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(InnerSender).SendMsg(msg);
+    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+  } else {
+    ERROR_LOG("order_info is nullptr");
+  }
+}
+
 void BtpTraderSpi::OnRspTradingAccount(const BtpAccountInfo *account_info) {
   if (account_info != nullptr) {
     ipc::message req_msg;

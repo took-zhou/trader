@@ -75,6 +75,7 @@ void ProxyRecer::SubscribeQueryTopic() {
   query_topic_list.push_back("ctpview_trader.BugInjection");
   query_topic_list.push_back("ctpview_trader.ProfilerControl");
   query_topic_list.push_back("trader_trader.AccountStatusReq");
+  query_topic_list.push_back("trader_trader.SendEmail");
 
   for (auto &topic : query_topic_list) {
     zmq_setsockopt(query_receiver_, ZMQ_SUBSCRIBE, topic.c_str(), strlen(topic.c_str()));

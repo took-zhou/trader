@@ -58,12 +58,20 @@ void StrategyEvent::OrderCancelReqHandle(utils::ItpMsg &msg) {
     return;
   }
 
-  auto content = trader_ser.ROLE(OrderManage).GetOrder(order_cancel_req.order_ref());
-  if (content != nullptr) {
-    content->active_cancle_indication = true;
-
-    auto &recer_sender = RecerSender::GetInstance();
-    recer_sender.ROLE(Sender).ROLE(ItpSender).CancelOrder(*content);
+  std::string temp_key;
+  temp_key += order_cancel_req.process_random_id();
+  temp_key += ".";
+  temp_key += order_cancel_req.instrument();
+  temp_key += ".";
+  temp_key += order_cancel_req.index();
+  auto order_para = trader_ser.ROLE(OrderLookup).GetOrderPara(temp_key);
+  if (order_para != nullptr) {
+    auto content = trader_ser.ROLE(OrderManage).GetOrder(order_para->order_ref);
+    if (content != nullptr) {
+      content->active_cancle_indication = true;
+      auto &recer_sender = RecerSender::GetInstance();
+      recer_sender.ROLE(Sender).ROLE(ItpSender).CancelOrder(*content);
+    }
   }
 }
 
@@ -94,30 +102,24 @@ void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {
   content->direction = order_insert_req.order().direction();
   content->comboffset = order_insert_req.order().comb_offset_flag();
   content->order_type = order_insert_req.order().order_type();
+  trader_ser.ROLE(AccountAssign).BuildOrderContent(content);
+  trader_ser.ROLE(OrderManage).BuildOrder(content->order_ref, content);
 
-  trader_ser.ROLE(AccountStatus).SelectAccountStatus(&content->session_id, &content->order_ref);
-
-  auto &order_manage = trader_ser.ROLE(OrderManage);
-  order_manage.BuildOrder(content->order_ref, content);
+  std::string temp_key;
+  temp_key += content->prid;
+  temp_key += ".";
+  temp_key += content->instrument_id;
+  temp_key += ".";
+  temp_key += content->index;
+  auto order_para = std::make_shared<OrderLookup::OrderPara>(content->session_id, content->order_ref);
+  trader_ser.ROLE(OrderLookup).BuildOrderIndex(temp_key, order_para);
 
   {
     PZone("InsertOrder");
     auto &recer_sender = RecerSender::GetInstance();
     bool result = recer_sender.ROLE(Sender).ROLE(ItpSender).InsertOrder(*content.get());
     if (result == false) {
-      order_manage.DelOrder(content->order_ref);
-    } else {
-      strategy_trader::message message;
-      auto *insert_rsp = message.mutable_order_insert_rsp();
-      insert_rsp->set_order_ref(content->order_ref);
-      insert_rsp->set_instrument(content->instrument_id);
-      insert_rsp->set_index(content->index);
-      insert_rsp->set_result(strategy_trader::Result::Result_INVALID);
-
-      message.SerializeToString(&msg.pb_msg);
-      msg.session_name = "strategy_trader";
-      msg.msg_name = "OrderInsertRsp." + content->prid;
-      recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(msg);
+      trader_ser.ROLE(OrderManage).DelOrder(content->order_ref);
     }
   }
 

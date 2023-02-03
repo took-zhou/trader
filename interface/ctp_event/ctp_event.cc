@@ -67,7 +67,8 @@ void CtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
       {
         strategy_trader::message message;
         auto *order_cancel_rsp = message.mutable_order_cancel_rsp();
-        order_cancel_rsp->set_order_ref(order->OrderRef);
+        order_cancel_rsp->set_instrument(content->instrument_id);
+        order_cancel_rsp->set_index(content->index);
         order_cancel_rsp->set_result(strategy_trader::Result::success);
 
         utils::ItpMsg msg;
@@ -80,7 +81,6 @@ void CtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
       {
         strategy_trader::message message;
         auto *insert_rsp = message.mutable_order_insert_rsp();
-        insert_rsp->set_order_ref(content->order_ref);
         insert_rsp->set_instrument(content->instrument_id);
         insert_rsp->set_index(content->index);
         insert_rsp->set_result(strategy_trader::Result::failed);
@@ -109,6 +109,7 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
   auto trade = reinterpret_cast<CThostFtdcTradeField *>(itp_msg.address());
   auto &trader_ser = TraderSevice::GetInstance();
   auto &order_manage = trader_ser.ROLE(OrderManage);
+  auto &order_lookup = trader_ser.ROLE(OrderLookup);
 
 #ifdef BENCH_TEST
   ScopedTimer t("OnRtnTradeHandle");
@@ -134,7 +135,6 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
 
     strategy_trader::message rsp;
     auto *insert_rsp = rsp.mutable_order_insert_rsp();
-    insert_rsp->set_order_ref(trade->OrderRef);
     insert_rsp->set_instrument(content->instrument_id);
     insert_rsp->set_index(content->index);
     insert_rsp->set_result(strategy_trader::Result::success);
@@ -152,8 +152,17 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
 
     content->left_volume -= trade->Volume;
     // content->left_volume -= content->traded_order.volume;
+    SendEmail(*content);
     if (content->left_volume == 0) {
-      SendEmail(*content);
+      if (content->comboffset != 1) {
+        std::string temp_key;
+        temp_key += content->prid;
+        temp_key += ".";
+        temp_key += content->instrument_id;
+        temp_key += ".";
+        temp_key += content->index;
+        order_lookup.DelOrderIndex(temp_key);
+      }
       INFO_LOG("the order was finished, order ref: %s, prid: %s.", trade->OrderRef, content->prid.c_str());
       order_manage.DelOrder(trade->OrderRef);
     }
@@ -175,7 +184,6 @@ void CtpEvent::OnRspOrderInsertHandle(utils::ItpMsg &msg) {
   if (content != nullptr) {
     strategy_trader::message message;
     auto *insert_rsp = message.mutable_order_insert_rsp();
-    insert_rsp->set_order_ref(content->order_ref);
     insert_rsp->set_instrument(content->instrument_id);
     insert_rsp->set_index(content->index);
     insert_rsp->set_result(strategy_trader::Result::failed);
@@ -207,7 +215,8 @@ void CtpEvent::OnRspOrderActionHandle(utils::ItpMsg &msg) {
   if (content != nullptr) {
     strategy_trader::message message;
     auto *order_cancel_rsp = message.mutable_order_cancel_rsp();
-    order_cancel_rsp->set_order_ref(order_action_rsp->OrderRef);
+    order_cancel_rsp->set_instrument(content->instrument_id);
+    order_cancel_rsp->set_index(content->index);
     order_cancel_rsp->set_result(strategy_trader::Result::failed);
     order_cancel_rsp->set_failedreason("INVALID");
 
@@ -229,11 +238,7 @@ void CtpEvent::OnRspQryTradingAccountHandle(utils::ItpMsg &msg) {
 
   auto account = reinterpret_cast<CThostFtdcTradingAccountField *>(itp_msg.address());
   auto &trader_ser = TraderSevice::GetInstance();
-  char time_array[64];
-  auto timenow = trader_ser.ROLE(TraderTimeState).GetTimeNow();
-  strftime(time_array, sizeof(time_array), "%Y-%m-%d %H:%M:%S", timenow);
-  trader_ser.ROLE(AccountStatus)
-      .UpdateAccountStatus(time_array, account->Balance, account->Available, itp_msg.session_id(), itp_msg.user_id());
+  trader_ser.ROLE(AccountAssign).UpdateAccountStatus(account->Balance, account->Available, itp_msg.session_id(), itp_msg.user_id());
 }
 
 void CtpEvent::OnRspQryInstrumentHandle(utils::ItpMsg &msg) {
@@ -353,16 +358,16 @@ void CtpEvent::OnRspQryOptionInstrCommRateHandle(utils::ItpMsg &msg) {
 
 bool CtpEvent::SendEmail(const utils::OrderContent &content) {
   char subject_content[30];
-  char save_content[200];
+  char save_content[180];
   sprintf(subject_content, "%s transaction notice", content.instrument_id.c_str());
 
   sprintf(save_content,
           "account: %s\ninstrument: %s\norder price: %f\ntransaction price: "
-          "%f\ndate: %s\ntime: %s\ndirection: %s\ncomboffset: %s\norder volume: "
+          "%f\ndirection: %s\ncomboffset: %s\norder volume: "
           "%d\ntransaction volume: %d",
           content.user_id.c_str(), content.instrument_id.c_str(), content.limit_price, content.traded_order.price,
-          content.traded_order.date.c_str(), content.traded_order.time.c_str(), content.traded_order.direction == 1 ? "BUY" : "SELL",
-          content.traded_order.comboffset == 1 ? "OPEN" : "CLOSE", content.total_volume, content.traded_order.volume);
+          content.traded_order.direction == 1 ? "BUY" : "SELL", content.traded_order.comboffset == 1 ? "OPEN" : "CLOSE",
+          content.total_volume, content.traded_order.volume);
 
   auto &recer_sender = RecerSender::GetInstance();
   ipc::message send_message;
@@ -374,7 +379,8 @@ bool CtpEvent::SendEmail(const utils::OrderContent &content) {
   send_message.SerializeToString(&itp_msg.pb_msg);
   itp_msg.session_name = "trader_trader";
   itp_msg.msg_name = "SendEmail";
-  recer_sender.ROLE(Sender).ROLE(InnerSender).SendMsg(itp_msg);
+  // innerSenders专为itp设计，所以只能走ProxySender的接口
+  recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(itp_msg);
 
   return true;
 }

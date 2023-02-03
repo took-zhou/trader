@@ -23,7 +23,7 @@ TraderSevice::TraderSevice() {
       while (1) {
         // trader_period_task begin
         if (period_count % 10 == 0) {
-          ROLE(AccountStatus).ReqAccountStatus();
+          ROLE(AccountAssign).ReqAccountStatus();
           FastBackLoginLogoutChange();
         }
         // trader_period_task end
@@ -40,7 +40,7 @@ TraderSevice::TraderSevice() {
         // trader_period_task begin
         ROLE(TraderTimeState).Update();
         if (period_count % 10 == 0) {
-          ROLE(AccountStatus).ReqAccountStatus();
+          ROLE(AccountAssign).ReqAccountStatus();
         }
         RealTimeLoginLogoutChange();
         // trader_period_task end
