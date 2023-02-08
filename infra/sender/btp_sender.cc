@@ -61,8 +61,6 @@ bool BtpSender::InsertOrder(utils::OrderContent &content) {
   bool ret = true;
   auto pos = btp_trader_info_map.find(content.session_id);
   if (pos != btp_trader_info_map.end()) {
-    content.user_id = pos->second.user_id;
-
     BtpOrderInfoStruct orderinfo;
     orderinfo.order_ref = stoi(content.order_ref);
     orderinfo.price = content.limit_price;

@@ -115,7 +115,6 @@ bool CtpSender::InsertOrder(utils::OrderContent &content) {
   auto pos = ctp_trader_info_map.find(content.session_id);
 
   if (pos != ctp_trader_info_map.end()) {
-    content.user_id = pos->second.user_id;
     BuildOrder(content, default_order_field);
     const std::string broker_id = json_cfg.GetDeepConfig("users", pos->second.user_name, "BrokerID").get<std::string>();
     const std::string investor_id = json_cfg.GetDeepConfig("users", pos->second.user_name, "InvestorID").get<std::string>();

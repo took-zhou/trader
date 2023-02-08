@@ -45,7 +45,7 @@ bool OrderLookup::BuildOrderIndex(const std::string &order_index, const std::sha
   if (pos == order_index_map_.end()) {
     order_index_map_[order_index] = para;
   } else {
-    pos->second->session_id = para->session_id;
+    pos->second->user_id = para->user_id;
     pos->second->order_ref = para->order_ref;
   }
 

@@ -11,14 +11,18 @@ AccountAssign::AccountAssign() {}
 void AccountAssign::InitDatabase() {}
 
 void AccountAssign::UpdateAccountStatus(double value1, double value2, uint64_t value3, const std::string &value4) {
-  if (account_info_map_.find(value3) != account_info_map_.end()) {
-    account_info_map_[value3]->balance = value1;
-    account_info_map_[value3]->available = value2;
-    account_info_map_[value3]->user_id = value4;
+  if (account_info_map_.find(value4) != account_info_map_.end()) {
+    account_info_map_[value4]->balance = value1;
+    account_info_map_[value4]->available = value2;
+    if (account_info_map_[value4]->session_id != value3) {
+      INFO_LOG("session id change %ld->%ld", account_info_map_[value4]->session_id, value3);
+      account_info_map_[value4]->session_id = value3;
+      account_info_map_[value4]->order_ref = (uint32_t)((value3 % 1000) * 1000000);
+    }
     // INFO_LOG("user id: %s, session id: %lu, available: %f", value5.c_str(), value4, value3);
   } else {
     auto order_ref_base = (uint32_t)((value3 % 1000) * 1000000);
-    account_info_map_[value3] = std::make_shared<AccountInfo>(value1, value2, value4, order_ref_base);
+    account_info_map_[value4] = std::make_shared<AccountInfo>(value1, value2, value3, order_ref_base);
     INFO_LOG("add account status %s", value4.c_str());
   }
 }
@@ -55,8 +59,9 @@ void AccountAssign::BuildOrderContent(std::shared_ptr<utils::OrderContent> &cont
         break;
       }
       if (pos->second->available >= minimum_account_available_) {
-        content->session_id = pos->first;
+        content->session_id = pos->second->session_id;
         content->order_ref = to_string(pos->second->order_ref++);
+        content->user_id = pos->first;
         pos++;
         break;
       }
@@ -71,8 +76,9 @@ void AccountAssign::BuildOrderContent(std::shared_ptr<utils::OrderContent> &cont
     temp_key += content->index;
     auto pos = trader_ser.ROLE(OrderLookup).GetOrderPara(temp_key);
     if (pos != nullptr) {
-      content->session_id = pos->session_id;
-      content->order_ref = to_string(account_info_map_[pos->session_id]->order_ref++);
+      content->session_id = account_info_map_[pos->user_id]->session_id;
+      content->order_ref = to_string(account_info_map_[pos->user_id]->order_ref++);
+      content->user_id = pos->user_id;
     } else {
       INFO_LOG("can not find session id. %s", temp_key.c_str());
     }

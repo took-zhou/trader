@@ -82,7 +82,6 @@ bool XtpSender::InsertOrder(utils::OrderContent &content) {
   bool ret = true;
   auto pos = xtp_trader_info_map.find(content.session_id);
   if (pos != xtp_trader_info_map.end()) {
-    content.user_id = pos->second.user_id;
     XTPOrderInsertInfo orderinfo;
     orderinfo.order_client_id = stoi(content.order_ref);
     strcpy(orderinfo.ticker, content.instrument_id.c_str());

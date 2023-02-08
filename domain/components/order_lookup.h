@@ -7,8 +7,8 @@
 struct OrderLookup {
  public:
   struct OrderPara {
-    OrderPara(uint64_t session_id, const std::string &order_ref) : session_id(session_id), order_ref(order_ref) {}
-    uint64_t session_id;
+    OrderPara(const std::string &user_id, const std::string &order_ref) : user_id(user_id), order_ref(order_ref) {}
+    std::string user_id;
     std::string order_ref;
   };
 

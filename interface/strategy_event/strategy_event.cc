@@ -111,7 +111,7 @@ void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {
   temp_key += content->instrument_id;
   temp_key += ".";
   temp_key += content->index;
-  auto order_para = std::make_shared<OrderLookup::OrderPara>(content->session_id, content->order_ref);
+  auto order_para = std::make_shared<OrderLookup::OrderPara>(content->user_id, content->order_ref);
   trader_ser.ROLE(OrderLookup).BuildOrderIndex(temp_key, order_para);
 
   {
