@@ -198,6 +198,9 @@ void CtpEvent::OnRspOrderInsertHandle(utils::ItpMsg &msg) {
     msg.msg_name = "OrderInsertRsp." + content->prid;
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(msg);
+    INFO_LOG("the order be canceled, orderRef: %s, prid: %s.", order_insert_rsp->OrderRef, content->prid.c_str());
+
+    order_manage.DelOrder(order_insert_rsp->OrderRef);
   } else {
     ERROR_LOG("not find order ref: %s", order_insert_rsp->OrderRef);
   }
