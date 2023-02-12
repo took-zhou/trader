@@ -57,28 +57,6 @@ uint8_t TraderTimeState::IsDuringNightLoginTime(void) {
   return out;
 }
 
-uint8_t TraderTimeState::IsDuringDayPrepareTime(void) {
-  uint8_t out;
-  out = 0U;
-
-  if (day_prepare_mins_ <= now_mins_ && now_mins_ < day_login_mins_) {
-    out = 1U;
-  }
-
-  return out;
-}
-
-uint8_t TraderTimeState::IsDuringNightPrepareTime(void) {
-  uint8_t out;
-  out = 0U;
-
-  if (night_prepare_mins_ <= now_mins_ && now_mins_ < night_login_mins_) {
-    out = 1U;
-  }
-
-  return out;
-}
-
 void TraderTimeState::Step() {
   if (is_active_step_ == 0U) {
     is_active_step_ = 1U;
@@ -86,20 +64,6 @@ void TraderTimeState::Step() {
     time_state_ = kLogoutTime;
   } else {
     switch (sub_time_state_) {
-      case kInDayPrePare:
-        if (IsDuringDayLoginTime()) {
-          sub_time_state_ = kInDayLogin;
-          time_state_ = kLoginTime;
-        }
-        break;
-
-      case kInNightPrePare:
-        if (IsDuringNightLoginTime()) {
-          sub_time_state_ = kInNightLogin;
-          time_state_ = kLoginTime;
-        }
-        break;
-
       case kInDayLogin:
         if (IsDuringDayLogoutTime()) {
           sub_time_state_ = kInDayLogout;
@@ -111,23 +75,11 @@ void TraderTimeState::Step() {
         if (IsDuringNightLoginTime()) {
           sub_time_state_ = kInNightLogin;
           time_state_ = kLoginTime;
-        } else if (IsDuringDayPrepareTime()) {
-          sub_time_state_ = kInDayPrePare;
-          time_state_ = kLogoutTime;
-        } else if (IsDuringNightPrepareTime()) {
-          sub_time_state_ = kInNightPrePare;
-          time_state_ = kLogoutTime;
         }
         break;
 
       case kInInitSts:
-        if (IsDuringDayPrepareTime()) {
-          sub_time_state_ = kInDayPrePare;
-          time_state_ = kLogoutTime;
-        } else if (IsDuringNightPrepareTime()) {
-          sub_time_state_ = kInNightPrePare;
-          time_state_ = kLogoutTime;
-        } else if (IsDuringDayLogoutTime()) {
+        if (IsDuringDayLogoutTime()) {
           sub_time_state_ = kInDayLogout;
           time_state_ = kLogoutTime;
         } else if (IsDuringNightLogoutTime()) {
@@ -153,12 +105,6 @@ void TraderTimeState::Step() {
         if (IsDuringDayLoginTime()) {
           sub_time_state_ = kInDayLogin;
           time_state_ = kLoginTime;
-        } else if (IsDuringNightPrepareTime()) {
-          sub_time_state_ = kInNightPrePare;
-          time_state_ = kLogoutTime;
-        } else if (IsDuringDayPrepareTime()) {
-          sub_time_state_ = kInDayPrePare;
-          time_state_ = kLogoutTime;
         }
         break;
 
@@ -172,7 +118,7 @@ void TraderTimeState::Update(void) {
   time_t now = {0};
 
   time(&now);
-  timenow_ = localtime(&now);  //获取当前时间
+  timenow_ = localtime(&now);  // 获取当前时间
   now_mins_ = timenow_->tm_hour * 60 + timenow_->tm_min;
 
   Step();
@@ -197,38 +143,29 @@ TraderTimeState::TraderTimeState() {
   vector<string> time_duration_splited = utils::SplitString(time_str, ";");
   if (time_duration_splited.size() == 1) {
     vector<string> day_time_str_split = utils::SplitString(time_duration_splited[0], "-");
-    vector<string> day_prepare_str_split = utils::SplitString(day_time_str_split[0], ":");
-    vector<string> day_start_str_split = utils::SplitString(day_time_str_split[1], ":");
-    vector<string> day_end_str_split = utils::SplitString(day_time_str_split[2], ":");
-
-    day_prepare_mins_ = stoi(day_prepare_str_split[0]) * 60 + stoi(day_prepare_str_split[1]);
+    vector<string> day_start_str_split = utils::SplitString(day_time_str_split[0], ":");
+    vector<string> day_end_str_split = utils::SplitString(day_time_str_split[1], ":");
     day_login_mins_ = stoi(day_start_str_split[0]) * 60 + stoi(day_start_str_split[1]);
     day_logout_mins_ = stoi(day_end_str_split[0]) * 60 + stoi(day_end_str_split[1]);
-    night_prepare_mins_ = -1;
     night_login_mins_ = -1;
     night_logout_mins_ = -1;
   } else if (time_duration_splited.size() == 2) {
     vector<string> day_time_str_split = utils::SplitString(time_duration_splited[0], "-");
     vector<string> night_time_str_split = utils::SplitString(time_duration_splited[1], "-");
-    vector<string> day_prepare_str_split = utils::SplitString(day_time_str_split[0], ":");
-    vector<string> day_start_str_split = utils::SplitString(day_time_str_split[1], ":");
-    vector<string> day_end_str_split = utils::SplitString(day_time_str_split[2], ":");
-    vector<string> night_prepare_str_split = utils::SplitString(night_time_str_split[0], ":");
-    vector<string> night_start_str_split = utils::SplitString(night_time_str_split[1], ":");
-    vector<string> night_end_str_split = utils::SplitString(night_time_str_split[2], ":");
+    vector<string> day_start_str_split = utils::SplitString(day_time_str_split[0], ":");
+    vector<string> day_end_str_split = utils::SplitString(day_time_str_split[1], ":");
+    vector<string> night_start_str_split = utils::SplitString(night_time_str_split[0], ":");
+    vector<string> night_end_str_split = utils::SplitString(night_time_str_split[1], ":");
 
-    day_prepare_mins_ = stoi(day_prepare_str_split[0]) * 60 + stoi(day_prepare_str_split[1]);
     day_login_mins_ = stoi(day_start_str_split[0]) * 60 + stoi(day_start_str_split[1]);
     day_logout_mins_ = stoi(day_end_str_split[0]) * 60 + stoi(day_end_str_split[1]);
-    night_prepare_mins_ = stoi(night_prepare_str_split[0]) * 60 + stoi(night_prepare_str_split[1]);
     night_login_mins_ = stoi(night_start_str_split[0]) * 60 + stoi(night_start_str_split[1]);
     night_logout_mins_ = stoi(night_end_str_split[0]) * 60 + stoi(night_end_str_split[1]);
   } else {
     ERROR_LOG("time string: %s is error.", time_str.c_str());
   }
 
-  INFO_LOG("%d %d %d %d %d %d", day_prepare_mins_, day_login_mins_, day_logout_mins_, night_prepare_mins_, night_login_mins_,
-           night_logout_mins_);
+  INFO_LOG("%d %d %d %d", day_login_mins_, day_logout_mins_, night_login_mins_, night_logout_mins_);
 }
 
 TraderTimeState::~TraderTimeState() { ; }
@@ -249,6 +186,4 @@ SubTimeState TraderTimeState::GetSubTimeState() {
   }
 }
 
-struct tm *TraderTimeState::GetTimeNow() {
-  return timenow_;
-}
+struct tm *TraderTimeState::GetTimeNow() { return timenow_; }
