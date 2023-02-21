@@ -15,6 +15,5 @@ target_link_libraries(tradelib
     commonlib
     zmq
     protobuf
-    pybind11::embed
     python3.8
  )
