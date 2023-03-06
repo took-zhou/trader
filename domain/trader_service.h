@@ -37,6 +37,8 @@ struct TraderSevice : OrderManage, TraderTimeState, AccountAssign, OrderLookup {
   bool RealTimeLoginLogoutChange();
   bool FastBackLoginLogoutChange();
   bool HandleAccountExitException();
+  uint32_t try_login_heartbeat_ = 0;
+  uint32_t try_login_count_ = 0;
 };
 
 #endif /* WORKSPACE_TRADER_DOMAIN_TRADERSERVICE_H_ */

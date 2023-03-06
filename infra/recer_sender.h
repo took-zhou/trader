@@ -9,8 +9,10 @@
 #define WORKSPACE_TRADER_INFRA_RECERSENDER_H_
 
 #include "trader/infra/base_zmq.h"
+#include "trader/infra/recer/direct_recer.h"
 #include "trader/infra/recer/inner_recer.h"
 #include "trader/infra/recer/proxy_recer.h"
+#include "trader/infra/sender/direct_sender.h"
 #include "trader/infra/sender/email_sender.h"
 #include "trader/infra/sender/inner_sender.h"
 #include "trader/infra/sender/itp_sender.h"
@@ -20,16 +22,18 @@
 #include "common/extern/log/log.h"
 #include "common/self/dci/role.h"
 
-struct Recer : InnerRecer, ProxyRecer {
+struct Recer : InnerRecer, ProxyRecer, DirectRecer {
   IMPL_ROLE(InnerRecer);
   IMPL_ROLE(ProxyRecer);
+  IMPL_ROLE(DirectRecer);
 };
 
-struct Sender : ItpSender, EmailSender, ProxySender, InnerSender {
+struct Sender : ItpSender, EmailSender, ProxySender, InnerSender, DirectSender {
   IMPL_ROLE(ItpSender);
   IMPL_ROLE(EmailSender);
   IMPL_ROLE(ProxySender);
   IMPL_ROLE(InnerSender);
+  IMPL_ROLE(DirectSender);
 };
 
 struct RecerSender : Recer, Sender {

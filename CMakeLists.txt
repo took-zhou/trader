@@ -1,4 +1,3 @@
-
 include_directories(
     "${workspace_dir}/"
 )
@@ -16,4 +15,5 @@ target_link_libraries(tradelib
     zmq
     protobuf
     python3.8
+    sqlite3
  )

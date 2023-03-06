@@ -1,19 +1,19 @@
 /*
- * proxy_recer.h
+ * direct_recer.h
  *
  *  Created on: 2020年10月23日
  *      Author: Administrator
  */
 
-#ifndef WORKSPACE_TRADER_INFRA_PROXYRECER_H_
-#define WORKSPACE_TRADER_INFRA_PROXYRECER_H_
+#ifndef WORKSPACE_TRADER_INFRA_DIRECTRECER_H_
+#define WORKSPACE_TRADER_INFRA_DIRECTRECER_H_
 
 #include <vector>
 #include "common/self/utils.h"
 
-struct ProxyRecer {
+struct DirectRecer {
  public:
-  ProxyRecer();
+  DirectRecer();
   bool ReceMsg(utils::ItpMsg &msg);
   bool IsTopicInSubTopics(std::string);
   std::vector<std::string> topic_list;

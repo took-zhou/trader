@@ -83,7 +83,7 @@ bool CtpSender::ReqUserLogin() {
       Confirm();
     }
   }
-  return true;
+  return ret;
 }
 
 bool CtpSender::ReqUserLogout() {

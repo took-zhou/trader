@@ -71,7 +71,7 @@ void XtpEvent::OnOrderEventHandle(utils::ItpMsg &msg) {
         message.SerializeToString(&msg.pb_msg);
         msg.session_name = "strategy_trader";
         msg.msg_name = "OrderCancelRsp." + content->prid;
-        recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(msg);
+        recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
       }
       strategy_trader::message rsp;
       auto *insert_rsp = rsp.mutable_order_insert_rsp();
@@ -82,7 +82,7 @@ void XtpEvent::OnOrderEventHandle(utils::ItpMsg &msg) {
       rsp.SerializeToString(&msg.pb_msg);
       msg.session_name = "strategy_trader";
       msg.msg_name = "OrderInsertRsp." + content->prid;
-      recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(msg);
+      recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
       INFO_LOG("the order be canceled, orderRef: %d, prid: %s.", order_info->order_client_id, content->prid.c_str());
 
       order_manage.DelOrder(std::to_string(order_info->order_client_id));
@@ -128,7 +128,7 @@ void XtpEvent::OnTradeEventHandle(utils::ItpMsg &msg) {
     msg.session_name = "strategy_trader";
     msg.msg_name = "OrderInsertRsp." + content->prid;
     auto &recer_sender = RecerSender::GetInstance();
-    recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(msg);
+    recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
 
     content->left_volume -= trade_report->quantity;
     SendEmail(*content);
@@ -172,7 +172,7 @@ void XtpEvent::OnCancelOrderErrorHandle(utils::ItpMsg &msg) {
     msg.session_name = "strategy_trader";
     msg.msg_name = "OrderCancelRsp." + content->prid;
     auto &recer_sender = RecerSender::GetInstance();
-    recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(msg);
+    recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
   } else {
     ERROR_LOG("not find order ref: %ld", cancel_info->order_xtp_id);
   }

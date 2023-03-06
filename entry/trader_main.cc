@@ -13,8 +13,6 @@
 #include "common/self/profiler.h"
 #include "common/self/utils.h"
 #include "trader/domain/trader_service.h"
-#include "trader/infra/base_zmq.h"
-#include "trader/infra/inner_zmq.h"
 #include "trader/infra/recer_sender.h"
 #include "trader/interface/trader_event.h"
 
