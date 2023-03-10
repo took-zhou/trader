@@ -59,8 +59,6 @@ void StrategyEvent::OrderCancelReqHandle(utils::ItpMsg &msg) {
   }
 
   std::string temp_key;
-  temp_key += order_cancel_req.process_random_id();
-  temp_key += ".";
   temp_key += order_cancel_req.instrument();
   temp_key += ".";
   temp_key += order_cancel_req.index();
@@ -92,7 +90,6 @@ void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {
   }
 
   auto content = std::make_shared<utils::OrderContent>();
-  content->prid = order_insert_req.process_random_id();
   content->index = order_insert_req.index();
   content->exchange_id = order_insert_req.order().exchangeid();
   content->instrument_id = order_insert_req.order().instrument();
@@ -106,8 +103,6 @@ void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {
   trader_ser.ROLE(OrderManage).BuildOrder(content->order_ref, content);
 
   std::string temp_key;
-  temp_key += content->prid;
-  temp_key += ".";
   temp_key += content->instrument_id;
   temp_key += ".";
   temp_key += content->index;
@@ -130,7 +125,6 @@ void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {
 void StrategyEvent::TransactionCostReqHandle(utils::ItpMsg &msg) {
   strategy_trader::message message;
   message.ParseFromString(msg.pb_msg);
-  auto process_random_id = message.transaction_cost_req().process_random_id();
   auto &trader_ser = TraderSevice::GetInstance();
   if (trader_ser.login_state != kLoginState) {
     ERROR_LOG("itp not login!");
@@ -142,7 +136,7 @@ void StrategyEvent::TransactionCostReqHandle(utils::ItpMsg &msg) {
   ins_exch.ins = message.transaction_cost_req().instrument_info().instrument_id();
   ins_exch.exch = message.transaction_cost_req().instrument_info().exchange_id();
 
-  recer_sender.ROLE(Sender).ROLE(ItpSender).ReqTransactionCost(ins_exch, stoi(process_random_id));
+  recer_sender.ROLE(Sender).ROLE(ItpSender).ReqTransactionCost(ins_exch);
 }
 
 void StrategyEvent::StrategyAliveRspHandle(utils::ItpMsg &msg) { GlobalSem::GetInstance().PostSemBySemName(GlobalSem::kStrategyRsp); }

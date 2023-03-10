@@ -69,8 +69,6 @@ void AccountAssign::BuildOrderContent(std::shared_ptr<utils::OrderContent> &cont
   } else {
     auto &trader_ser = TraderSevice::GetInstance();
     std::string temp_key;
-    temp_key += content->prid;
-    temp_key += ".";
     temp_key += content->instrument_id;
     temp_key += ".";
     temp_key += content->index;

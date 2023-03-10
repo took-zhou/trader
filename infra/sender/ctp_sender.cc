@@ -155,7 +155,7 @@ bool CtpSender::CancelOrder(utils::OrderContent &content) {
   return ret;
 }
 
-bool CtpSender::ReqAvailableFunds(const int request_id) {
+bool CtpSender::ReqAvailableFunds() {
   auto &json_cfg = utils::JsonConfig::GetInstance();
 
   for (auto &item : ctp_api_spi_info_map) {
@@ -167,7 +167,7 @@ bool CtpSender::ReqAvailableFunds(const int request_id) {
       strcpy(request_msg.BrokerID, broker_id.c_str());
       strcpy(request_msg.CurrencyID, "CNY");
 
-      int result = item.second.trader_api->ReqQryTradingAccount(&request_msg, request_id);
+      int result = item.second.trader_api->ReqQryTradingAccount(&request_msg, 0);
       if (result != 0) {
         INFO_LOG("ReqQryTradingAccount send result is [%d]", result);
       }
@@ -176,13 +176,13 @@ bool CtpSender::ReqAvailableFunds(const int request_id) {
   return true;
 }
 
-bool CtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch, const int request_id) {
+bool CtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) {
   for (auto &item : ctp_api_spi_info_map) {
     CThostFtdcQryInstrumentField request_msg{{0}};
     std::strcpy(request_msg.ExchangeID, ins_exch.exch.c_str());
     std::strcpy(request_msg.InstrumentID, ins_exch.ins.c_str());
 
-    int result = item.second.trader_api->ReqQryInstrument(&request_msg, request_id);
+    int result = item.second.trader_api->ReqQryInstrument(&request_msg, 0);
     INFO_LOG("ReqQryInstrument send result is [%d]", result);
     break;
   }
@@ -190,7 +190,7 @@ bool CtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch, const int
   return true;
 }
 
-bool CtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch, const int request_id) {
+bool CtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
   auto &json_cfg = utils::JsonConfig::GetInstance();
   for (auto &item : ctp_api_spi_info_map) {
     item.second.trader_spi->req_transaction_cost_exchange = ins_exch.exch;
@@ -204,7 +204,7 @@ bool CtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch, const in
       strcpy(margin_rate_field.ExchangeID, ins_exch.exch.c_str());
       strcpy(margin_rate_field.InstrumentID, ins_exch.ins.c_str());
       margin_rate_field.HedgeFlag = THOST_FTDC_HF_Speculation;
-      int result = item.second.trader_api->ReqQryInstrumentMarginRate(&margin_rate_field, request_id);
+      int result = item.second.trader_api->ReqQryInstrumentMarginRate(&margin_rate_field, 0);
       INFO_LOG("ReqQryInstrumentMarginRate send result is [%d]", result);
 
       std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -213,7 +213,7 @@ bool CtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch, const in
       strcpy(commisson_rate_field.InvestorID, investor_id.c_str());
       strcpy(commisson_rate_field.ExchangeID, ins_exch.exch.c_str());
       strcpy(commisson_rate_field.InstrumentID, ins_exch.ins.c_str());
-      result = item.second.trader_api->ReqQryInstrumentCommissionRate(&commisson_rate_field, request_id);
+      result = item.second.trader_api->ReqQryInstrumentCommissionRate(&commisson_rate_field, 0);
       INFO_LOG("ReqQryInstrumentCommissionRate send result is [%d]", result);
     } else {
       CThostFtdcQryOptionInstrCommRateField commisson_rate_field{{0}};
@@ -221,7 +221,7 @@ bool CtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch, const in
       strcpy(commisson_rate_field.InvestorID, investor_id.c_str());
       strcpy(commisson_rate_field.ExchangeID, ins_exch.exch.c_str());
       strcpy(commisson_rate_field.InstrumentID, ins_exch.ins.c_str());
-      int result = item.second.trader_api->ReqQryOptionInstrCommRate(&commisson_rate_field, request_id);
+      int result = item.second.trader_api->ReqQryOptionInstrCommRate(&commisson_rate_field, 0);
       INFO_LOG("ReqQryOptionInstrCommRate send result is [%d]", result);
     }
   }

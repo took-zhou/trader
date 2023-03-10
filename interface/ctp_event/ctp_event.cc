@@ -74,7 +74,7 @@ void CtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
         utils::ItpMsg msg;
         message.SerializeToString(&msg.pb_msg);
         msg.session_name = "strategy_trader";
-        msg.msg_name = "OrderCancelRsp." + content->prid;
+        msg.msg_name = "OrderCancelRsp";
         recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
       }
 
@@ -88,11 +88,11 @@ void CtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
 
         message.SerializeToString(&msg.pb_msg);
         msg.session_name = "strategy_trader";
-        msg.msg_name = "OrderInsertRsp." + content->prid;
+        msg.msg_name = "OrderInsertRsp";
         recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
       }
 
-      INFO_LOG("the order be canceled, order ref: %s, prid: %s.", order->OrderRef, content->prid.c_str());
+      INFO_LOG("the order be canceled, order ref: %s.", order->OrderRef);
       order_manage.DelOrder(order->OrderRef);
     }
   } else {
@@ -146,7 +146,7 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
     utils::ItpMsg msg;
     rsp.SerializeToString(&msg.pb_msg);
     msg.session_name = "strategy_trader";
-    msg.msg_name = "OrderInsertRsp." + content->prid;
+    msg.msg_name = "OrderInsertRsp";
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
 
@@ -156,14 +156,12 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
     if (content->left_volume == 0) {
       if (content->comboffset != 1) {
         std::string temp_key;
-        temp_key += content->prid;
-        temp_key += ".";
         temp_key += content->instrument_id;
         temp_key += ".";
         temp_key += content->index;
         order_lookup.DelOrderIndex(temp_key);
       }
-      INFO_LOG("the order was finished, order ref: %s, prid: %s.", trade->OrderRef, content->prid.c_str());
+      INFO_LOG("the order was finished, order ref: %s.", trade->OrderRef);
       order_manage.DelOrder(trade->OrderRef);
     }
   } else {
@@ -195,10 +193,10 @@ void CtpEvent::OnRspOrderInsertHandle(utils::ItpMsg &msg) {
 
     message.SerializeToString(&msg.pb_msg);
     msg.session_name = "strategy_trader";
-    msg.msg_name = "OrderInsertRsp." + content->prid;
+    msg.msg_name = "OrderInsertRsp";
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
-    INFO_LOG("the order be canceled, orderRef: %s, prid: %s.", order_insert_rsp->OrderRef, content->prid.c_str());
+    INFO_LOG("the order be canceled, orderRef: %s.", order_insert_rsp->OrderRef);
 
     order_manage.DelOrder(order_insert_rsp->OrderRef);
   } else {
@@ -226,7 +224,7 @@ void CtpEvent::OnRspOrderActionHandle(utils::ItpMsg &msg) {
     utils::ItpMsg msg;
     message.SerializeToString(&msg.pb_msg);
     msg.session_name = "strategy_trader";
-    msg.msg_name = "OrderCancelRsp." + content->prid;
+    msg.msg_name = "OrderCancelRsp";
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
   } else {
@@ -296,7 +294,7 @@ void CtpEvent::OnRspQryInstrumentMarginRateHandle(utils::ItpMsg &msg) {
   utils::ItpMsg sendmsg;
   rsp.SerializeToString(&sendmsg.pb_msg);
   sendmsg.session_name = "strategy_trader";
-  sendmsg.msg_name = "MarginRateRsp." + std::to_string(itp_msg.request_id());
+  sendmsg.msg_name = "MarginRateRsp";
   auto &recer_sender = RecerSender::GetInstance();
   recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(sendmsg);
 }
@@ -325,7 +323,7 @@ void CtpEvent::OnRspQryInstrumentCommissionRateHandle(utils::ItpMsg &msg) {
   utils::ItpMsg sendmsg;
   rsp.SerializeToString(&sendmsg.pb_msg);
   sendmsg.session_name = "strategy_trader";
-  sendmsg.msg_name = "CommissionRateRsp." + std::to_string(itp_msg.request_id());
+  sendmsg.msg_name = "CommissionRateRsp";
   auto &recer_sender = RecerSender::GetInstance();
   recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(sendmsg);
 }
@@ -354,7 +352,7 @@ void CtpEvent::OnRspQryOptionInstrCommRateHandle(utils::ItpMsg &msg) {
   utils::ItpMsg sendmsg;
   rsp.SerializeToString(&sendmsg.pb_msg);
   sendmsg.session_name = "strategy_trader";
-  sendmsg.msg_name = "CommissionRateRsp." + std::to_string(itp_msg.request_id());
+  sendmsg.msg_name = "CommissionRateRsp";
   auto &recer_sender = RecerSender::GetInstance();
   recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(sendmsg);
 }

@@ -72,7 +72,7 @@ void BtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
         utils::ItpMsg msg;
         message.SerializeToString(&msg.pb_msg);
         msg.session_name = "strategy_trader";
-        msg.msg_name = "OrderCancelRsp." + content->prid;
+        msg.msg_name = "OrderCancelRsp";
         recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
       }
       strategy_trader::message rsp;
@@ -83,9 +83,9 @@ void BtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
       insert_rsp->set_reason(strategy_trader::FailedReason::Order_Cancel);
       rsp.SerializeToString(&msg.pb_msg);
       msg.session_name = "strategy_trader";
-      msg.msg_name = "OrderInsertRsp." + content->prid;
+      msg.msg_name = "OrderInsertRsp";
       recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
-      INFO_LOG("the order be canceled, orderRef: %d, prid: %s.", order_info->order_ref, content->prid.c_str());
+      INFO_LOG("the order be canceled, orderRef: %d.", order_info->order_ref);
 
       order_manage.DelOrder(std::to_string(order_info->order_ref));
     }
@@ -128,7 +128,7 @@ void BtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
     utils::ItpMsg msg;
     rsp.SerializeToString(&msg.pb_msg);
     msg.session_name = "strategy_trader";
-    msg.msg_name = "OrderInsertRsp." + content->prid;
+    msg.msg_name = "OrderInsertRsp";
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
 
@@ -137,14 +137,12 @@ void BtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
     if (content->left_volume == 0) {
       if (content->comboffset != 1) {
         std::string temp_key;
-        temp_key += content->prid;
-        temp_key += ".";
         temp_key += content->instrument_id;
         temp_key += ".";
         temp_key += content->index;
         order_lookup.DelOrderIndex(temp_key);
       }
-      INFO_LOG("the order was finished, ref[%d],identity[%s]", trade_report->order_ref, content->prid.c_str());
+      INFO_LOG("the order was finished, ref[%d].", trade_report->order_ref);
       order_manage.DelOrder(std::to_string(trade_report->order_ref));
     }
   } else {
@@ -171,10 +169,10 @@ void BtpEvent::OnRtnOrderInsertHandle(utils::ItpMsg &msg) {
 
     message.SerializeToString(&msg.pb_msg);
     msg.session_name = "strategy_trader";
-    msg.msg_name = "OrderInsertRsp." + content->prid;
+    msg.msg_name = "OrderInsertRsp";
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
-    INFO_LOG("the order be canceled, orderRef: %d, prid: %s.", order_insert->order_ref, content->prid.c_str());
+    INFO_LOG("the order be canceled, orderRef: %d.", order_insert->order_ref);
 
     order_manage.DelOrder(std::to_string(order_insert->order_ref));
   } else {
@@ -202,7 +200,7 @@ void BtpEvent::OnRtnOrderActionHandle(utils::ItpMsg &msg) {
     utils::ItpMsg msg;
     message.SerializeToString(&msg.pb_msg);
     msg.session_name = "strategy_trader";
-    msg.msg_name = "OrderCancelRsp." + content->prid;
+    msg.msg_name = "OrderCancelRsp";
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
   } else {
@@ -242,7 +240,7 @@ void BtpEvent::OnRspMarginRateHandle(utils::ItpMsg &msg) {
   utils::ItpMsg sendmsg;
   rsp.SerializeToString(&sendmsg.pb_msg);
   sendmsg.session_name = "strategy_trader";
-  sendmsg.msg_name = "MarginRateRsp." + std::to_string(itp_msg.request_id());
+  sendmsg.msg_name = "MarginRateRsp";
   auto &recer_sender = RecerSender::GetInstance();
   recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(sendmsg);
 }
@@ -271,7 +269,7 @@ void BtpEvent::OnRspCommissionRateHandle(utils::ItpMsg &msg) {
   utils::ItpMsg sendmsg;
   rsp.SerializeToString(&sendmsg.pb_msg);
   sendmsg.session_name = "strategy_trader";
-  sendmsg.msg_name = "CommissionRateRsp." + std::to_string(itp_msg.request_id());
+  sendmsg.msg_name = "CommissionRateRsp";
   auto &recer_sender = RecerSender::GetInstance();
   recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(sendmsg);
 }

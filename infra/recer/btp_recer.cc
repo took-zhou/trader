@@ -100,7 +100,6 @@ void BtpTraderSpi::OnRspTradingAccount(const BtpAccountInfo *account_info) {
     send_msg->set_address(reinterpret_cast<int64_t>(account_info));
     send_msg->set_user_id(account_info->user_id);
     send_msg->set_session_id(account_info->session_id);
-    send_msg->set_request_id(account_info->prid);
     utils::ItpMsg msg;
     req_msg.SerializeToString(&msg.pb_msg);
     msg.session_name = "btp_trader";
@@ -121,7 +120,6 @@ void BtpTraderSpi::OnRspMarginRate(const BtpMarginInfo *margin_info) {
     auto send_msg = req_msg.mutable_itp_msg();
     send_msg->set_address(reinterpret_cast<int64_t>(margin_info));
     send_msg->set_user_id(margin_info->user_id);
-    send_msg->set_request_id(margin_info->prid);
     utils::ItpMsg msg;
     req_msg.SerializeToString(&msg.pb_msg);
     msg.session_name = "btp_trader";
@@ -142,7 +140,6 @@ void BtpTraderSpi::OnRspCommissionRate(const BtpCommissionInfo *commission_info)
     auto send_msg = req_msg.mutable_itp_msg();
     send_msg->set_address(reinterpret_cast<int64_t>(commission_info));
     send_msg->set_user_id(commission_info->user_id);
-    send_msg->set_request_id(commission_info->prid);
     utils::ItpMsg msg;
     req_msg.SerializeToString(&msg.pb_msg);
     msg.session_name = "btp_trader";

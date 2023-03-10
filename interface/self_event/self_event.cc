@@ -47,7 +47,7 @@ void SelfEvent::AccountStatusReqHandle(utils::ItpMsg &msg) {
   recv_message.ParseFromString(msg.pb_msg);
 
   if (recv_message.account_status_req().indication() == ipc::AccountStatusReq::start) {
-    recer_sender.ROLE(Sender).ROLE(ItpSender).ReqAvailableFunds(0);
+    recer_sender.ROLE(Sender).ROLE(ItpSender).ReqAvailableFunds();
   }
 }
 

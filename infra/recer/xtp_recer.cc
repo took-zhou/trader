@@ -106,7 +106,6 @@ void XtpTraderSpi::OnQueryAsset(XTPQueryAssetRsp *trading_account, XTPRI *error_
       send_msg->set_address(reinterpret_cast<int64_t>(trading_account));
       send_msg->set_user_id(pos->second.user_id);
       send_msg->set_session_id(session_id);
-      send_msg->set_request_id(request_id);
       send_msg->set_is_last(is_last);
       utils::ItpMsg msg;
       req_msg.SerializeToString(&msg.pb_msg);

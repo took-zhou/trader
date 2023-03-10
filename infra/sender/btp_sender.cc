@@ -125,25 +125,25 @@ bool BtpSender::Release() {
   return true;
 }
 
-bool BtpSender::ReqAvailableFunds(const int request_id) {
+bool BtpSender::ReqAvailableFunds() {
   if (trader_api != nullptr) {
-    trader_api->QryTradingAccount(request_id);
+    trader_api->QryTradingAccount(0);
   }
 
   return true;
 }
 
-bool BtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch, const int request_id) {
+bool BtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) {
   INFO_LOG("ReqInstrumentInfo not support.");
   return true;
 }
 
-bool BtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch, const int request_id) {
+bool BtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
   BtpTransactionCostField field;
   strcpy(field.exchange_id, ins_exch.exch.c_str());
   strcpy(field.instrument_id, ins_exch.ins.c_str());
 
-  int result = trader_api->QryTransactionCost(&field, request_id);
+  int result = trader_api->QryTransactionCost(&field, 0);
   INFO_LOG("ReqTransactionCost send result is [%d]", result);
   return true;
 }

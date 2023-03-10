@@ -70,7 +70,7 @@ void XtpEvent::OnOrderEventHandle(utils::ItpMsg &msg) {
         utils::ItpMsg msg;
         message.SerializeToString(&msg.pb_msg);
         msg.session_name = "strategy_trader";
-        msg.msg_name = "OrderCancelRsp." + content->prid;
+        msg.msg_name = "OrderCancelRsp";
         recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
       }
       strategy_trader::message rsp;
@@ -81,9 +81,9 @@ void XtpEvent::OnOrderEventHandle(utils::ItpMsg &msg) {
       insert_rsp->set_reason(strategy_trader::FailedReason::Order_Cancel);
       rsp.SerializeToString(&msg.pb_msg);
       msg.session_name = "strategy_trader";
-      msg.msg_name = "OrderInsertRsp." + content->prid;
+      msg.msg_name = "OrderInsertRsp";
       recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
-      INFO_LOG("the order be canceled, orderRef: %d, prid: %s.", order_info->order_client_id, content->prid.c_str());
+      INFO_LOG("the order be canceled, orderRef: %d.", order_info->order_client_id);
 
       order_manage.DelOrder(std::to_string(order_info->order_client_id));
     }
@@ -126,7 +126,7 @@ void XtpEvent::OnTradeEventHandle(utils::ItpMsg &msg) {
     utils::ItpMsg msg;
     rsp.SerializeToString(&msg.pb_msg);
     msg.session_name = "strategy_trader";
-    msg.msg_name = "OrderInsertRsp." + content->prid;
+    msg.msg_name = "OrderInsertRsp";
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
 
@@ -135,14 +135,12 @@ void XtpEvent::OnTradeEventHandle(utils::ItpMsg &msg) {
     if (content->left_volume == 0) {
       if (content->comboffset != 1) {
         std::string temp_key;
-        temp_key += content->prid;
-        temp_key += ".";
         temp_key += content->instrument_id;
         temp_key += ".";
         temp_key += content->index;
         order_lookup.DelOrderIndex(temp_key);
       }
-      INFO_LOG("the order was finished, ref[%d],identity[%s]", trade_report->order_client_id, content->prid.c_str());
+      INFO_LOG("the order was finished, ref[%d].", trade_report->order_client_id);
       order_manage.DelOrder(std::to_string(trade_report->order_client_id));
     }
   } else {
@@ -170,7 +168,7 @@ void XtpEvent::OnCancelOrderErrorHandle(utils::ItpMsg &msg) {
     utils::ItpMsg msg;
     message.SerializeToString(&msg.pb_msg);
     msg.session_name = "strategy_trader";
-    msg.msg_name = "OrderCancelRsp." + content->prid;
+    msg.msg_name = "OrderCancelRsp";
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
   } else {

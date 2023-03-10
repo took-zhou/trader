@@ -173,21 +173,21 @@ bool XtpSender::Release() {
   return true;
 }
 
-bool XtpSender::ReqAvailableFunds(const int request_id) {
+bool XtpSender::ReqAvailableFunds() {
   bool ret = true;
   for (auto &item : xtp_trader_info_map) {
     if (trader_api != nullptr) {
-      ret = trader_api->QueryAsset(item.first, request_id);
+      ret = trader_api->QueryAsset(item.first, 0);
     }
   }
   return ret;
 }
 
-bool XtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch, const int request_id) {
+bool XtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) {
   INFO_LOG("ReqInstrumentInfo not support.");
   return true;
 }
-bool XtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch, const int request_id) {
+bool XtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
   INFO_LOG("ReqTransactionCost not support.");
   return true;
 }

@@ -112,7 +112,6 @@ void CtpTraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *trading
     send_msg->set_address(reinterpret_cast<int64_t>(trading_account));
     send_msg->set_user_id(user_id);
     send_msg->set_session_id(session_id);
-    send_msg->set_request_id(request_id);
     send_msg->set_is_last(is_last);
     utils::ItpMsg msg;
     req_msg.SerializeToString(&msg.pb_msg);
@@ -138,7 +137,6 @@ void CtpTraderSpi::OnRspQryInstrument(CThostFtdcInstrumentField *instrument, CTh
     ipc::message req_msg;
     auto send_msg = req_msg.mutable_itp_msg();
     send_msg->set_address(reinterpret_cast<int64_t>(instrument));
-    send_msg->set_request_id(request_id);
     send_msg->set_is_last(is_last);
     utils::ItpMsg msg;
     req_msg.SerializeToString(&msg.pb_msg);
@@ -165,7 +163,6 @@ void CtpTraderSpi::OnRspOrderInsert(CThostFtdcInputOrderField *input_order, CTho
     auto send_msg = req_msg.mutable_itp_msg();
     send_msg->set_address(reinterpret_cast<int64_t>(input_order));
     send_msg->set_rsp_info(reinterpret_cast<int64_t>(rsp_info));
-    send_msg->set_request_id(request_id);
     send_msg->set_is_last(is_last);
     utils::ItpMsg msg;
     req_msg.SerializeToString(&msg.pb_msg);
@@ -191,7 +188,6 @@ void CtpTraderSpi::OnRspOrderAction(CThostFtdcInputOrderActionField *input_order
     ipc::message req_msg;
     auto send_msg = req_msg.mutable_itp_msg();
     send_msg->set_address(reinterpret_cast<int64_t>(input_order_action));
-    send_msg->set_request_id(request_id);
     send_msg->set_is_last(is_last);
     utils::ItpMsg msg;
     req_msg.SerializeToString(&msg.pb_msg);
@@ -218,7 +214,6 @@ void CtpTraderSpi::OnRspQryInstrumentMarginRate(CThostFtdcInstrumentMarginRateFi
     auto send_msg = req_msg.mutable_itp_msg();
     send_msg->set_address(reinterpret_cast<int64_t>(instrument_margin_rate));
     send_msg->set_user_id(user_id);
-    send_msg->set_request_id(request_id);
     send_msg->set_is_last(is_last);
 
     // fix bug of exch ins not right
@@ -249,7 +244,6 @@ void CtpTraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissi
     auto send_msg = req_msg.mutable_itp_msg();
     send_msg->set_address(reinterpret_cast<int64_t>(instrument_commission_rate));
     send_msg->set_user_id(user_id);
-    send_msg->set_request_id(request_id);
     send_msg->set_is_last(is_last);
 
     // fix bug of exch ins not right
@@ -280,7 +274,6 @@ void CtpTraderSpi::OnRspQryOptionInstrCommRate(CThostFtdcOptionInstrCommRateFiel
     auto send_msg = req_msg.mutable_itp_msg();
     send_msg->set_address(reinterpret_cast<int64_t>(option_instr_comm_rate));
     send_msg->set_user_id(user_id);
-    send_msg->set_request_id(request_id);
     send_msg->set_is_last(is_last);
 
     // fix bug of exch ins not right

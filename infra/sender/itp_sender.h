@@ -17,9 +17,9 @@ struct ItpSender {
   bool ReqUserLogout();
   bool InsertOrder(utils::OrderContent &content);
   bool CancelOrder(utils::OrderContent &content);
-  bool ReqAvailableFunds(const int request_id);
-  bool ReqInstrumentInfo(const utils::InstrumtntID &ins_exch, const int request_id);
-  bool ReqTransactionCost(const utils::InstrumtntID &ins_exch, const int request_id);
+  bool ReqAvailableFunds();
+  bool ReqInstrumentInfo(const utils::InstrumtntID &ins_exch);
+  bool ReqTransactionCost(const utils::InstrumtntID &ins_exch);
   bool LossConnection();
 
  private:
