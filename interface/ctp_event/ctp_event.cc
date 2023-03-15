@@ -187,6 +187,8 @@ void CtpEvent::OnRspOrderInsertHandle(utils::ItpMsg &msg) {
     insert_rsp->set_result(strategy_trader::Result::failed);
     if (rsp_info->ErrorID == 31) {
       insert_rsp->set_reason(strategy_trader::FailedReason::Fund_Shortage_Error);
+    } else if (rsp_info->ErrorID == 50 || rsp_info->ErrorID == 51) {
+      insert_rsp->set_reason(strategy_trader::FailedReason::No_Opened_Order);
     } else {
       insert_rsp->set_reason(strategy_trader::FailedReason::Order_Fill_Error);
     }

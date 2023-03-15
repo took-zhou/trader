@@ -53,12 +53,7 @@ void AccountAssign::BuildOrderContent(std::shared_ptr<utils::OrderContent> &cont
       if (pos == account_info_map_.end()) {
         pos = account_info_map_.begin();
       }
-      if (find_count++ > account_info_map_.size()) {
-        ERROR_LOG("can not find account.");
-        pos++;
-        break;
-      }
-      if (pos->second->available >= minimum_account_available_) {
+      if (pos->second->available >= minimum_account_available_ || find_count++ > account_info_map_.size()) {
         content->session_id = pos->second->session_id;
         content->order_ref = to_string(pos->second->order_ref++);
         content->user_id = pos->first;

@@ -165,7 +165,11 @@ void BtpEvent::OnRtnOrderInsertHandle(utils::ItpMsg &msg) {
     insert_rsp->set_instrument(content->instrument_id);
     insert_rsp->set_index(content->index);
     insert_rsp->set_result(strategy_trader::Result::failed);
-    insert_rsp->set_reason(strategy_trader::FailedReason::Fund_Shortage_Error);
+    if (order_insert->order_status == kRejected) {
+      insert_rsp->set_reason(strategy_trader::FailedReason::Fund_Shortage_Error);
+    } else if (order_insert->order_status == kNoOpened) {
+      insert_rsp->set_reason(strategy_trader::FailedReason::No_Opened_Order);
+    }
 
     message.SerializeToString(&msg.pb_msg);
     msg.session_name = "strategy_trader";
