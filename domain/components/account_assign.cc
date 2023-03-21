@@ -68,7 +68,7 @@ void AccountAssign::BuildOrderContent(std::shared_ptr<utils::OrderContent> &cont
     temp_key += ".";
     temp_key += content->index;
     auto pos = trader_ser.ROLE(OrderLookup).GetOrderPara(temp_key);
-    if (pos != nullptr) {
+    if (pos != nullptr && account_info_map_.find(pos->user_id) != account_info_map_.end()) {
       content->session_id = account_info_map_[pos->user_id]->session_id;
       content->order_ref = to_string(account_info_map_[pos->user_id]->order_ref++);
       content->user_id = pos->user_id;
