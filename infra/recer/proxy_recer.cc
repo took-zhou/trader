@@ -42,6 +42,7 @@ void ProxyRecer::SubscribeTopic() {
   topic_list.push_back("ctpview_trader.LoginControl");
   topic_list.push_back("ctpview_trader.BugInjection");
   topic_list.push_back("ctpview_trader.ProfilerControl");
+  topic_list.push_back("ctpview_trader.UpdatePara");
   topic_list.push_back("trader_trader.AccountStatusReq");
   topic_list.push_back("trader_trader.SendEmail");
 

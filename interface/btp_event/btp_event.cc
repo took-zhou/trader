@@ -89,8 +89,6 @@ void BtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
 
       order_manage.DelOrder(std::to_string(order_info->order_ref));
     }
-  } else {
-    ERROR_LOG("not find order ref: %d", order_info->order_ref);
   }
 }
 
@@ -133,7 +131,6 @@ void BtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
     recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
 
     content->left_volume -= trade_report->volume;
-    SendEmail(*content);
     if (content->left_volume == 0) {
       if (content->comboffset != 1) {
         std::string temp_key;
@@ -142,11 +139,10 @@ void BtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
         temp_key += content->index;
         order_lookup.DelOrderIndex(temp_key);
       }
+      SendEmail(*content);
       INFO_LOG("the order was finished, ref[%d].", trade_report->order_ref);
       order_manage.DelOrder(std::to_string(trade_report->order_ref));
     }
-  } else {
-    ERROR_LOG("not find order ref: %d", trade_report->order_ref);
   }
 }
 
@@ -283,13 +279,9 @@ bool BtpEvent::SendEmail(const utils::OrderContent &content) {
   char save_content[180];
   sprintf(subject_content, "%s transaction notice", content.instrument_id.c_str());
 
-  sprintf(save_content,
-          "account: %s\ninstrument: %s\norder price: %f\ntransaction price: "
-          "%f\ndirection: %s\ncomboffset: %s\norder volume: "
-          "%d\ntransaction volume: %d",
-          content.user_id.c_str(), content.instrument_id.c_str(), content.limit_price, content.traded_order.price,
-          content.traded_order.direction == 1 ? "BUY" : "SELL", content.traded_order.comboffset == 1 ? "OPEN" : "CLOSE",
-          content.total_volume, content.traded_order.volume);
+  sprintf(save_content, "account: %s\ninstrument: %s\norder price: %f\ndirection: %s\ncomboffset: %s\norder volume: %d",
+          content.user_id.c_str(), content.instrument_id.c_str(), content.limit_price, content.direction == 1 ? "BUY" : "SELL",
+          content.comboffset == 1 ? "OPEN" : "CLOSE", content.total_volume);
 
   auto &recer_sender = RecerSender::GetInstance();
   ipc::message send_message;

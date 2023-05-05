@@ -95,8 +95,6 @@ void CtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
       INFO_LOG("the order be canceled, order ref: %s.", order->OrderRef);
       order_manage.DelOrder(order->OrderRef);
     }
-  } else {
-    ERROR_LOG("not find order ref: %s", order->OrderRef);
   }
 }
 
@@ -151,8 +149,6 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
     recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
 
     content->left_volume -= trade->Volume;
-    // content->left_volume -= content->traded_order.volume;
-    SendEmail(*content);
     if (content->left_volume == 0) {
       if (content->comboffset != 1) {
         std::string temp_key;
@@ -161,11 +157,10 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
         temp_key += content->index;
         order_lookup.DelOrderIndex(temp_key);
       }
+      SendEmail(*content);
       INFO_LOG("the order was finished, order ref: %s.", trade->OrderRef);
       order_manage.DelOrder(trade->OrderRef);
     }
-  } else {
-    ERROR_LOG("not find order ref: %s", trade->OrderRef);
   }
 }
 
@@ -364,13 +359,9 @@ bool CtpEvent::SendEmail(const utils::OrderContent &content) {
   char save_content[180];
   sprintf(subject_content, "%s transaction notice", content.instrument_id.c_str());
 
-  sprintf(save_content,
-          "account: %s\ninstrument: %s\norder price: %f\ntransaction price: "
-          "%f\ndirection: %s\ncomboffset: %s\norder volume: "
-          "%d\ntransaction volume: %d",
-          content.user_id.c_str(), content.instrument_id.c_str(), content.limit_price, content.traded_order.price,
-          content.traded_order.direction == 1 ? "BUY" : "SELL", content.traded_order.comboffset == 1 ? "OPEN" : "CLOSE",
-          content.total_volume, content.traded_order.volume);
+  sprintf(save_content, "account: %s\ninstrument: %s\norder price: %f\ndirection: %s\ncomboffset: %s\norder volume: %d",
+          content.user_id.c_str(), content.instrument_id.c_str(), content.limit_price, content.direction == 1 ? "BUY" : "SELL",
+          content.comboffset == 1 ? "OPEN" : "CLOSE", content.total_volume);
 
   auto &recer_sender = RecerSender::GetInstance();
   ipc::message send_message;

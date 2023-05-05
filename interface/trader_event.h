@@ -12,6 +12,7 @@
 #include "trader/interface/ctp_event/ctp_event.h"
 #include "trader/interface/ctpview_event/ctpview_event.h"
 #include "trader/interface/market_event/market_event.h"
+#include "trader/interface/otp_event/otp_event.h"
 #include "trader/interface/self_event/self_event.h"
 #include "trader/interface/strategy_event/strategy_event.h"
 #include "trader/interface/xtp_event/xtp_event.h"
@@ -22,7 +23,7 @@
 #include "common/self/dci/role.h"
 #include "common/self/utils.h"
 
-struct TraderEvent : BtpEvent, CtpEvent, XtpEvent, StrategyEvent, MarketEvent, CtpviewEvent, SelfEvent {
+struct TraderEvent : BtpEvent, CtpEvent, OtpEvent, XtpEvent, StrategyEvent, MarketEvent, CtpviewEvent, SelfEvent {
   TraderEvent();
   TraderEvent(const TraderEvent &) = delete;
   TraderEvent &operator=(const TraderEvent &) = delete;
@@ -35,6 +36,7 @@ struct TraderEvent : BtpEvent, CtpEvent, XtpEvent, StrategyEvent, MarketEvent, C
   void RegSessionFunc();
   IMPL_ROLE(BtpEvent);
   IMPL_ROLE(CtpEvent);
+  IMPL_ROLE(OtpEvent);
   IMPL_ROLE(XtpEvent);
   IMPL_ROLE(StrategyEvent);
   IMPL_ROLE(MarketEvent);

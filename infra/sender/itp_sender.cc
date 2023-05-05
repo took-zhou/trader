@@ -2,6 +2,7 @@
 #include "common/self/file_util.h"
 #include "trader/infra/sender/btp_sender.h"
 #include "trader/infra/sender/ctp_sender.h"
+#include "trader/infra/sender/otp_sender.h"
 #include "trader/infra/sender/xtp_sender.h"
 
 ItpSender::ItpSender() {
@@ -13,6 +14,8 @@ ItpSender::ItpSender() {
     send_api_ = new XtpSender();
   } else if (api_type == "btp") {
     send_api_ = new BtpSender();
+  } else if (api_type == "otp") {
+    send_api_ = new OtpSender();
   }
 }
 

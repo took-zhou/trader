@@ -7,6 +7,7 @@
 #include "trader/interface/ctpview_event/ctpview_event.h"
 #include <thread>
 #include "common/extern/log/log.h"
+#include "common/self/file_util.h"
 #include "common/self/profiler.h"
 #include "common/self/protobuf/ctpview-trader.pb.h"
 #include "trader/domain/trader_service.h"
@@ -20,6 +21,7 @@ void CtpviewEvent::RegMsgFun() {
   msg_func_map["LoginControl"] = [this](utils::ItpMsg &msg) { LoginControlHandle(msg); };
   msg_func_map["BugInjection"] = [this](utils::ItpMsg &msg) { BugInjectionHandle(msg); };
   msg_func_map["ProfilerControl"] = [this](utils::ItpMsg &msg) { ProfilerControlHandle(msg); };
+  msg_func_map["UpdatePara"] = [this](utils::ItpMsg &msg) { UpdateParaHandle(msg); };
 
   for (auto &iter : msg_func_map) {
     INFO_LOG("msg_func_map[%d] key is [%s]", cnt, iter.first.c_str());
@@ -77,5 +79,17 @@ void CtpviewEvent::ProfilerControlHandle(utils::ItpMsg &msg) {
   } else if (action == ctpview_trader::ProfilerControl::stop_write) {
     profiler::FlameGraphWriter::Instance().StopAddData();
     INFO_LOG("stop write tracepoint");
+  }
+}
+
+void CtpviewEvent::UpdateParaHandle(utils::ItpMsg &msg) {
+  ctpview_trader::message message;
+  message.ParseFromString(msg.pb_msg);
+  auto update = message.update_para();
+
+  auto action = update.update_action();
+  if (action == ctpview_trader::UpdatePara::update) {
+    utils::JsonConfig::GetInstance().GetConfig();
+    INFO_LOG("reload config file");
   }
 }
