@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <mutex>
 #include "common/extern/log/log.h"
+#include "common/self/file_util.h"
 #include "common/self/profiler.h"
 #include "common/self/protobuf/ipc.pb.h"
 #include "common/self/protobuf/market-trader.pb.h"
@@ -64,7 +65,7 @@ void CtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
       ScopedTimer timer("OnRtnOrderHandle");
 #endif
       auto &recer_sender = RecerSender::GetInstance();
-      {
+      if (content->active_cancle_indication) {
         strategy_trader::message message;
         auto *order_cancel_rsp = message.mutable_order_cancel_rsp();
         order_cancel_rsp->set_instrument(content->instrument_id);
@@ -77,20 +78,20 @@ void CtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
         msg.msg_name = "OrderCancelRsp";
         recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
       }
-
-      {
-        strategy_trader::message message;
-        auto *insert_rsp = message.mutable_order_insert_rsp();
-        insert_rsp->set_instrument(content->instrument_id);
-        insert_rsp->set_index(content->index);
-        insert_rsp->set_result(strategy_trader::Result::failed);
+      strategy_trader::message rsp;
+      auto *insert_rsp = rsp.mutable_order_insert_rsp();
+      insert_rsp->set_instrument(content->instrument_id);
+      insert_rsp->set_index(content->index);
+      insert_rsp->set_result(strategy_trader::Result::failed);
+      if (content->active_cancle_indication) {
         insert_rsp->set_reason(strategy_trader::FailedReason::Order_Cancel);
-
-        message.SerializeToString(&msg.pb_msg);
-        msg.session_name = "strategy_trader";
-        msg.msg_name = "OrderInsertRsp";
-        recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
+      } else {
+        insert_rsp->set_reason(strategy_trader::FailedReason::No_Trading_Time);
       }
+      rsp.SerializeToString(&msg.pb_msg);
+      msg.session_name = "strategy_trader";
+      msg.msg_name = "OrderInsertRsp";
+      recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
 
       INFO_LOG("the order be canceled, order ref: %s.", order->OrderRef);
       order_manage.DelOrder(order->OrderRef);
@@ -157,7 +158,11 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
         temp_key += content->index;
         order_lookup.DelOrderIndex(temp_key);
       }
-      SendEmail(*content);
+      auto &json_cfg = utils::JsonConfig::GetInstance();
+      auto send_email = json_cfg.GetConfig("trader", "SendOrderEmail").get<std::string>();
+      if (send_email == "send") {
+        SendEmail(*content);
+      }
       INFO_LOG("the order was finished, order ref: %s.", trade->OrderRef);
       order_manage.DelOrder(trade->OrderRef);
     }

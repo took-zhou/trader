@@ -10,6 +10,7 @@
 #include <mutex>
 #include "common/extern/log/log.h"
 #include "common/extern/xtp/inc/xtp_trader_api.h"
+#include "common/self/file_util.h"
 #include "common/self/protobuf/ipc.pb.h"
 #include "common/self/protobuf/market-trader.pb.h"
 #include "common/self/protobuf/strategy-trader.pb.h"
@@ -78,13 +79,17 @@ void XtpEvent::OnOrderEventHandle(utils::ItpMsg &msg) {
       insert_rsp->set_instrument(content->instrument_id);
       insert_rsp->set_index(content->index);
       insert_rsp->set_result(strategy_trader::Result::failed);
-      insert_rsp->set_reason(strategy_trader::FailedReason::Order_Cancel);
+      if (content->active_cancle_indication) {
+        insert_rsp->set_reason(strategy_trader::FailedReason::Order_Cancel);
+      } else {
+        insert_rsp->set_reason(strategy_trader::FailedReason::No_Trading_Time);
+      }
       rsp.SerializeToString(&msg.pb_msg);
       msg.session_name = "strategy_trader";
       msg.msg_name = "OrderInsertRsp";
       recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
-      INFO_LOG("the order be canceled, orderRef: %d.", order_info->order_client_id);
 
+      INFO_LOG("the order be canceled, orderRef: %d.", order_info->order_client_id);
       order_manage.DelOrder(std::to_string(order_info->order_client_id));
     }
   }
@@ -137,7 +142,11 @@ void XtpEvent::OnTradeEventHandle(utils::ItpMsg &msg) {
         temp_key += content->index;
         order_lookup.DelOrderIndex(temp_key);
       }
-      SendEmail(*content);
+      auto &json_cfg = utils::JsonConfig::GetInstance();
+      auto send_email = json_cfg.GetConfig("trader", "SendOrderEmail").get<std::string>();
+      if (send_email == "send") {
+        SendEmail(*content);
+      }
       INFO_LOG("the order was finished, ref[%d].", trade_report->order_client_id);
       order_manage.DelOrder(std::to_string(trade_report->order_client_id));
     }
