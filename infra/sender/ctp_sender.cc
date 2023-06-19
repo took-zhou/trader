@@ -224,6 +224,7 @@ bool CtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
       int result = item.second.trader_api->ReqQryOptionInstrCommRate(&commisson_rate_field, 0);
       INFO_LOG("ReqQryOptionInstrCommRate send result is [%d]", result);
     }
+    break;
   }
 
   return true;
