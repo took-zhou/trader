@@ -89,10 +89,10 @@ void BtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
       rsp.SerializeToString(&msg.pb_msg);
       msg.session_name = "strategy_trader";
       msg.msg_name = "OrderInsertRsp";
-      recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
 
       INFO_LOG("the order be canceled, orderRef: %d.", order_info->order_ref);
       order_manage.DelOrder(std::to_string(order_info->order_ref));
+      recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
     }
   }
 }
@@ -118,6 +118,7 @@ void BtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
     content->traded_order.comboffset = trade_report->comboffset;
     content->traded_order.date = trade_report->date;
     content->traded_order.time = trade_report->time;
+    content->left_volume -= trade_report->volume;
 
     strategy_trader::message rsp;
     auto *insert_rsp = rsp.mutable_order_insert_rsp();
@@ -132,10 +133,7 @@ void BtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
     rsp.SerializeToString(&msg.pb_msg);
     msg.session_name = "strategy_trader";
     msg.msg_name = "OrderInsertRsp";
-    auto &recer_sender = RecerSender::GetInstance();
-    recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
 
-    content->left_volume -= trade_report->volume;
     if (content->left_volume == 0) {
       if (content->comboffset != 1) {
         std::string temp_key;
@@ -152,6 +150,8 @@ void BtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
       INFO_LOG("the order was finished, ref[%d].", trade_report->order_ref);
       order_manage.DelOrder(std::to_string(trade_report->order_ref));
     }
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
   }
 }
 
@@ -179,11 +179,11 @@ void BtpEvent::OnRtnOrderInsertHandle(utils::ItpMsg &msg) {
     message.SerializeToString(&msg.pb_msg);
     msg.session_name = "strategy_trader";
     msg.msg_name = "OrderInsertRsp";
+
+    INFO_LOG("the order be canceled, orderRef: %d.", order_insert->order_ref);
+    order_manage.DelOrder(std::to_string(order_insert->order_ref));
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
-    INFO_LOG("the order be canceled, orderRef: %d.", order_insert->order_ref);
-
-    order_manage.DelOrder(std::to_string(order_insert->order_ref));
   } else {
     ERROR_LOG("not find order ref: %d", order_insert->order_ref);
   }

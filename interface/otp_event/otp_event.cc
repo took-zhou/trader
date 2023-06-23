@@ -89,10 +89,10 @@ void OtpEvent::OnOrderReportHandle(utils::ItpMsg &msg) {
       rsp.SerializeToString(&msg.pb_msg);
       msg.session_name = "strategy_trader";
       msg.msg_name = "OrderInsertRsp";
-      recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
 
       INFO_LOG("the order be canceled, order ref: %lld.", order->clOrdId);
       order_manage.DelOrder(std::to_string(order->clOrdId));
+      recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
     }
   } else {
     ERROR_LOG("not find order ref: %lld", order->clOrdId);
@@ -130,6 +130,7 @@ void OtpEvent::OnTradeReportHandle(utils::ItpMsg &msg) {
     }
     content->traded_order.date = std::to_string(trade->trdDate);
     content->traded_order.time = std::to_string(trade->trdTime);
+    content->left_volume -= trade->trdQty;
 
     strategy_trader::message rsp;
     auto *insert_rsp = rsp.mutable_order_insert_rsp();
@@ -145,10 +146,7 @@ void OtpEvent::OnTradeReportHandle(utils::ItpMsg &msg) {
     rsp.SerializeToString(&msg.pb_msg);
     msg.session_name = "strategy_trader";
     msg.msg_name = "OrderInsertRsp";
-    auto &recer_sender = RecerSender::GetInstance();
-    recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
 
-    content->left_volume -= trade->trdQty;
     if (content->left_volume == 0) {
       if (content->comboffset != 1) {
         std::string temp_key;
@@ -165,8 +163,8 @@ void OtpEvent::OnTradeReportHandle(utils::ItpMsg &msg) {
       INFO_LOG("the order was finished, order ref: %d.", trade->clSeqNo);
       order_manage.DelOrder(std::to_string(trade->clSeqNo));
     }
-  } else {
-    ERROR_LOG("not find order ref: %d", trade->clSeqNo);
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
   }
 }
 
@@ -196,11 +194,11 @@ void OtpEvent::OnBusinessRejectHandle(utils::ItpMsg &msg) {
     message.SerializeToString(&msg.pb_msg);
     msg.session_name = "strategy_trader";
     msg.msg_name = "OrderInsertRsp";
+
+    INFO_LOG("the order be canceled, orderRef: %d.", order_insert_rsp->origClSeqNo);
+    order_manage.DelOrder(std::to_string(order_insert_rsp->origClSeqNo));
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
-    INFO_LOG("the order be canceled, orderRef: %d.", order_insert_rsp->origClSeqNo);
-
-    order_manage.DelOrder(std::to_string(order_insert_rsp->origClSeqNo));
   } else {
     ERROR_LOG("not find order ref: %d", order_insert_rsp->origClSeqNo);
   }

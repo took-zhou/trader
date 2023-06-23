@@ -91,10 +91,10 @@ void CtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
       rsp.SerializeToString(&msg.pb_msg);
       msg.session_name = "strategy_trader";
       msg.msg_name = "OrderInsertRsp";
-      recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
 
       INFO_LOG("the order be canceled, order ref: %s.", order->OrderRef);
       order_manage.DelOrder(order->OrderRef);
+      recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
     }
   }
 }
@@ -131,6 +131,7 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
     }
     content->traded_order.date = trade->TradeDate;
     content->traded_order.time = trade->TradeTime;
+    content->left_volume -= trade->Volume;
 
     strategy_trader::message rsp;
     auto *insert_rsp = rsp.mutable_order_insert_rsp();
@@ -146,10 +147,7 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
     rsp.SerializeToString(&msg.pb_msg);
     msg.session_name = "strategy_trader";
     msg.msg_name = "OrderInsertRsp";
-    auto &recer_sender = RecerSender::GetInstance();
-    recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
 
-    content->left_volume -= trade->Volume;
     if (content->left_volume == 0) {
       if (content->comboffset != 1) {
         std::string temp_key;
@@ -166,6 +164,8 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
       INFO_LOG("the order was finished, order ref: %s.", trade->OrderRef);
       order_manage.DelOrder(trade->OrderRef);
     }
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
   }
 }
 
@@ -196,11 +196,11 @@ void CtpEvent::OnRspOrderInsertHandle(utils::ItpMsg &msg) {
     message.SerializeToString(&msg.pb_msg);
     msg.session_name = "strategy_trader";
     msg.msg_name = "OrderInsertRsp";
+
+    INFO_LOG("the order be canceled, orderRef: %s.", order_insert_rsp->OrderRef);
+    order_manage.DelOrder(order_insert_rsp->OrderRef);
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
-    INFO_LOG("the order be canceled, orderRef: %s.", order_insert_rsp->OrderRef);
-
-    order_manage.DelOrder(order_insert_rsp->OrderRef);
   } else {
     ERROR_LOG("not find order ref: %s", order_insert_rsp->OrderRef);
   }
