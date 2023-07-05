@@ -315,12 +315,12 @@ void CtpEvent::OnRspQryInstrumentCommissionRateHandle(utils::ItpMsg &msg) {
   commission_rate_rsp->set_instrument_id(commission_rate_field->InstrumentID);
   commission_rate_rsp->set_user_id(itp_msg.user_id());
   commission_rate_rsp->set_result(strategy_trader::Result::success);
-  commission_rate_rsp->set_openratiobymoney(commission_rate_field->CloseRatioByMoney);
-  commission_rate_rsp->set_openratiobyvolume(commission_rate_field->CloseRatioByVolume);
-  commission_rate_rsp->set_closeratiobymoney(commission_rate_field->CloseTodayRatioByMoney);
-  commission_rate_rsp->set_closeratiobyvolume(commission_rate_field->CloseTodayRatioByVolume);
-  commission_rate_rsp->set_closetodayratiobymoney(commission_rate_field->OpenRatioByMoney);
-  commission_rate_rsp->set_closetodayratiobyvolume(commission_rate_field->OpenRatioByVolume);
+  commission_rate_rsp->set_openratiobymoney(commission_rate_field->OpenRatioByMoney);
+  commission_rate_rsp->set_openratiobyvolume(commission_rate_field->OpenRatioByVolume);
+  commission_rate_rsp->set_closeratiobymoney(commission_rate_field->CloseRatioByMoney);
+  commission_rate_rsp->set_closeratiobyvolume(commission_rate_field->CloseRatioByVolume);
+  commission_rate_rsp->set_closetodayratiobymoney(commission_rate_field->CloseTodayRatioByMoney);
+  commission_rate_rsp->set_closetodayratiobyvolume(commission_rate_field->CloseTodayRatioByVolume);
 
   utils::ItpMsg sendmsg;
   rsp.SerializeToString(&sendmsg.pb_msg);
@@ -344,12 +344,12 @@ void CtpEvent::OnRspQryOptionInstrCommRateHandle(utils::ItpMsg &msg) {
   commission_rate_rsp->set_instrument_id(commission_rate_field->InstrumentID);
   commission_rate_rsp->set_user_id(itp_msg.user_id());
   commission_rate_rsp->set_result(strategy_trader::Result::success);
-  commission_rate_rsp->set_openratiobymoney(commission_rate_field->CloseRatioByMoney);
-  commission_rate_rsp->set_openratiobyvolume(commission_rate_field->CloseRatioByVolume);
-  commission_rate_rsp->set_closeratiobymoney(commission_rate_field->CloseTodayRatioByMoney);
-  commission_rate_rsp->set_closeratiobyvolume(commission_rate_field->CloseTodayRatioByVolume);
-  commission_rate_rsp->set_closetodayratiobymoney(commission_rate_field->OpenRatioByMoney);
-  commission_rate_rsp->set_closetodayratiobyvolume(commission_rate_field->OpenRatioByVolume);
+  commission_rate_rsp->set_openratiobymoney(commission_rate_field->OpenRatioByMoney);
+  commission_rate_rsp->set_openratiobyvolume(commission_rate_field->OpenRatioByVolume);
+  commission_rate_rsp->set_closeratiobymoney(commission_rate_field->CloseRatioByMoney);
+  commission_rate_rsp->set_closeratiobyvolume(commission_rate_field->CloseRatioByVolume);
+  commission_rate_rsp->set_closetodayratiobymoney(commission_rate_field->CloseTodayRatioByMoney);
+  commission_rate_rsp->set_closetodayratiobyvolume(commission_rate_field->CloseTodayRatioByVolume);
 
   utils::ItpMsg sendmsg;
   rsp.SerializeToString(&sendmsg.pb_msg);
