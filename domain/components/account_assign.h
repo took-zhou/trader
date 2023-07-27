@@ -12,6 +12,7 @@ struct AccountInfo {
   double available;
   uint64_t session_id;
   uint32_t order_ref;
+  std::set<std::string> open_blacklist;
 };
 
 struct AccountAssign {
@@ -19,14 +20,12 @@ struct AccountAssign {
   AccountAssign();
   void InitDatabase();
   void UpdateAccountStatus(double value1, double value2, uint64_t value3, const std::string &value4);
+  void UpdateOpenBlackList(const std::string &value, const std::string &ins, const std::string &index);
   void ReqAccountStatus(void);
   void RemoveAccountStatus(void);
-  void BuildOrderContent(std::shared_ptr<utils::OrderContent> &content);
   void RestoreFromSqlite3();
 
- private:
-  std::unordered_map<std::string, std::shared_ptr<AccountInfo>> account_info_map_;
-  const double minimum_account_available_ = 10000.0;
+  std::unordered_map<std::string, std::shared_ptr<AccountInfo>> account_info_map;
 };
 
 #endif

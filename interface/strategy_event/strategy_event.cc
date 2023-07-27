@@ -62,13 +62,15 @@ void StrategyEvent::OrderCancelReqHandle(utils::ItpMsg &msg) {
   temp_key += order_cancel_req.instrument();
   temp_key += ".";
   temp_key += order_cancel_req.index();
-  auto order_para = trader_ser.ROLE(OrderLookup).GetOrderPara(temp_key);
-  if (order_para != nullptr) {
-    auto content = trader_ser.ROLE(OrderManage).GetOrder(order_para->order_ref);
-    if (content != nullptr) {
-      content->active_cancle_indication = true;
-      auto &recer_sender = RecerSender::GetInstance();
-      recer_sender.ROLE(Sender).ROLE(ItpSender).CancelOrder(*content);
+  auto pos = trader_ser.ROLE(OrderLookup).order_index_map.find(temp_key);
+  if (pos != trader_ser.ROLE(OrderLookup).order_index_map.end()) {
+    for (auto &item : pos->second) {
+      auto content = trader_ser.ROLE(OrderManage).GetOrder(item.second->order_ref);
+      if (content != nullptr && content->total_volume > (content->success_volume + content->fail_volume)) {
+        content->active_cancle_indication = true;
+        auto &recer_sender = RecerSender::GetInstance();
+        recer_sender.ROLE(Sender).ROLE(ItpSender).CancelOrder(*content);
+      }
     }
   }
 }
@@ -83,42 +85,49 @@ void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {
 
   const auto &order_insert_req = message.order_insert_req();
   auto &trader_ser = TraderSevice::GetInstance();
+  auto &order_allocate = trader_ser.ROLE(OrderAllocate);
 
   if (trader_ser.login_state != kLoginState) {
     ERROR_LOG("itp not login!");
     return;
   }
 
-  auto content = std::make_shared<utils::OrderContent>();
-  content->index = order_insert_req.index();
-  content->exchange_id = order_insert_req.order().exchangeid();
-  content->instrument_id = order_insert_req.order().instrument();
-  content->total_volume = order_insert_req.order().volume_total_original();
-  content->left_volume = order_insert_req.order().volume_total_original();
-  content->limit_price = order_insert_req.order().limitprice();
-  content->direction = order_insert_req.order().direction();
-  content->comboffset = order_insert_req.order().comb_offset_flag();
-  content->order_type = order_insert_req.order().order_type();
-  trader_ser.ROLE(AccountAssign).BuildOrderContent(content);
-  trader_ser.ROLE(OrderManage).BuildOrder(content->order_ref, content);
+  auto content = utils::OrderContent();
+  content.index = order_insert_req.index();
+  content.exchange_id = order_insert_req.order().exchangeid();
+  content.instrument_id = order_insert_req.order().instrument();
+  content.total_volume = order_insert_req.order().volume_total_original();
+  content.limit_price = order_insert_req.order().limitprice();
+  content.direction = order_insert_req.order().direction();
+  content.comboffset = order_insert_req.order().comb_offset_flag();
+  content.order_type = order_insert_req.order().order_type();
+  order_allocate.UpdateOrderList(content);
+  if (order_allocate.order_list.size() == 0) {
+    strategy_trader::message message;
+    auto *insert_rsp = message.mutable_order_insert_rsp();
+    insert_rsp->set_instrument(content.instrument_id);
+    insert_rsp->set_index(content.index);
+    insert_rsp->set_result(strategy_trader::Result::failed);
+    insert_rsp->set_reason(strategy_trader::FailedReason::Account_Assign_Error);
+    auto *rsp_info = insert_rsp->mutable_info();
+    rsp_info->set_orderprice(content.limit_price);
+    rsp_info->set_ordervolume(content.total_volume);
 
-  std::string temp_key;
-  temp_key += content->instrument_id;
-  temp_key += ".";
-  temp_key += content->index;
-  auto order_para = std::make_shared<OrderLookup::OrderPara>(content->user_id, content->order_ref);
-  trader_ser.ROLE(OrderLookup).BuildOrderIndex(temp_key, order_para);
-
-  {
-    PZone("InsertOrder");
+    message.SerializeToString(&msg.pb_msg);
+    msg.session_name = "strategy_trader";
+    msg.msg_name = "OrderInsertRsp";
     auto &recer_sender = RecerSender::GetInstance();
-    bool result = recer_sender.ROLE(Sender).ROLE(ItpSender).InsertOrder(*content.get());
-    if (result == false) {
-      trader_ser.ROLE(OrderManage).DelOrder(content->order_ref);
+    recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
+  } else {
+    for (auto &order : order_allocate.order_list) {
+      PZone("InsertOrder");
+      auto &recer_sender = RecerSender::GetInstance();
+      bool result = recer_sender.ROLE(Sender).ROLE(ItpSender).InsertOrder(*order.get());
+      if (result == false) {
+        trader_ser.ROLE(OrderManage).DelOrder(order->order_ref);
+      }
     }
   }
-
-  return;
 }
 
 // 将保证金和手续费综合成交易成本

@@ -13,9 +13,43 @@
 #include "trader/infra/recer_sender.h"
 #include "trader/infra/sender/btp_sender.h"
 
-void BtpTraderSpi::OnRspUserLogin(const BtpLoginLogoutStruct *login_info) {}
+void BtpTraderSpi::OnRspUserLogin(const BtpLoginLogoutStruct *login_info) {
+  if (login_info != nullptr) {
+    ipc::message req_msg;
+    auto send_msg = req_msg.mutable_itp_msg();
+    send_msg->set_address(reinterpret_cast<int64_t>(login_info));
+    utils::ItpMsg msg;
+    req_msg.SerializeToString(&msg.pb_msg);
+    msg.session_name = "btp_trader";
+    msg.msg_name = "OnRspUserLogin";
 
-void BtpTraderSpi::OnRspUserLogout(const BtpLoginLogoutStruct *login_info) {}
+    auto &global_sem = GlobalSem::GetInstance();
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(InnerSender).SendMsg(msg);
+    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+  } else {
+    ERROR_LOG("login_info is nullptr");
+  }
+}
+
+void BtpTraderSpi::OnRspUserLogout(const BtpLoginLogoutStruct *login_info) {
+  if (login_info != nullptr) {
+    ipc::message req_msg;
+    auto send_msg = req_msg.mutable_itp_msg();
+    send_msg->set_address(reinterpret_cast<int64_t>(login_info));
+    utils::ItpMsg msg;
+    req_msg.SerializeToString(&msg.pb_msg);
+    msg.session_name = "btp_trader";
+    msg.msg_name = "OnRspUserLogout";
+
+    auto &global_sem = GlobalSem::GetInstance();
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(InnerSender).SendMsg(msg);
+    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+  } else {
+    ERROR_LOG("login_info is nullptr");
+  }
+}
 
 void BtpTraderSpi::OnRtnTrade(const BtpOrderInfoStruct *trade_info) {
   if (trade_info != nullptr) {

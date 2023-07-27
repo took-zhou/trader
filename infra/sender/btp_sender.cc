@@ -83,7 +83,7 @@ bool BtpSender::CancelOrder(utils::OrderContent &content) {
     BtpOrderInfoStruct orderinfo;
     orderinfo.order_ref = stoi(content.order_ref);
     orderinfo.price = content.limit_price;
-    orderinfo.volume = content.total_volume;
+    orderinfo.volume = content.total_volume - content.success_volume - content.fail_volume;
     trader_api->ReqOrderAction(&orderinfo);
   }
   return ret;

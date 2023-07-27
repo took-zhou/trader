@@ -40,20 +40,50 @@ void CtpTraderSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *rsp_user_login, C
   }
 
   if (rsp_user_login != nullptr) {
+    ipc::message req_msg;
+    auto send_msg = req_msg.mutable_itp_msg();
+    send_msg->set_address(reinterpret_cast<int64_t>(rsp_info));
+    utils::ItpMsg msg;
+    req_msg.SerializeToString(&msg.pb_msg);
+    msg.session_name = "ctp_trader";
+    msg.msg_name = "OnRspUserLogin";
+
+    auto &global_sem = GlobalSem::GetInstance();
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(InnerSender).SendMsg(msg);
+    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
     session_id = (uint64_t)rsp_user_login->SessionID;
     front_id = rsp_user_login->FrontID;
     user_id = rsp_user_login->UserID;
-    auto &global_sem = GlobalSem::GetInstance();
-    global_sem.PostSemBySemName(GlobalSem::kLoginLogout);
     front_disconnected = false;
+    global_sem.PostSemBySemName(GlobalSem::kLoginLogout);
   } else {
     ERROR_LOG("rsp_user_login is nullptr");
   }
 }
 
 void CtpTraderSpi::OnRspUserLogout(CThostFtdcUserLogoutField *user_logout, CThostFtdcRspInfoField *rsp_info, int request_id, bool is_last) {
-  auto &global_sem = GlobalSem::GetInstance();
-  global_sem.PostSemBySemName(GlobalSem::kLoginLogout);
+  if (rsp_info != nullptr && rsp_info->ErrorID != 0) {
+    ERROR_LOG("id: %d, msg: %s.", rsp_info->ErrorID, rsp_info->ErrorMsg);
+  }
+
+  if (user_logout != nullptr) {
+    ipc::message req_msg;
+    auto send_msg = req_msg.mutable_itp_msg();
+    send_msg->set_address(reinterpret_cast<int64_t>(rsp_info));
+    utils::ItpMsg msg;
+    req_msg.SerializeToString(&msg.pb_msg);
+    msg.session_name = "ctp_trader";
+    msg.msg_name = "OnRspUserLogout";
+
+    auto &global_sem = GlobalSem::GetInstance();
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(InnerSender).SendMsg(msg);
+    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    global_sem.PostSemBySemName(GlobalSem::kLoginLogout);
+  } else {
+    ERROR_LOG("user_logout is nullptr");
+  }
 }
 
 void CtpTraderSpi::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *settlement_info_confirm,

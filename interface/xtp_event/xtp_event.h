@@ -20,6 +20,9 @@ struct XtpEvent {
   void Handle(utils::ItpMsg &msg);
   void RegMsgFun();
 
+  void OnRspUserLoginHandle(utils::ItpMsg &msg);
+  void OnRspUserLogoutHandle(utils::ItpMsg &msg);
+
   void OnTradeEventHandle(utils::ItpMsg &msg);
   void OnOrderEventHandle(utils::ItpMsg &msg);
   void OnCancelOrderErrorHandle(utils::ItpMsg &msg);

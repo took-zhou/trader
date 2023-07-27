@@ -15,11 +15,13 @@
 #include "common/self/dci/role.h"
 #include "common/self/utils.h"
 
-struct BtpEvent  {
+struct BtpEvent {
   BtpEvent();
   void Handle(utils::ItpMsg &msg);
   void RegMsgFun();
 
+  void OnRspUserLoginHandle(utils::ItpMsg &msg);
+  void OnRspUserLogoutHandle(utils::ItpMsg &msg);
   void OnRtnTradeHandle(utils::ItpMsg &msg);
   void OnRtnOrderHandle(utils::ItpMsg &msg);
   void OnRtnOrderInsertHandle(utils::ItpMsg &msg);

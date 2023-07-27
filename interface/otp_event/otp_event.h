@@ -19,6 +19,9 @@ struct OtpEvent {
   void Handle(utils::ItpMsg &msg);
   void RegMsgFun();
 
+  void OnRspUserLoginHandle(utils::ItpMsg &msg);
+  void OnRspUserLogoutHandle(utils::ItpMsg &msg);
+
   void OnBusinessRejectHandle(utils::ItpMsg &msg);
   void OnOrderReportHandle(utils::ItpMsg &msg);
   void OnTradeReportHandle(utils::ItpMsg &msg);

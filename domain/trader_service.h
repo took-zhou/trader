@@ -8,6 +8,7 @@
 #define WORKSPACE_TRADER_DOMAIN_TRADERSERVICE_H_
 
 #include "trader/domain/components/account_assign.h"
+#include "trader/domain/components/order_allocate.h"
 #include "trader/domain/components/order_lookup.h"
 #include "trader/domain/components/order_manage.h"
 #include "trader/domain/components/trader_time_state.h"
@@ -16,7 +17,7 @@
 enum TraderLoginState { kErrorState = 0, kLoginState = 1, kLogoutState = 2 };
 enum TraderRunMode { kFastBack = 0, kRealTime };
 
-struct TraderSevice : OrderManage, TraderTimeState, AccountAssign, OrderLookup {
+struct TraderSevice : OrderManage, TraderTimeState, AccountAssign, OrderLookup, OrderAllocate {
   TraderSevice();
   TraderSevice(const TraderSevice &) = delete;
   TraderSevice &operator=(const TraderSevice &) = delete;
@@ -29,6 +30,7 @@ struct TraderSevice : OrderManage, TraderTimeState, AccountAssign, OrderLookup {
   IMPL_ROLE(TraderTimeState);
   IMPL_ROLE(AccountAssign);
   IMPL_ROLE(OrderLookup);
+  IMPL_ROLE(OrderAllocate);
 
   TraderLoginState login_state = kLogoutState;
   TraderRunMode run_mode = kRealTime;

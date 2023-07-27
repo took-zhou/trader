@@ -24,6 +24,8 @@ XtpEvent::XtpEvent() { RegMsgFun(); }
 void XtpEvent::RegMsgFun() {
   int cnt = 0;
   msg_func_map_.clear();
+  msg_func_map_["OnRspUserLogin"] = [this](utils::ItpMsg &msg) { OnRspUserLoginHandle(msg); };
+  msg_func_map_["OnRspUserLogout"] = [this](utils::ItpMsg &msg) { OnRspUserLogoutHandle(msg); };
   msg_func_map_["OnOrderEvent"] = [this](utils::ItpMsg &msg) { OnOrderEventHandle(msg); };
   msg_func_map_["OnTradeEvent"] = [this](utils::ItpMsg &msg) { OnTradeEventHandle(msg); };
   msg_func_map_["OnCancelOrderError"] = [this](utils::ItpMsg &msg) { OnCancelOrderErrorHandle(msg); };
@@ -43,6 +45,27 @@ void XtpEvent::Handle(utils::ItpMsg &msg) {
   }
   ERROR_LOG("can not find func for msgName [%s]!", msg.msg_name.c_str());
   return;
+}
+
+void XtpEvent::OnRspUserLoginHandle(utils::ItpMsg &msg) {}
+
+void XtpEvent::OnRspUserLogoutHandle(utils::ItpMsg &msg) {
+  ipc::message message;
+  message.ParseFromString(msg.pb_msg);
+  auto &itp_msg = message.itp_msg();
+
+  auto xtpri = reinterpret_cast<XTPRI *>(itp_msg.address());
+  if (xtpri->error_id != 0) {
+    // 端登失败，客户端需进行错误处理
+    ERROR_LOG("Failed to login, errorcode=%d errormsg=%s", xtpri->error_id, xtpri->error_msg);
+    exit(-1);
+  } else {
+    auto &trader_ser = TraderSevice::GetInstance();
+    auto &time_state = trader_ser.ROLE(TraderTimeState);
+    if (time_state.GetSubTimeState() == kInDayLogout) {
+      trader_ser.ROLE(OrderLookup).HandleTraderClose();
+    }
+  }
 }
 
 void XtpEvent::OnOrderEventHandle(utils::ItpMsg &msg) {
@@ -84,6 +107,9 @@ void XtpEvent::OnOrderEventHandle(utils::ItpMsg &msg) {
       } else {
         insert_rsp->set_reason(strategy_trader::FailedReason::No_Trading_Time);
       }
+      auto *rsp_info = insert_rsp->mutable_info();
+      rsp_info->set_orderprice(order_info->price);
+      rsp_info->set_ordervolume(order_info->quantity);
       rsp.SerializeToString(&msg.pb_msg);
       msg.session_name = "strategy_trader";
       msg.msg_name = "OrderInsertRsp";
@@ -110,13 +136,15 @@ void XtpEvent::OnTradeEventHandle(utils::ItpMsg &msg) {
 #endif
   auto content = order_manage.GetOrder(std::to_string(trade_report->order_client_id));
   if (content != nullptr) {
-    content->traded_order.price = trade_report->price;
-    content->traded_order.volume = trade_report->quantity;
-    content->traded_order.direction = trade_report->side;
-    content->traded_order.comboffset = trade_report->position_effect + 1;
-    content->traded_order.date = trade_report->trade_time;
-    content->traded_order.time = trade_report->trade_time;
-    content->left_volume -= trade_report->quantity;
+    if (content->comboffset == strategy_trader::CombOffsetType::OPEN) {
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, 0, trade_report->quantity);
+    } else if (content->comboffset == strategy_trader::CombOffsetType::CLOSE_TODAY) {
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, 0, -trade_report->quantity);
+    } else if (content->comboffset == strategy_trader::CombOffsetType::CLOSE_YESTERDAY) {
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, -trade_report->quantity, 0);
+    }
+
+    content->success_volume += trade_report->quantity;
 
     strategy_trader::message rsp;
     auto *insert_rsp = rsp.mutable_order_insert_rsp();
@@ -124,22 +152,15 @@ void XtpEvent::OnTradeEventHandle(utils::ItpMsg &msg) {
     insert_rsp->set_index(content->index);
     insert_rsp->set_result(strategy_trader::Result::success);
 
-    auto *succ_info = insert_rsp->mutable_info();
-    succ_info->set_orderprice(content->traded_order.price);
-    succ_info->set_ordervolume(content->traded_order.volume);
+    auto *rsp_info = insert_rsp->mutable_info();
+    rsp_info->set_orderprice(trade_report->price);
+    rsp_info->set_ordervolume(trade_report->quantity);
     utils::ItpMsg msg;
     rsp.SerializeToString(&msg.pb_msg);
     msg.session_name = "strategy_trader";
     msg.msg_name = "OrderInsertRsp";
 
-    if (content->left_volume == 0) {
-      if (content->comboffset != 1) {
-        std::string temp_key;
-        temp_key += content->instrument_id;
-        temp_key += ".";
-        temp_key += content->index;
-        order_lookup.DelOrderIndex(temp_key);
-      }
+    if (content->total_volume == content->success_volume) {
       auto &json_cfg = utils::JsonConfig::GetInstance();
       auto send_email = json_cfg.GetConfig("trader", "SendOrderEmail").get<std::string>();
       if (send_email == "send") {
