@@ -24,8 +24,6 @@ BtpEvent::BtpEvent() { RegMsgFun(); }
 void BtpEvent::RegMsgFun() {
   int cnt = 0;
   msg_func_map_.clear();
-  msg_func_map_["OnRspUserLogin"] = [this](utils::ItpMsg &msg) { OnRspUserLoginHandle(msg); };
-  msg_func_map_["OnRspUserLogout"] = [this](utils::ItpMsg &msg) { OnRspUserLogoutHandle(msg); };
   msg_func_map_["OnRtnOrder"] = [this](utils::ItpMsg &msg) { OnRtnOrderHandle(msg); };
   msg_func_map_["OnRtnTrade"] = [this](utils::ItpMsg &msg) { OnRtnTradeHandle(msg); };
   msg_func_map_["OnRtnOrderInsert"] = [this](utils::ItpMsg &msg) { OnRtnOrderInsertHandle(msg); };
@@ -50,23 +48,13 @@ void BtpEvent::Handle(utils::ItpMsg &msg) {
   return;
 }
 
-void BtpEvent::OnRspUserLoginHandle(utils::ItpMsg &msg) {}
-
-void BtpEvent::OnRspUserLogoutHandle(utils::ItpMsg &msg) {
-  auto &trader_ser = TraderSevice::GetInstance();
-  auto &time_state = trader_ser.ROLE(TraderTimeState);
-  if (time_state.GetSubTimeState() == kInDayLogout) {
-    trader_ser.ROLE(OrderLookup).HandleTraderClose();
-  }
-}
-
 void BtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
   ipc::message message;
   message.ParseFromString(msg.pb_msg);
   auto &itp_msg = message.itp_msg();
 
   auto order_info = reinterpret_cast<BtpOrderInfoStruct *>(itp_msg.address());
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   auto &order_manage = trader_ser.ROLE(OrderManage);
   auto content = order_manage.GetOrder(std::to_string(order_info->order_ref));
   if (content != nullptr) {
@@ -118,7 +106,7 @@ void BtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
   auto &itp_msg = message.itp_msg();
 
   auto trade_report = reinterpret_cast<BtpOrderInfoStruct *>(itp_msg.address());
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   auto &order_manage = trader_ser.ROLE(OrderManage);
   auto &order_lookup = trader_ser.ROLE(OrderLookup);
 
@@ -171,7 +159,7 @@ void BtpEvent::OnRtnOrderInsertHandle(utils::ItpMsg &msg) {
   auto &itp_msg = message.itp_msg();
 
   auto order_insert = reinterpret_cast<BtpOrderInfoStruct *>(itp_msg.address());
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   auto &order_manage = trader_ser.ROLE(OrderManage);
   auto &order_lookup = trader_ser.ROLE(OrderLookup);
   auto &account_assign = trader_ser.ROLE(AccountAssign);
@@ -217,7 +205,7 @@ void BtpEvent::OnRtnOrderActionHandle(utils::ItpMsg &msg) {
   auto &itp_msg = message.itp_msg();
 
   auto order_action_rsp = reinterpret_cast<BtpOrderInfoStruct *>(itp_msg.address());
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   auto &order_manage = trader_ser.ROLE(OrderManage);
   auto content = order_manage.GetOrder(std::to_string(order_action_rsp->order_ref));
   if (content != nullptr) {
@@ -245,7 +233,7 @@ void BtpEvent::OnRspTradingAccountHandle(utils::ItpMsg &msg) {
   auto &itp_msg = message.itp_msg();
 
   auto account = reinterpret_cast<BtpAccountInfo *>(itp_msg.address());
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   trader_ser.ROLE(AccountAssign).UpdateAccountStatus(account->balance, account->available, itp_msg.session_id(), itp_msg.user_id());
 }
 

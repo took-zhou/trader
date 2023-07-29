@@ -24,8 +24,6 @@ XtpEvent::XtpEvent() { RegMsgFun(); }
 void XtpEvent::RegMsgFun() {
   int cnt = 0;
   msg_func_map_.clear();
-  msg_func_map_["OnRspUserLogin"] = [this](utils::ItpMsg &msg) { OnRspUserLoginHandle(msg); };
-  msg_func_map_["OnRspUserLogout"] = [this](utils::ItpMsg &msg) { OnRspUserLogoutHandle(msg); };
   msg_func_map_["OnOrderEvent"] = [this](utils::ItpMsg &msg) { OnOrderEventHandle(msg); };
   msg_func_map_["OnTradeEvent"] = [this](utils::ItpMsg &msg) { OnTradeEventHandle(msg); };
   msg_func_map_["OnCancelOrderError"] = [this](utils::ItpMsg &msg) { OnCancelOrderErrorHandle(msg); };
@@ -47,34 +45,13 @@ void XtpEvent::Handle(utils::ItpMsg &msg) {
   return;
 }
 
-void XtpEvent::OnRspUserLoginHandle(utils::ItpMsg &msg) {}
-
-void XtpEvent::OnRspUserLogoutHandle(utils::ItpMsg &msg) {
-  ipc::message message;
-  message.ParseFromString(msg.pb_msg);
-  auto &itp_msg = message.itp_msg();
-
-  auto xtpri = reinterpret_cast<XTPRI *>(itp_msg.address());
-  if (xtpri->error_id != 0) {
-    // 端登失败，客户端需进行错误处理
-    ERROR_LOG("Failed to login, errorcode=%d errormsg=%s", xtpri->error_id, xtpri->error_msg);
-    exit(-1);
-  } else {
-    auto &trader_ser = TraderSevice::GetInstance();
-    auto &time_state = trader_ser.ROLE(TraderTimeState);
-    if (time_state.GetSubTimeState() == kInDayLogout) {
-      trader_ser.ROLE(OrderLookup).HandleTraderClose();
-    }
-  }
-}
-
 void XtpEvent::OnOrderEventHandle(utils::ItpMsg &msg) {
   ipc::message message;
   message.ParseFromString(msg.pb_msg);
   auto &itp_msg = message.itp_msg();
 
   auto order_info = reinterpret_cast<XTPOrderInfo *>(itp_msg.address());
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   auto &order_manage = trader_ser.ROLE(OrderManage);
   auto content = order_manage.GetOrder(std::to_string(order_info->order_client_id));
   if (content != nullptr) {
@@ -127,7 +104,7 @@ void XtpEvent::OnTradeEventHandle(utils::ItpMsg &msg) {
   auto &itp_msg = message.itp_msg();
 
   auto trade_report = reinterpret_cast<XTPTradeReport *>(itp_msg.address());
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   auto &order_manage = trader_ser.ROLE(OrderManage);
   auto &order_lookup = trader_ser.ROLE(OrderLookup);
 
@@ -181,7 +158,7 @@ void XtpEvent::OnCancelOrderErrorHandle(utils::ItpMsg &msg) {
   auto &itp_msg = message.itp_msg();
 
   auto cancel_info = reinterpret_cast<XTPOrderCancelInfo *>(itp_msg.address());
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   auto &order_manage = trader_ser.ROLE(OrderManage);
   auto content = order_manage.GetOrder(std::to_string(cancel_info->order_xtp_id));
   if (content != nullptr) {
@@ -212,7 +189,7 @@ void XtpEvent::OnQueryAssetHandle(utils::ItpMsg &msg) {
   auto &itp_msg = message.itp_msg();
 
   auto account = reinterpret_cast<XTPQueryAssetRsp *>(itp_msg.address());
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   trader_ser.ROLE(AccountAssign).UpdateAccountStatus(account->total_asset, account->buying_power, itp_msg.session_id(), itp_msg.user_id());
 }
 

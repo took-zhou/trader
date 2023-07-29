@@ -40,7 +40,7 @@ void MarketEvent::Handle(utils::ItpMsg &msg) {
 void MarketEvent::QryInstrumentReqHandle(utils::ItpMsg &msg) {
   market_trader::message message;
   message.ParseFromString(msg.pb_msg);
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   if (trader_ser.login_state != kLoginState) {
     ERROR_LOG("itp not login!");
     return;

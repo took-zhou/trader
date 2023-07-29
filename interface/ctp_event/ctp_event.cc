@@ -24,8 +24,6 @@ CtpEvent::CtpEvent() { RegMsgFun(); }
 void CtpEvent::RegMsgFun() {
   int cnt = 0;
   msg_func_map_.clear();
-  msg_func_map_["OnRspUserLogin"] = [this](utils::ItpMsg &msg) { OnRspUserLoginHandle(msg); };
-  msg_func_map_["OnRspUserLogout"] = [this](utils::ItpMsg &msg) { OnRspUserLogoutHandle(msg); };
   msg_func_map_["OnRtnOrder"] = [this](utils::ItpMsg &msg) { OnRtnOrderHandle(msg); };
   msg_func_map_["OnRtnTrade"] = [this](utils::ItpMsg &msg) { OnRtnTradeHandle(msg); };
   msg_func_map_["OnRspOrderInsert"] = [this](utils::ItpMsg &msg) { OnRspOrderInsertHandle(msg); };
@@ -52,37 +50,13 @@ void CtpEvent::Handle(utils::ItpMsg &msg) {
   return;
 }
 
-void CtpEvent::OnRspUserLoginHandle(utils::ItpMsg &msg) {}
-
-void CtpEvent::OnRspUserLogoutHandle(utils::ItpMsg &msg) {
-  ipc::message message;
-  message.ParseFromString(msg.pb_msg);
-  auto &itp_msg = message.itp_msg();
-
-  auto rsp_info = reinterpret_cast<CThostFtdcRspInfoField *>(itp_msg.address());
-  TThostFtdcErrorMsgType errormsg;
-  utils::Gbk2Utf8(rsp_info->ErrorMsg, errormsg, sizeof(errormsg));  //报错返回信息
-
-  if (rsp_info->ErrorID != 0) {
-    // 端登失败，客户端需进行错误处理
-    ERROR_LOG("Failed to logout, errorcode=%d errormsg=%s", rsp_info->ErrorID, errormsg);
-    exit(-1);
-  } else {
-    auto &trader_ser = TraderSevice::GetInstance();
-    auto &time_state = trader_ser.ROLE(TraderTimeState);
-    if (time_state.GetSubTimeState() == kInDayLogout) {
-      trader_ser.ROLE(OrderLookup).HandleTraderClose();
-    }
-  }
-}
-
 void CtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
   ipc::message message;
   message.ParseFromString(msg.pb_msg);
   auto &itp_msg = message.itp_msg();
 
   auto order = reinterpret_cast<CThostFtdcOrderField *>(itp_msg.address());
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   auto &order_manage = trader_ser.ROLE(OrderManage);
   auto content = order_manage.GetOrder(order->OrderRef);
   if (content != nullptr) {
@@ -135,7 +109,7 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
   auto &itp_msg = message.itp_msg();
 
   auto trade = reinterpret_cast<CThostFtdcTradeField *>(itp_msg.address());
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   auto &order_manage = trader_ser.ROLE(OrderManage);
   auto &order_lookup = trader_ser.ROLE(OrderLookup);
 
@@ -191,7 +165,7 @@ void CtpEvent::OnRspOrderInsertHandle(utils::ItpMsg &msg) {
 
   auto order_insert_rsp = reinterpret_cast<CThostFtdcInputOrderField *>(itp_msg.address());
   auto rsp_info = reinterpret_cast<CThostFtdcRspInfoField *>(itp_msg.rsp_info());
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   auto &order_manage = trader_ser.ROLE(OrderManage);
   auto &order_lookup = trader_ser.ROLE(OrderLookup);
   auto &account_assign = trader_ser.ROLE(AccountAssign);
@@ -239,7 +213,7 @@ void CtpEvent::OnRspOrderActionHandle(utils::ItpMsg &msg) {
   auto &itp_msg = message.itp_msg();
 
   auto order_action_rsp = reinterpret_cast<CThostFtdcInputOrderActionField *>(itp_msg.address());
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   auto &order_manage = trader_ser.ROLE(OrderManage);
   auto content = order_manage.GetOrder(order_action_rsp->OrderRef);
   if (content != nullptr) {
@@ -267,7 +241,7 @@ void CtpEvent::OnRspQryTradingAccountHandle(utils::ItpMsg &msg) {
   auto &itp_msg = message.itp_msg();
 
   auto account = reinterpret_cast<CThostFtdcTradingAccountField *>(itp_msg.address());
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   trader_ser.ROLE(AccountAssign).UpdateAccountStatus(account->Balance, account->Available, itp_msg.session_id(), itp_msg.user_id());
 }
 

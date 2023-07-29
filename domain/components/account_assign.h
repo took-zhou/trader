@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include "common/extern/sqlite3/sqlite3.h"
 #include "common/self/utils.h"
 
 struct AccountInfo {
@@ -18,14 +19,26 @@ struct AccountInfo {
 struct AccountAssign {
  public:
   AccountAssign();
-  void InitDatabase();
+  ~AccountAssign();
+
   void UpdateAccountStatus(double value1, double value2, uint64_t value3, const std::string &value4);
   void UpdateOpenBlackList(const std::string &value, const std::string &ins, const std::string &index);
   void ReqAccountStatus(void);
   void RemoveAccountStatus(void);
-  void RestoreFromSqlite3();
+  void HandleTraderOpen();
+  void HandleTraderClose();
 
+  bool init_database_flag = false;
   std::unordered_map<std::string, std::shared_ptr<AccountInfo>> account_info_map;
+
+ private:
+  void PrepareSqlSentence();
+  void RestoreFromSqlite3();
+  void InitDatabase();
+  sqlite3_stmt *insert_account_ = nullptr;
+  sqlite3_stmt *update_account_ = nullptr;
+  sqlite3_stmt *delete_account_ = nullptr;
+  const uint16_t sql_length_ = 512;
 };
 
 #endif

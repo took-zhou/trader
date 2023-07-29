@@ -11,7 +11,7 @@
 #include "common/self/file_util.h"
 #include "trader/domain/components/fd_manage.h"
 
-TraderSevice::TraderSevice() {
+TraderService::TraderService() {
   auto &json_cfg = utils::JsonConfig::GetInstance();
   if (json_cfg.GetConfig("common", "RunMode").get<std::string>() == "fastback") {
     run_mode = kFastBack;
@@ -41,6 +41,7 @@ TraderSevice::TraderSevice() {
       while (1) {
         // trader_period_task begin
         ROLE(TraderTimeState).Update();
+        ROLE(HandleState).HandleEvent();
         if (period_count % 10 == 0) {
           ROLE(AccountAssign).ReqAccountStatus();
           FdManage::GetInstance().OpenThingsUp();
@@ -57,7 +58,7 @@ TraderSevice::TraderSevice() {
   }
 };
 
-bool TraderSevice::RealTimeLoginLogoutChange() {
+bool TraderService::RealTimeLoginLogoutChange() {
   auto &recer_sender = RecerSender::GetInstance();
   if (ROLE(TraderTimeState).GetTimeState() == kLoginTime && login_state == kLogoutState) {
     if (recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogin()) {
@@ -81,7 +82,7 @@ bool TraderSevice::RealTimeLoginLogoutChange() {
   return 0;
 }
 
-bool TraderSevice::FastBackLoginLogoutChange() {
+bool TraderService::FastBackLoginLogoutChange() {
   auto &recer_sender = RecerSender::GetInstance();
   if (login_state == kLogoutState) {
     if (recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogin()) {
@@ -94,7 +95,7 @@ bool TraderSevice::FastBackLoginLogoutChange() {
   return 0;
 }
 
-bool TraderSevice::HandleAccountExitException() {
+bool TraderService::HandleAccountExitException() {
   bool ret = true;
   auto &recer_sender = RecerSender::GetInstance();
   recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogin();

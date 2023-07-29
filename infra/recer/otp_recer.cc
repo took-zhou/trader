@@ -6,44 +6,6 @@
 #include "common/self/utils.h"
 #include "trader/infra/recer_sender.h"
 
-void OtpTraderSpi::OnRspUserLogin(const std::string *login_info) {
-  if (login_info != nullptr) {
-    ipc::message req_msg;
-    auto send_msg = req_msg.mutable_itp_msg();
-    send_msg->set_address(reinterpret_cast<int64_t>(&login_info));
-    utils::ItpMsg msg;
-    req_msg.SerializeToString(&msg.pb_msg);
-    msg.session_name = "btp_trader";
-    msg.msg_name = "OnRspUserLogin";
-
-    auto &global_sem = GlobalSem::GetInstance();
-    auto &recer_sender = RecerSender::GetInstance();
-    recer_sender.ROLE(InnerSender).SendMsg(msg);
-    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
-  } else {
-    ERROR_LOG("login_info is nullptr");
-  }
-}
-
-void OtpTraderSpi::OnRspUserLogout(const std::string *logout_info) {
-  if (logout_info != nullptr) {
-    ipc::message req_msg;
-    auto send_msg = req_msg.mutable_itp_msg();
-    send_msg->set_address(reinterpret_cast<int64_t>(logout_info));
-    utils::ItpMsg msg;
-    req_msg.SerializeToString(&msg.pb_msg);
-    msg.session_name = "btp_trader";
-    msg.msg_name = "OnRspUserLogout";
-
-    auto &global_sem = GlobalSem::GetInstance();
-    auto &recer_sender = RecerSender::GetInstance();
-    recer_sender.ROLE(InnerSender).SendMsg(msg);
-    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
-  } else {
-    ERROR_LOG("logout_info is nullptr");
-  }
-}
-
 int32_t OtpTraderSpi::OnConnected(eOesApiChannelTypeT channel_type, OesApiSessionInfoT *session_info,
                                   OesApiSubscribeInfoT *subscribe_info) {
   return 0;

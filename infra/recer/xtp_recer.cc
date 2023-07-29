@@ -23,45 +23,9 @@ void XtpTraderSpi::OnDisconnected(uint64_t session_id, int reason) {
   front_disconnected = true;
 }
 
-void XtpTraderSpi::OnRspUserLogin() {
-  std::unique_ptr<XTPRI> field(new XTPRI);
-  field->error_id = 0;
-  strcpy(field->error_msg, "force login");
+void XtpTraderSpi::OnRspUserLogin() { front_disconnected = false; }
 
-  ipc::message req_msg;
-  auto send_msg = req_msg.mutable_itp_msg();
-  send_msg->set_address(reinterpret_cast<int64_t>(field.get()));
-  utils::ItpMsg msg;
-  req_msg.SerializeToString(&msg.pb_msg);
-  msg.session_name = "xtp_trader";
-  msg.msg_name = "OnRspUserLogin";
-
-  auto &global_sem = GlobalSem::GetInstance();
-  auto &recer_sender = RecerSender::GetInstance();
-  recer_sender.ROLE(InnerSender).SendMsg(msg);
-  global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
-
-  front_disconnected = false;
-}
-
-void XtpTraderSpi::OnRspUserLogout() {
-  std::unique_ptr<XTPRI> field(new XTPRI);
-  field->error_id = 0;
-  strcpy(field->error_msg, "force logout");
-
-  ipc::message req_msg;
-  auto send_msg = req_msg.mutable_itp_msg();
-  send_msg->set_address(reinterpret_cast<int64_t>(field.get()));
-  utils::ItpMsg msg;
-  req_msg.SerializeToString(&msg.pb_msg);
-  msg.session_name = "xtp_trader";
-  msg.msg_name = "OnRspUserLogout";
-
-  auto &global_sem = GlobalSem::GetInstance();
-  auto &recer_sender = RecerSender::GetInstance();
-  recer_sender.ROLE(InnerSender).SendMsg(msg);
-  global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
-}
+void XtpTraderSpi::OnRspUserLogout() {}
 
 void XtpTraderSpi::OnOrderEvent(XTPOrderInfo *order_info, XTPRI *error_info, uint64_t session_id) {
   OnError(error_info);

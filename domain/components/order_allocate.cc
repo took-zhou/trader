@@ -16,7 +16,7 @@ OrderAllocate::OrderAllocate() {
 }
 
 void OrderAllocate::UpdateOrderList(utils::OrderContent &content) {
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   bool ret = true;
 
   order_list.clear();
@@ -64,7 +64,7 @@ bool OrderAllocate::BuildShareOrderContent(utils::OrderContent &content) {
 }
 
 bool OrderAllocate::CycleOpenOrder(utils::OrderContent &content) {
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   auto &account_assign = trader_ser.ROLE(AccountAssign);
   std::string temp_key;
   temp_key += content.instrument_id;
@@ -95,7 +95,7 @@ bool OrderAllocate::CycleOpenOrder(utils::OrderContent &content) {
 }
 
 bool OrderAllocate::ShareOpenOrder(utils::OrderContent &content) {
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   auto &account_assign = trader_ser.ROLE(AccountAssign);
   std::string temp_key;
   temp_key += content.instrument_id;
@@ -132,7 +132,7 @@ bool OrderAllocate::ShareOpenOrder(utils::OrderContent &content) {
 }
 
 bool OrderAllocate::CloseOrder(utils::OrderContent &content) {
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   auto &account_assign = trader_ser.ROLE(AccountAssign);
   auto &order_lookup = trader_ser.ROLE(OrderLookup);
   std::string temp_key;

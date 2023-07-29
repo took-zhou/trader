@@ -45,7 +45,7 @@ void CtpviewEvent::LoginControlHandle(utils::ItpMsg &msg) {
   auto indication = login_control.login_control();
 
   int command = indication.command();
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
 
   INFO_LOG("force set time state: %d", command);
   trader_ser.ROLE(TraderTimeState).SetTimeState(command);

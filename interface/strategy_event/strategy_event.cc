@@ -52,7 +52,7 @@ void StrategyEvent::OrderCancelReqHandle(utils::ItpMsg &msg) {
 
   auto &order_cancel_req = message.order_cancel_req();
 
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   if (trader_ser.login_state != kLoginState) {
     ERROR_LOG("itp not login!");
     return;
@@ -84,7 +84,7 @@ void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {
   message.ParseFromString(msg.pb_msg);
 
   const auto &order_insert_req = message.order_insert_req();
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   auto &order_allocate = trader_ser.ROLE(OrderAllocate);
 
   if (trader_ser.login_state != kLoginState) {
@@ -134,7 +134,7 @@ void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {
 void StrategyEvent::TransactionCostReqHandle(utils::ItpMsg &msg) {
   strategy_trader::message message;
   message.ParseFromString(msg.pb_msg);
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   if (trader_ser.login_state != kLoginState) {
     ERROR_LOG("itp not login!");
     return;

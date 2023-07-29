@@ -26,8 +26,6 @@ OtpEvent::OtpEvent() { RegMsgFun(); }
 void OtpEvent::RegMsgFun() {
   int cnt = 0;
   msg_func_map_.clear();
-  msg_func_map_["OnRspUserLogin"] = [this](utils::ItpMsg &msg) { OnRspUserLoginHandle(msg); };
-  msg_func_map_["OnRspUserLogout"] = [this](utils::ItpMsg &msg) { OnRspUserLogoutHandle(msg); };
   msg_func_map_["OnBusinessReject"] = [this](utils::ItpMsg &msg) { OnBusinessRejectHandle(msg); };
   msg_func_map_["OnOrderReport"] = [this](utils::ItpMsg &msg) { OnOrderReportHandle(msg); };
   msg_func_map_["OnTradeReport"] = [this](utils::ItpMsg &msg) { OnTradeReportHandle(msg); };
@@ -50,23 +48,13 @@ void OtpEvent::Handle(utils::ItpMsg &msg) {
   return;
 }
 
-void OtpEvent::OnRspUserLoginHandle(utils::ItpMsg &msg) {}
-
-void OtpEvent::OnRspUserLogoutHandle(utils::ItpMsg &msg) {
-  auto &trader_ser = TraderSevice::GetInstance();
-  auto &time_state = trader_ser.ROLE(TraderTimeState);
-  if (time_state.GetSubTimeState() == kInDayLogout) {
-    trader_ser.ROLE(OrderLookup).HandleTraderClose();
-  }
-}
-
 void OtpEvent::OnOrderReportHandle(utils::ItpMsg &msg) {
   ipc::message message;
   message.ParseFromString(msg.pb_msg);
   auto &itp_msg = message.itp_msg();
 
   auto order = reinterpret_cast<OesOrdCnfmT *>(itp_msg.address());
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   auto &order_manage = trader_ser.ROLE(OrderManage);
   auto content = order_manage.GetOrder(std::to_string(order->clOrdId));
   if (content != nullptr) {
@@ -121,7 +109,7 @@ void OtpEvent::OnTradeReportHandle(utils::ItpMsg &msg) {
   auto &itp_msg = message.itp_msg();
 
   auto trade = reinterpret_cast<OesTrdCnfmT *>(itp_msg.address());
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   auto &order_manage = trader_ser.ROLE(OrderManage);
   auto &order_lookup = trader_ser.ROLE(OrderLookup);
 
@@ -176,7 +164,7 @@ void OtpEvent::OnBusinessRejectHandle(utils::ItpMsg &msg) {
   auto &itp_msg = message.itp_msg();
 
   auto order_insert_rsp = reinterpret_cast<OesOrdRejectT *>(itp_msg.address());
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   auto &order_manage = trader_ser.ROLE(OrderManage);
   auto &order_lookup = trader_ser.ROLE(OrderLookup);
   auto &account_assign = trader_ser.ROLE(AccountAssign);
@@ -224,7 +212,7 @@ void OtpEvent::OnQueryCashAssetHandle(utils::ItpMsg &msg) {
   auto &itp_msg = message.itp_msg();
 
   auto account = reinterpret_cast<OesCashAssetItemT *>(itp_msg.address());
-  auto &trader_ser = TraderSevice::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   trader_ser.ROLE(AccountAssign)
       .UpdateAccountStatus(account->currentTotalBal, account->currentAvailableBal, itp_msg.session_id(), itp_msg.user_id());
 }
