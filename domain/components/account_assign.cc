@@ -72,10 +72,7 @@ void AccountAssign::UpdateAccountStatus(double value1, double value2, uint64_t v
     }
     account_info_map[value4]->balance = value1;
     account_info_map[value4]->available = value2;
-    if (account_info_map[value4]->session_id != value3) {
-      account_info_map[value4]->session_id = value3;
-      account_info_map[value4]->order_ref = (uint32_t)((value3 % 1000) * 1000000);
-    }
+    account_info_map[value4]->session_id = value3;
     sqlite3_reset(update_account_);
     sqlite3_bind_int64(update_account_, 1, value3);
     sqlite3_bind_double(update_account_, 2, value1);
@@ -146,7 +143,8 @@ void AccountAssign::HandleTraderOpen() {
     INFO_LOG("del account: %s", item.c_str());
   }
   for (auto &item : add_account_list) {
-    account_info_map[item] = std::make_shared<AccountInfo>(0.0, 0.0, 0, 0);
+    uint32_t new_order_ref = (uint32_t)((--ref_base_ % 1000) * 1000000);
+    account_info_map[item] = std::make_shared<AccountInfo>(0.0, 0.0, 0, new_order_ref);
     sqlite3_reset(insert_account_);
     sqlite3_bind_text(insert_account_, 1, item.c_str(), item.size(), 0);
     sqlite3_bind_int64(insert_account_, 2, 0);

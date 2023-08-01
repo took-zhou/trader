@@ -112,12 +112,8 @@ bool OrderAllocate::ShareOpenOrder(utils::OrderContent &content) {
   double sub_volume = 0;
   for (auto &item : account_assign.account_info_map) {
     if (item.second->open_blacklist.find(temp_key) == item.second->open_blacklist.end()) {
-      uint32_t volume = uint32_t(item.second->available / total_money * total_volume);
+      uint32_t volume = uint32_t(item.second->available / total_money * total_volume + 0.5000001 + sub_volume);
       sub_volume += (item.second->available / total_money * total_volume - volume);
-      if (sub_volume + 0.000001 >= 1.0) {
-        volume += 1;
-        sub_volume -= 1;
-      }
       if (volume > 0) {
         content.session_id = item.second->session_id;
         content.order_ref = to_string(item.second->order_ref++);
@@ -157,6 +153,7 @@ bool OrderAllocate::CloseOrder(utils::OrderContent &content) {
           content.total_volume = sub_item.second->yesterday_volume;
           send_volume += sub_item.second->yesterday_volume;
           order_list.push_back(std::make_shared<utils::OrderContent>(content));
+          continue;
         } else {
           content.total_volume = total_volume - send_volume;
           send_volume = total_volume;
@@ -175,6 +172,7 @@ bool OrderAllocate::CloseOrder(utils::OrderContent &content) {
           content.total_volume = sub_item.second->today_volume;
           send_volume += sub_item.second->today_volume;
           order_list.push_back(std::make_shared<utils::OrderContent>(content));
+          continue;
         } else {
           content.total_volume = total_volume - send_volume;
           send_volume = total_volume;
@@ -185,8 +183,23 @@ bool OrderAllocate::CloseOrder(utils::OrderContent &content) {
     }
   }
 
-  if (send_volume < total_volume) {
-    ERROR_LOG("not find enough order to close, total volume: %d, send_volume: %d.", total_volume, send_volume);
+  if (send_volume < total_volume && send_volume > 0) {
+    strategy_trader::message message;
+    auto *insert_rsp = message.mutable_order_insert_rsp();
+    insert_rsp->set_instrument(content.instrument_id);
+    insert_rsp->set_index(content.index);
+    insert_rsp->set_result(strategy_trader::Result::failed);
+    insert_rsp->set_reason(strategy_trader::FailedReason::No_Opened_Order);
+    auto *rsp_info = insert_rsp->mutable_info();
+    rsp_info->set_orderprice(content.limit_price);
+    rsp_info->set_ordervolume(total_volume - send_volume);
+
+    utils::ItpMsg msg;
+    message.SerializeToString(&msg.pb_msg);
+    msg.session_name = "strategy_trader";
+    msg.msg_name = "OrderInsertRsp";
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
   }
 
   return ret;

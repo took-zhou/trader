@@ -39,6 +39,7 @@ struct AccountAssign {
   sqlite3_stmt *update_account_ = nullptr;
   sqlite3_stmt *delete_account_ = nullptr;
   const uint16_t sql_length_ = 512;
+  uint16_t ref_base_ = 1000;
 };
 
 #endif
