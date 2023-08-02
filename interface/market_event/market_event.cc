@@ -20,6 +20,7 @@ void MarketEvent::RegMsgFun() {
   int cnt = 0;
   msg_func_map.clear();
   msg_func_map["QryInstrumentReq"] = [this](utils::ItpMsg &msg) { QryInstrumentReqHandle(msg); };
+  msg_func_map["MarketStateReq"] = [this](utils::ItpMsg &msg) { MarketStateReqHandle(msg); };
 
   for (auto &iter : msg_func_map) {
     INFO_LOG("msg_func_map[%d] key is [%s]", cnt, iter.first.c_str());
@@ -57,4 +58,37 @@ void MarketEvent::QryInstrumentReqHandle(utils::ItpMsg &msg) {
 
   auto &recer_sender = RecerSender::GetInstance();
   recer_sender.ROLE(Sender).ROLE(ItpSender).ReqInstrumentInfo(ins_exch);  // 10000000代表是market的请求
+}
+
+void MarketEvent::MarketStateReqHandle(utils::ItpMsg &msg) {
+  auto &trader_ser = TraderService::GetInstance();
+  market_trader::message message;
+  message.ParseFromString(msg.pb_msg);
+  auto &market_state = message.market_state_req();
+
+  auto state = market_state.market_state();
+  auto date = market_state.date();
+
+  trader_ser.ROLE(HandleState).trder_date = date;
+  if (state == market_trader::MarketStateReq_MarketState_day_open || state == market_trader::MarketStateReq_MarketState_night_open) {
+    trader_ser.ROLE(AccountAssign).HandleTraderOpen();
+  }
+
+  if (state == market_trader::MarketStateReq_MarketState_day_close) {
+    trader_ser.ROLE(OrderLookup).HandleTraderClose();
+    trader_ser.ROLE(AccountAssign).HandleTraderClose();
+  }
+
+  {
+    market_trader::message message;
+    auto *market_state_rsp = message.mutable_market_state_rsp();
+    market_state_rsp->set_result(true);
+
+    utils::ItpMsg msg;
+    message.SerializeToString(&msg.pb_msg);
+    msg.session_name = "market_trader";
+    msg.msg_name = "MarketStateRsp";
+    RecerSender::GetInstance().ROLE(Sender).ROLE(ProxySender).SendMsg(msg);
+    INFO_LOG("market state handle ok.");
+  }
 }

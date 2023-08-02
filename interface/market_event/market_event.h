@@ -22,6 +22,7 @@ struct MarketEvent {
   void RegMsgFun();
 
   void QryInstrumentReqHandle(utils::ItpMsg &msg);
+  void MarketStateReqHandle(utils::ItpMsg &msg);
 
   std::map<std::string, std::function<void(utils::ItpMsg &msg)>> msg_func_map;
 };

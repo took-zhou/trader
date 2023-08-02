@@ -169,12 +169,14 @@ void AccountAssign::HandleTraderClose() {
   }
 
   for (auto &item : account_info_map) {
-    snprintf(sql, sql_length_, "insert into account values ('%s', '%s', %f);", trader_ser.ROLE(HandleState).trder_date.c_str(),
-             item.first.c_str(), item.second->balance);
-    if (sqlite3_exec(FdManage::GetInstance().trader_conn, sql, NULL, NULL, &error_msg) != SQLITE_OK) {
-      ERROR_LOG("Sql error %s.", error_msg);
-      sqlite3_free(error_msg);
-      sqlite3_close(FdManage::GetInstance().trader_conn);
+    if (item.second->session_id != 0) {
+      snprintf(sql, sql_length_, "insert into account values ('%s', '%s', %f);", trader_ser.ROLE(HandleState).trder_date.c_str(),
+               item.first.c_str(), item.second->balance);
+      if (sqlite3_exec(FdManage::GetInstance().trader_conn, sql, NULL, NULL, &error_msg) != SQLITE_OK) {
+        ERROR_LOG("Sql error %s.", error_msg);
+        sqlite3_free(error_msg);
+        sqlite3_close(FdManage::GetInstance().trader_conn);
+      }
     }
   }
 }

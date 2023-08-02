@@ -36,19 +36,6 @@ void HandleState::HandleStateChange(void) {
   }
 }
 
-void HandleState::HandleStateChange(const std::string &date, uint8_t state) {
-  auto &trader_ser = TraderService::GetInstance();
-  trder_date = date;
-
-  if (trader_ser.ROLE(TraderTimeState).GetSubTimeState() == kInNightLogin ||
-      trader_ser.ROLE(TraderTimeState).GetSubTimeState() == kInDayLogin) {
-    trader_ser.ROLE(AccountAssign).HandleTraderOpen();
-  } else if (trader_ser.ROLE(TraderTimeState).GetSubTimeState() == kInDayLogout) {
-    trader_ser.ROLE(OrderLookup).HandleTraderClose();
-    trader_ser.ROLE(AccountAssign).HandleTraderClose();
-  }
-}
-
 int HandleState::IsLeapYear(int year) {
   if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0) {
     return 1;

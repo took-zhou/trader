@@ -13,9 +13,6 @@ struct HandleState {
   void HandleEvent(void);
   void HandleStateChange(void);
 
-  // 回测模式
-  void HandleStateChange(const std::string &date, uint8_t state);
-
   std::string trder_date = "";
 
  private:
