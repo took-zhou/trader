@@ -46,7 +46,9 @@ void AccountAssign::InitDatabase() {
 }
 
 void AccountAssign::PrepareSqlSentence() {
-  const char *sql = "insert into account_info(user_id, session_id, balance, available, open_blacklist) VALUES(?, ?, ?, ?, '');";
+  const char *sql =
+      "insert into account_info(user_id, session_id, balance, available, open_blacklist) select ?, ?, ?, ?, '' where not exists (select * "
+      "from account_info where user_id=?);";
   if (sqlite3_prepare_v2(FdManage::GetInstance().trader_conn, sql, strlen(sql), &insert_account_, 0) != SQLITE_OK) {
     ERROR_LOG("prepare sql sentence error.");
     sqlite3_close(FdManage::GetInstance().trader_conn);
@@ -150,6 +152,7 @@ void AccountAssign::HandleTraderOpen() {
     sqlite3_bind_int64(insert_account_, 2, 0);
     sqlite3_bind_double(insert_account_, 3, 0);
     sqlite3_bind_double(insert_account_, 4, 0);
+    sqlite3_bind_text(insert_account_, 5, item.c_str(), item.size(), 0);
     if (sqlite3_step(insert_account_) != SQLITE_DONE) {
       ERROR_LOG("do sql sentence error.");
       sqlite3_close(FdManage::GetInstance().trader_conn);
@@ -169,6 +172,7 @@ void AccountAssign::HandleTraderClose() {
   }
 
   for (auto &item : account_info_map) {
+    item.second->open_blacklist.clear();
     if (item.second->session_id != 0) {
       snprintf(sql, sql_length_, "insert into account values ('%s', '%s', %f);", trader_ser.ROLE(HandleState).trder_date.c_str(),
                item.first.c_str(), item.second->balance);
