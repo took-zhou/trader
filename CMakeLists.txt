@@ -17,4 +17,6 @@ target_link_libraries(tradelib
     protobuf
     python3.8
     sqlite3
+    z
+    curl
  )
