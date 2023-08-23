@@ -13,12 +13,8 @@
 
 TraderService::TraderService() {
   auto &json_cfg = utils::JsonConfig::GetInstance();
-  if (json_cfg.GetConfig("common", "RunMode").get<std::string>() == "fastback") {
-    run_mode = kFastBack;
-  } else {
-    run_mode = kRealTime;
-  }
-  if (run_mode == kFastBack) {
+  auto api_type = json_cfg.GetConfig("common", "ApiType");
+  if (api_type == "ftp") {
     auto trader_period_task = [&]() {
       uint32_t period_count = 0;
       while (1) {
@@ -82,18 +78,7 @@ bool TraderService::RealTimeLoginLogoutChange() {
   return 0;
 }
 
-bool TraderService::FastBackLoginLogoutChange() {
-  auto &recer_sender = RecerSender::GetInstance();
-  if (login_state == kLogoutState) {
-    if (recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogin()) {
-      login_state = kLoginState;
-    } else {
-      login_state = kErrorState;
-    }
-  }
-
-  return 0;
-}
+bool TraderService::FastBackLoginLogoutChange() { return 0; }
 
 bool TraderService::HandleAccountExitException() {
   bool ret = true;

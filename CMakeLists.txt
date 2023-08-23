@@ -10,6 +10,7 @@ target_link_libraries(tradelib
     thosttraderapi_se_6.5.1
     xtptraderapi
     btptraderapi
+    ftptraderapi
     oes_api
     pthread
     commonlib

@@ -1,14 +1,14 @@
 /*
- * ctpEvent.cpp
+ * ftpEvent.cpp
  *
  *  Created on: 2020年10月23日
  *      Author: Administrator
  */
 
-#include "trader/interface/btp_event/btp_event.h"
+#include "trader/interface/ftp_event/ftp_event.h"
 #include <algorithm>
 #include <mutex>
-#include "common/extern/btp/inc/btp_trader_api.h"
+#include "common/extern/ftp/inc/ftp_trader_api.h"
 #include "common/extern/log/log.h"
 #include "common/self/file_util.h"
 #include "common/self/protobuf/ipc.pb.h"
@@ -19,9 +19,9 @@
 #include "trader/domain/trader_service.h"
 #include "trader/infra/recer_sender.h"
 
-BtpEvent::BtpEvent() { RegMsgFun(); }
+FtpEvent::FtpEvent() { RegMsgFun(); }
 
-void BtpEvent::RegMsgFun() {
+void FtpEvent::RegMsgFun() {
   int cnt = 0;
   msg_func_map_.clear();
   msg_func_map_["OnRtnOrder"] = [this](utils::ItpMsg &msg) { OnRtnOrderHandle(msg); };
@@ -38,7 +38,7 @@ void BtpEvent::RegMsgFun() {
   }
 }
 
-void BtpEvent::Handle(utils::ItpMsg &msg) {
+void FtpEvent::Handle(utils::ItpMsg &msg) {
   auto iter = msg_func_map_.find(msg.msg_name);
   if (iter != msg_func_map_.end()) {
     iter->second(msg);
@@ -48,17 +48,17 @@ void BtpEvent::Handle(utils::ItpMsg &msg) {
   return;
 }
 
-void BtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
+void FtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
   ipc::message message;
   message.ParseFromString(msg.pb_msg);
   auto &itp_msg = message.itp_msg();
 
-  auto order_info = reinterpret_cast<BtpOrderInfoStruct *>(itp_msg.address());
+  auto order_info = reinterpret_cast<FtpOrderInfoStruct *>(itp_msg.address());
   auto &trader_ser = TraderService::GetInstance();
   auto &order_manage = trader_ser.ROLE(OrderManage);
   auto content = order_manage.GetOrder(std::to_string(order_info->order_ref));
   if (content != nullptr) {
-    if (order_info->order_status == BtpOrderInfoStruct::kCanceled) {
+    if (order_info->order_status == FtpOrderInfoStruct::kCanceled) {
 #ifdef BENCH_TEST
       ScopedTimer t("OnRtnOrderHandle");
 #endif
@@ -100,12 +100,12 @@ void BtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
   }
 }
 
-void BtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
+void FtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
   ipc::message message;
   message.ParseFromString(msg.pb_msg);
   auto &itp_msg = message.itp_msg();
 
-  auto trade_report = reinterpret_cast<BtpOrderInfoStruct *>(itp_msg.address());
+  auto trade_report = reinterpret_cast<FtpOrderInfoStruct *>(itp_msg.address());
   auto &trader_ser = TraderService::GetInstance();
   auto &order_manage = trader_ser.ROLE(OrderManage);
   auto &order_lookup = trader_ser.ROLE(OrderLookup);
@@ -156,12 +156,12 @@ void BtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
   }
 }
 
-void BtpEvent::OnRtnOrderInsertHandle(utils::ItpMsg &msg) {
+void FtpEvent::OnRtnOrderInsertHandle(utils::ItpMsg &msg) {
   ipc::message message;
   message.ParseFromString(msg.pb_msg);
   auto &itp_msg = message.itp_msg();
 
-  auto order_insert = reinterpret_cast<BtpOrderInfoStruct *>(itp_msg.address());
+  auto order_insert = reinterpret_cast<FtpOrderInfoStruct *>(itp_msg.address());
   auto &trader_ser = TraderService::GetInstance();
   auto &order_manage = trader_ser.ROLE(OrderManage);
   auto &order_lookup = trader_ser.ROLE(OrderLookup);
@@ -184,9 +184,9 @@ void BtpEvent::OnRtnOrderInsertHandle(utils::ItpMsg &msg) {
     insert_rsp->set_instrument(content->instrument_id);
     insert_rsp->set_index(content->index);
     insert_rsp->set_result(strategy_trader::Result::failed);
-    if (order_insert->order_status == BtpOrderInfoStruct::kRejected) {
+    if (order_insert->order_status == FtpOrderInfoStruct::kRejected) {
       insert_rsp->set_reason(strategy_trader::FailedReason::Fund_Shortage_Error);
-    } else if (order_insert->order_status == BtpOrderInfoStruct::kNoOpened) {
+    } else if (order_insert->order_status == FtpOrderInfoStruct::kNoOpened) {
       insert_rsp->set_reason(strategy_trader::FailedReason::No_Opened_Order);
     }
     auto *rsp_info = insert_rsp->mutable_info();
@@ -204,12 +204,12 @@ void BtpEvent::OnRtnOrderInsertHandle(utils::ItpMsg &msg) {
   }
 }
 
-void BtpEvent::OnRtnOrderActionHandle(utils::ItpMsg &msg) {
+void FtpEvent::OnRtnOrderActionHandle(utils::ItpMsg &msg) {
   ipc::message message;
   message.ParseFromString(msg.pb_msg);
   auto &itp_msg = message.itp_msg();
 
-  auto order_action_rsp = reinterpret_cast<BtpOrderInfoStruct *>(itp_msg.address());
+  auto order_action_rsp = reinterpret_cast<FtpOrderInfoStruct *>(itp_msg.address());
   auto &trader_ser = TraderService::GetInstance();
   auto &order_manage = trader_ser.ROLE(OrderManage);
   auto content = order_manage.GetOrder(std::to_string(order_action_rsp->order_ref));
@@ -232,22 +232,22 @@ void BtpEvent::OnRtnOrderActionHandle(utils::ItpMsg &msg) {
   }
 }
 
-void BtpEvent::OnRspTradingAccountHandle(utils::ItpMsg &msg) {
+void FtpEvent::OnRspTradingAccountHandle(utils::ItpMsg &msg) {
   ipc::message message;
   message.ParseFromString(msg.pb_msg);
   auto &itp_msg = message.itp_msg();
 
-  auto account = reinterpret_cast<BtpAccountInfo *>(itp_msg.address());
+  auto account = reinterpret_cast<FtpAccountInfo *>(itp_msg.address());
   auto &trader_ser = TraderService::GetInstance();
   trader_ser.ROLE(AccountAssign).UpdateAccountStatus(account->balance, account->available, itp_msg.session_id(), itp_msg.user_id());
 }
 
-void BtpEvent::OnRspMarginRateHandle(utils::ItpMsg &msg) {
+void FtpEvent::OnRspMarginRateHandle(utils::ItpMsg &msg) {
   ipc::message message;
   message.ParseFromString(msg.pb_msg);
   auto &itp_msg = message.itp_msg();
 
-  auto margin_info = reinterpret_cast<BtpMarginInfo *>(itp_msg.address());
+  auto margin_info = reinterpret_cast<FtpMarginInfo *>(itp_msg.address());
 
   strategy_trader::message rsp;
   auto *margin_rate_rsp = rsp.mutable_margin_rate_rsp();
@@ -269,12 +269,12 @@ void BtpEvent::OnRspMarginRateHandle(utils::ItpMsg &msg) {
   recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(sendmsg);
 }
 
-void BtpEvent::OnRspCommissionRateHandle(utils::ItpMsg &msg) {
+void FtpEvent::OnRspCommissionRateHandle(utils::ItpMsg &msg) {
   ipc::message message;
   message.ParseFromString(msg.pb_msg);
   auto &itp_msg = message.itp_msg();
 
-  auto commission_info = reinterpret_cast<BtpCommissionInfo *>(itp_msg.address());
+  auto commission_info = reinterpret_cast<FtpCommissionInfo *>(itp_msg.address());
 
   strategy_trader::message rsp;
   auto *commission_rate_rsp = rsp.mutable_commission_rate_rsp();
@@ -298,7 +298,7 @@ void BtpEvent::OnRspCommissionRateHandle(utils::ItpMsg &msg) {
   recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(sendmsg);
 }
 
-bool BtpEvent::SendEmail(const utils::OrderContent &content) {
+bool FtpEvent::SendEmail(const utils::OrderContent &content) {
   char subject_content[30];
   char save_content[180];
   sprintf(subject_content, "%s transaction notice", content.instrument_id.c_str());

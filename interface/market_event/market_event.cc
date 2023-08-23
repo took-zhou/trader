@@ -62,21 +62,27 @@ void MarketEvent::QryInstrumentReqHandle(utils::ItpMsg &msg) {
 
 void MarketEvent::MarketStateReqHandle(utils::ItpMsg &msg) {
   auto &trader_ser = TraderService::GetInstance();
+  auto &recer_sender = RecerSender::GetInstance();
   market_trader::message message;
   message.ParseFromString(msg.pb_msg);
   auto &market_state = message.market_state_req();
-
   auto state = market_state.market_state();
   auto date = market_state.date();
 
   trader_ser.ROLE(HandleState).trder_date = date;
   if (state == market_trader::MarketStateReq_MarketState_day_open || state == market_trader::MarketStateReq_MarketState_night_open) {
+    recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogin();
+    trader_ser.login_state = kLoginState;
     trader_ser.ROLE(AccountAssign).HandleTraderOpen();
   }
 
-  if (state == market_trader::MarketStateReq_MarketState_day_close) {
-    trader_ser.ROLE(OrderLookup).HandleTraderClose();
-    trader_ser.ROLE(AccountAssign).HandleTraderClose();
+  if (state == market_trader::MarketStateReq_MarketState_day_close || state == market_trader::MarketStateReq_MarketState_night_close) {
+    if (state == market_trader::MarketStateReq_MarketState_day_close) {
+      trader_ser.ROLE(OrderLookup).HandleTraderClose();
+      trader_ser.ROLE(AccountAssign).HandleTraderClose();
+    }
+    recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogout();
+    trader_ser.login_state = kLogoutState;
   }
 
   {

@@ -22,6 +22,7 @@ void TraderEvent::RegSessionFunc() {
   session_func_map["ctp_trader"] = [this](utils::ItpMsg msg) { ROLE(CtpEvent).Handle(msg); };
   session_func_map["otp_trader"] = [this](utils::ItpMsg msg) { ROLE(OtpEvent).Handle(msg); };
   session_func_map["xtp_trader"] = [this](utils::ItpMsg msg) { ROLE(XtpEvent).Handle(msg); };
+  session_func_map["ftp_trader"] = [this](utils::ItpMsg msg) { ROLE(FtpEvent).Handle(msg); };
   session_func_map["ctpview_trader"] = [this](utils::ItpMsg msg) { ROLE(CtpviewEvent).Handle(msg); };
   session_func_map["btp_trader"] = [this](utils::ItpMsg msg) { ROLE(BtpEvent).Handle(msg); };
   session_func_map["trader_trader"] = [this](utils::ItpMsg msg) { ROLE(SelfEvent).Handle(msg); };

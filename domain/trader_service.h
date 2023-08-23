@@ -16,7 +16,6 @@
 #include "trader/infra/recer_sender.h"
 
 enum TraderLoginState { kErrorState = 0, kLoginState = 1, kLogoutState = 2 };
-enum TraderRunMode { kFastBack = 0, kRealTime };
 
 struct TraderService : OrderManage, TraderTimeState, AccountAssign, OrderLookup, OrderAllocate, HandleState {
   TraderService();
@@ -35,7 +34,6 @@ struct TraderService : OrderManage, TraderTimeState, AccountAssign, OrderLookup,
   IMPL_ROLE(HandleState);
 
   TraderLoginState login_state = kLogoutState;
-  TraderRunMode run_mode = kRealTime;
 
  private:
   bool RealTimeLoginLogoutChange();

@@ -2,6 +2,7 @@
 #include "common/self/file_util.h"
 #include "trader/infra/sender/btp_sender.h"
 #include "trader/infra/sender/ctp_sender.h"
+#include "trader/infra/sender/ftp_sender.h"
 #include "trader/infra/sender/otp_sender.h"
 #include "trader/infra/sender/xtp_sender.h"
 
@@ -9,13 +10,15 @@ ItpSender::ItpSender() {
   auto &json_cfg = utils::JsonConfig::GetInstance();
   auto api_type = json_cfg.GetConfig("common", "ApiType");
   if (api_type == "ctp") {
-    send_api_ = new CtpSender();
+    send_api_ = std::make_unique<CtpSender>();
   } else if (api_type == "xtp") {
-    send_api_ = new XtpSender();
+    send_api_ = std::make_unique<XtpSender>();
   } else if (api_type == "btp") {
-    send_api_ = new BtpSender();
+    send_api_ = std::make_unique<BtpSender>();
   } else if (api_type == "otp") {
-    send_api_ = new OtpSender();
+    send_api_ = std::make_unique<OtpSender>();
+  } else if (api_type == "ftp") {
+    send_api_ = std::make_unique<FtpSender>();
   }
 }
 

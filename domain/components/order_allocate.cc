@@ -82,6 +82,7 @@ bool OrderAllocate::CycleOpenOrder(utils::OrderContent &content) {
       content.session_id = pos->second->session_id;
       content.order_ref = to_string(pos->second->order_ref++);
       content.user_id = pos->first;
+      pos++;
       order_list.push_back(std::make_shared<utils::OrderContent>(content));
       break;
     }
@@ -149,7 +150,7 @@ bool OrderAllocate::CloseOrder(utils::OrderContent &content) {
         content.order_ref = to_string(account_assign.account_info_map[sub_item.first]->order_ref++);
         content.user_id = sub_item.first;
         content.comboffset = strategy_trader::CombOffsetType::CLOSE_YESTERDAY;
-        if (sub_item.second->yesterday_volume + send_volume <= total_volume) {
+        if (sub_item.second->yesterday_volume + send_volume < total_volume) {
           content.total_volume = sub_item.second->yesterday_volume;
           send_volume += sub_item.second->yesterday_volume;
           order_list.push_back(std::make_shared<utils::OrderContent>(content));
@@ -168,7 +169,7 @@ bool OrderAllocate::CloseOrder(utils::OrderContent &content) {
         content.order_ref = to_string(account_assign.account_info_map[sub_item.first]->order_ref++);
         content.user_id = sub_item.first;
         content.comboffset = strategy_trader::CombOffsetType::CLOSE_TODAY;
-        if (sub_item.second->today_volume + send_volume <= total_volume) {
+        if (sub_item.second->today_volume + send_volume < total_volume) {
           content.total_volume = sub_item.second->today_volume;
           send_volume += sub_item.second->today_volume;
           order_list.push_back(std::make_shared<utils::OrderContent>(content));

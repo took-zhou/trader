@@ -1,6 +1,7 @@
 #ifndef WORKSPACE_TRADER_INFRA_ITPSENDER_H_
 #define WORKSPACE_TRADER_INFRA_ITPSENDER_H_
 
+#include <memory>
 #include "trader/infra/sender/send_api.h"
 
 struct ItpSender {
@@ -23,7 +24,7 @@ struct ItpSender {
   bool LossConnection();
 
  private:
-  SendApi *send_api_ = nullptr;
+  std::unique_ptr<SendApi> send_api_;
 };
 
 #endif

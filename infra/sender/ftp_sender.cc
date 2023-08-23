@@ -1,4 +1,4 @@
-#include "trader/infra/sender/btp_sender.h"
+#include "trader/infra/sender/ftp_sender.h"
 #include <cstring>
 #include <string>
 #include <thread>
@@ -6,15 +6,15 @@
 #include "common/self/file_util.h"
 #include "common/self/semaphore.h"
 #include "common/self/utils.h"
-#include "trader/infra/recer/btp_recer.h"
+#include "trader/infra/recer/ftp_recer.h"
 
-std::map<int, BtpTraderInfo> BtpSender::btp_trader_info_map;
-btp::api::TraderApi *BtpSender::trader_api;
-BtpTraderSpi *BtpSender::trader_spi;
+std::map<int, FtpTraderInfo> FtpSender::ftp_trader_info_map;
+ftp::api::TraderApi *FtpSender::trader_api;
+FtpTraderSpi *FtpSender::trader_spi;
 
-BtpSender::BtpSender() { ; }
+FtpSender::FtpSender() { ; }
 
-bool BtpSender::ReqUserLogin() {
+bool FtpSender::ReqUserLogin() {
   INFO_LOG("login time, is going to login.");
   bool ret = true;
   Init();
@@ -23,28 +23,28 @@ bool BtpSender::ReqUserLogin() {
   for (auto &user : users) {
     const std::string user_id = json_cfg.GetDeepConfig("users", user, "UserID").get<std::string>();
 
-    BtpLoginLogoutStruct login;
+    FtpLoginLogoutStruct login;
     strcpy(login.user_id, user_id.c_str());
     uint64_t session = trader_api->Login(login);
     INFO_LOG("%s login ok", user_id.c_str());
 
-    BtpTraderInfo trader_info;
+    FtpTraderInfo trader_info;
     trader_info.user_id = user_id;
     trader_info.user_name = user;
-    btp_trader_info_map[session] = trader_info;
+    ftp_trader_info_map[session] = trader_info;
   }
 
   return ret;
 }
 
-bool BtpSender::ReqUserLogout() {
+bool FtpSender::ReqUserLogout() {
   INFO_LOG("logout time, is going to logout.");
 
   auto &json_cfg = utils::JsonConfig::GetInstance();
-  for (auto &item : btp_trader_info_map) {
+  for (auto &item : ftp_trader_info_map) {
     const std::string user_id = json_cfg.GetDeepConfig("users", item.second.user_name, "UserID").get<std::string>();
 
-    BtpLoginLogoutStruct logout;
+    FtpLoginLogoutStruct logout;
     strcpy(logout.user_id, user_id.c_str());
 
     if (trader_api != nullptr) {
@@ -57,11 +57,11 @@ bool BtpSender::ReqUserLogout() {
   return true;
 }
 
-bool BtpSender::InsertOrder(utils::OrderContent &content) {
+bool FtpSender::InsertOrder(utils::OrderContent &content) {
   bool ret = true;
-  auto pos = btp_trader_info_map.find(content.session_id);
-  if (pos != btp_trader_info_map.end()) {
-    BtpOrderInfoStruct orderinfo;
+  auto pos = ftp_trader_info_map.find(content.session_id);
+  if (pos != ftp_trader_info_map.end()) {
+    FtpOrderInfoStruct orderinfo;
     orderinfo.order_ref = stoi(content.order_ref);
     orderinfo.price = content.limit_price;
     orderinfo.volume = content.total_volume;
@@ -79,11 +79,11 @@ bool BtpSender::InsertOrder(utils::OrderContent &content) {
   return ret;
 }
 
-bool BtpSender::CancelOrder(utils::OrderContent &content) {
+bool FtpSender::CancelOrder(utils::OrderContent &content) {
   bool ret = true;
-  auto pos = btp_trader_info_map.find(content.session_id);
-  if (pos != btp_trader_info_map.end()) {
-    BtpOrderInfoStruct orderinfo;
+  auto pos = ftp_trader_info_map.find(content.session_id);
+  if (pos != ftp_trader_info_map.end()) {
+    FtpOrderInfoStruct orderinfo;
     orderinfo.order_ref = stoi(content.order_ref);
     orderinfo.price = content.limit_price;
     orderinfo.volume = content.total_volume - content.success_volume - content.fail_volume;
@@ -95,16 +95,16 @@ bool BtpSender::CancelOrder(utils::OrderContent &content) {
   return ret;
 }
 
-bool BtpSender::Init(void) {
+bool FtpSender::Init(void) {
   bool out = true;
 
   if (is_init_ == false) {
     INFO_LOG("begin BtpTraderApi init");
     auto &json_cfg = utils::JsonConfig::GetInstance();
     auto temp_folder = json_cfg.GetConfig("trader", "ControlParaFilePath").get<std::string>();
-    trader_api = btp::api::TraderApi::CreateTraderApi(temp_folder.c_str());
+    trader_api = ftp::api::TraderApi::CreateTraderApi(temp_folder.c_str());
 
-    trader_spi = new BtpTraderSpi();
+    trader_spi = new FtpTraderSpi();
     trader_api->RegisterSpi(trader_spi);
     INFO_LOG("traderApi init ok.");
     is_init_ = true;
@@ -113,7 +113,7 @@ bool BtpSender::Init(void) {
   return out;
 }
 
-bool BtpSender::Release() {
+bool FtpSender::Release() {
   INFO_LOG("Is going to release traderApi.");
 
   if (trader_api != nullptr) {
@@ -127,16 +127,16 @@ bool BtpSender::Release() {
     trader_spi = NULL;
   }
 
-  btp_trader_info_map.erase(btp_trader_info_map.begin(), btp_trader_info_map.end());
+  ftp_trader_info_map.erase(ftp_trader_info_map.begin(), ftp_trader_info_map.end());
   is_init_ = false;
 
   return true;
 }
 
-bool BtpSender::ReqAvailableFunds() {
+bool FtpSender::ReqAvailableFunds() {
   if (trader_api != nullptr) {
-    for (auto &item : btp_trader_info_map) {
-      BtpAccountField request_msg{{0}};
+    for (auto &item : ftp_trader_info_map) {
+      FtpAccountField request_msg{{0}};
       strcpy(request_msg.user_id, item.second.user_id.c_str());
       int result = trader_api->QryTradingAccount(&request_msg, 0);
       if (result != 0) {
@@ -148,13 +148,13 @@ bool BtpSender::ReqAvailableFunds() {
   return true;
 }
 
-bool BtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) {
+bool FtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) {
   INFO_LOG("ReqInstrumentInfo not support.");
   return true;
 }
 
-bool BtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
-  BtpTransactionCostField field;
+bool FtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
+  FtpTransactionCostField field;
   strcpy(field.exchange_id, ins_exch.exch.c_str());
   strcpy(field.instrument_id, ins_exch.ins.c_str());
 
@@ -163,4 +163,4 @@ bool BtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
   return true;
 }
 
-bool BtpSender::LossConnection() { return false; }
+bool FtpSender::LossConnection() { return false; }
