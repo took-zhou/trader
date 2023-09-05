@@ -17,7 +17,6 @@ struct HandleState {
 
  private:
   void GetTradeData(char *);
-  int IsLeapYear(int year);
 };
 
 #endif

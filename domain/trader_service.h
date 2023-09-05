@@ -33,12 +33,15 @@ struct TraderService : OrderManage, TraderTimeState, AccountAssign, OrderLookup,
   IMPL_ROLE(OrderAllocate);
   IMPL_ROLE(HandleState);
 
+  bool UpdateLoginState(TraderLoginState state);
   TraderLoginState login_state = kLogoutState;
 
  private:
   bool RealTimeLoginLogoutChange();
   bool FastBackLoginLogoutChange();
   bool HandleAccountExitException();
+  void InitDatabase();
+  bool init_database_flag_ = false;
   uint32_t try_login_heartbeat_ = 0;
   uint32_t try_login_count_ = 0;
 };

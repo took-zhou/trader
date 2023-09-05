@@ -5,10 +5,7 @@
 #include "trader/domain/components/trader_time_state.h"
 #include "trader/domain/trader_service.h"
 
-HandleState::HandleState() {
-  ;
-  ;
-}
+HandleState::HandleState() {}
 
 void HandleState::HandleEvent(void) {
   auto &market_ser = TraderService::GetInstance();
@@ -36,80 +33,23 @@ void HandleState::HandleStateChange(void) {
   }
 }
 
-int HandleState::IsLeapYear(int year) {
-  if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0) {
-    return 1;
-  } else {
-    return 0;
-  }
-}
-
 void HandleState::GetTradeData(char *buff) {
-  int year, mon, day, mon_days[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-
   auto &trader_ser = TraderService::GetInstance();
   auto timenow = trader_ser.ROLE(TraderTimeState).GetTimeNow();
   if (timenow != nullptr) {
-    year = 1900 + timenow->tm_year;
-    mon = 1 + timenow->tm_mon;
-    day = timenow->tm_mday;
-
-    if (IsLeapYear(year) == 1) {
-      mon_days[1] = 29;
-    }
-
     if (19 <= timenow->tm_hour && timenow->tm_hour <= 23) {
       if (timenow->tm_wday == 5) {
-        day += 3;
-        while (day > mon_days[mon - 1]) {
-          day -= mon_days[mon - 1];
-          mon++;
-          if (mon > 12) {
-            mon = 1;
-            year++;
-            if (IsLeapYear(year) == 1) {
-              mon_days[1] = 29;
-            } else {
-              mon_days[1] = 28;
-            }
-          }
-        }
-        sprintf(buff, "%04d%02d%02d", year, mon, day);
+        time_t tsecond = mktime(timenow) + 259200;
+        strftime(buff, 10, "%Y%m%d", localtime(&tsecond));
       } else {
-        day += 1;
-        while (day > mon_days[mon - 1]) {
-          day -= mon_days[mon - 1];
-          mon++;
-          if (mon > 12) {
-            mon = 1;
-            year++;
-            if (IsLeapYear(year) == 1) {
-              mon_days[1] = 29;
-            } else {
-              mon_days[1] = 28;
-            }
-          }
-        }
-        sprintf(buff, "%04d%02d%02d", year, mon, day);
+        time_t tsecond = mktime(timenow) + 86400;
+        strftime(buff, 10, "%Y%m%d", localtime(&tsecond));
       }
     } else if (1 <= timenow->tm_hour && timenow->tm_hour <= 3 && timenow->tm_wday == 6) {
-      day += 2;
-      while (day > mon_days[mon - 1]) {
-        day -= mon_days[mon - 1];
-        mon++;
-        if (mon > 12) {
-          mon = 1;
-          year++;
-          if (IsLeapYear(year) == 1) {
-            mon_days[1] = 29;
-          } else {
-            mon_days[1] = 28;
-          }
-        }
-      }
-      sprintf(buff, "%04d%02d%02d", year, mon, day);
+      time_t tsecond = mktime(timenow) + 172800;
+      strftime(buff, 10, "%Y%m%d", localtime(&tsecond));
     } else {
-      sprintf(buff, "%04d%02d%02d", year, mon, day);
+      strftime(buff, 10, "%Y%m%d", timenow);
     }
   }
 }

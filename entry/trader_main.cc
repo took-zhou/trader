@@ -24,7 +24,6 @@ int main(int argc, char *agrv[]) {
   auto &json_cfg = utils::JsonConfig::GetInstance();
   json_cfg.SetFileName("/etc/marktrade/config.json");
 
-  //开启log
   std::string trader_log_path = json_cfg.GetConfig("trader", "LogPath").get<std::string>();
   utils::CreatFolder(trader_log_path);
   LOG_INIT(trader_log_path.c_str(), "traderlog", 6);
@@ -34,18 +33,11 @@ int main(int argc, char *agrv[]) {
   utils::CreatFolder(trader_data_path);
   profiler::FlameGraphWriter::Instance().SetFilePath(trader_data_path);
 
-  // 打印版本信息
-  std::string compile_time = utils::GetCompileTime();
-  json_cfg.WriteConfig("trader", "CompileTime", compile_time);
-  INFO_LOG("program last build at %s.", compile_time.c_str());
-
-  INFO_LOG("begin init trader server");
   TraderService::GetInstance();
   INFO_LOG("trader server init ok");
 
   std::this_thread::sleep_for(std::chrono::seconds(5));
 
-  INFO_LOG("begin init trader event");
   auto &trader_event = TraderEvent::GetInstance();
   INFO_LOG("trader event init ok");
 

@@ -72,7 +72,7 @@ void MarketEvent::MarketStateReqHandle(utils::ItpMsg &msg) {
   trader_ser.ROLE(HandleState).trder_date = date;
   if (state == market_trader::MarketStateReq_MarketState_day_open || state == market_trader::MarketStateReq_MarketState_night_open) {
     recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogin();
-    trader_ser.login_state = kLoginState;
+    trader_ser.UpdateLoginState(kLoginState);
     trader_ser.ROLE(AccountAssign).HandleTraderOpen();
   }
 
@@ -82,7 +82,7 @@ void MarketEvent::MarketStateReqHandle(utils::ItpMsg &msg) {
       trader_ser.ROLE(AccountAssign).HandleTraderClose();
     }
     recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogout();
-    trader_ser.login_state = kLogoutState;
+    trader_ser.UpdateLoginState(kLogoutState);
   }
 
   {
