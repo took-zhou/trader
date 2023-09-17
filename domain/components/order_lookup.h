@@ -9,10 +9,9 @@
 struct OrderLookup {
  public:
   struct OrderPara {
-    OrderPara(const std::string &order_ref, double price, uint32_t volume1, uint32_t volume2)
-        : order_ref(order_ref), price(price), yesterday_volume(volume1), today_volume(volume2) {}
+    OrderPara(const std::string &order_ref, uint32_t volume1, uint32_t volume2)
+        : order_ref(order_ref), yesterday_volume(volume1), today_volume(volume2) {}
     std::string order_ref;
-    double price = 0;
     uint32_t yesterday_volume = 0;
     uint32_t today_volume = 0;
   };
@@ -21,8 +20,8 @@ struct OrderLookup {
   ~OrderLookup();
 
   bool UpdateOrderIndex(const std::string &ins, const std::string &index, const std::string &user_id, const std::string &order_ref);
-  void UpdateOpenInterest(const std::string &ins, const std::string &index, const std::string &user_id, double price,
-                          int32_t yesterday_volume, int32_t today_volume);
+  void UpdateOpenInterest(const std::string &ins, const std::string &index, const std::string &user_id, int32_t yesterday_volume,
+                          int32_t today_volume);
   bool DelOrderIndex(const std::string &ins, const std::string index);
   void HandleTraderClose();
 

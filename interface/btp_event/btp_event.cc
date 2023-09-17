@@ -116,14 +116,11 @@ void BtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
   auto content = order_manage.GetOrder(std::to_string(trade_report->order_ref));
   if (content != nullptr) {
     if (content->comboffset == strategy_trader::CombOffsetType::OPEN) {
-      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, trade_report->price, 0,
-                                      trade_report->volume);
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, 0, trade_report->volume);
     } else if (content->comboffset == strategy_trader::CombOffsetType::CLOSE_TODAY) {
-      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, trade_report->price, 0,
-                                      -trade_report->volume);
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, 0, -trade_report->volume);
     } else if (content->comboffset == strategy_trader::CombOffsetType::CLOSE_YESTERDAY) {
-      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, trade_report->price, -trade_report->volume,
-                                      0);
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, -trade_report->volume, 0);
     }
 
     content->success_volume += trade_report->volume;
@@ -171,11 +168,9 @@ void BtpEvent::OnRtnOrderInsertHandle(utils::ItpMsg &msg) {
     if (content->comboffset == strategy_trader::CombOffsetType::OPEN) {
       account_assign.UpdateOpenBlackList(content->user_id, content->instrument_id, content->index);
     } else if (content->comboffset == strategy_trader::CombOffsetType::CLOSE_YESTERDAY) {
-      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, order_insert->price, -order_insert->volume,
-                                      0);
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, -order_insert->volume, 0);
     } else if (content->comboffset == strategy_trader::CombOffsetType::CLOSE_TODAY) {
-      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, order_insert->price, 0,
-                                      -order_insert->volume);
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, 0, -order_insert->volume);
     }
     order_manage.DelOrder(std::to_string(order_insert->order_ref));
 

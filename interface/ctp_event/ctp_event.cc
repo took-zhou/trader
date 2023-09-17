@@ -120,11 +120,11 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
   if (content != nullptr) {
     PZone("SendResult");
     if (content->comboffset == strategy_trader::CombOffsetType::OPEN) {
-      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, trade->Price, 0, trade->Volume);
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, 0, trade->Volume);
     } else if (content->comboffset == strategy_trader::CombOffsetType::CLOSE_TODAY) {
-      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, trade->Price, 0, -trade->Volume);
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, 0, -trade->Volume);
     } else if (content->comboffset == strategy_trader::CombOffsetType::CLOSE_YESTERDAY) {
-      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, trade->Price, -trade->Volume, 0);
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, -trade->Volume, 0);
     }
 
     content->success_volume += trade->Volume;
@@ -174,11 +174,9 @@ void CtpEvent::OnRspOrderInsertHandle(utils::ItpMsg &msg) {
     if (content->comboffset == strategy_trader::CombOffsetType::OPEN) {
       account_assign.UpdateOpenBlackList(content->user_id, content->instrument_id, content->index);
     } else if (content->comboffset == strategy_trader::CombOffsetType::CLOSE_YESTERDAY) {
-      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, order_insert_rsp->LimitPrice,
-                                      -order_insert_rsp->VolumeTotalOriginal, 0);
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, -order_insert_rsp->VolumeTotalOriginal, 0);
     } else if (content->comboffset == strategy_trader::CombOffsetType::CLOSE_TODAY) {
-      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, order_insert_rsp->LimitPrice, 0,
-                                      -order_insert_rsp->VolumeTotalOriginal);
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, 0, -order_insert_rsp->VolumeTotalOriginal);
     }
     order_manage.DelOrder(order_insert_rsp->OrderRef);
 
