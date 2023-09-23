@@ -15,7 +15,6 @@ class TraderTimeState {
   ~TraderTimeState();
 
   void SetTimeState(int command);
-  void SetSubTimeState(int command);
   TimeState GetTimeState();
   SubTimeState GetSubTimeState();
   struct tm *GetTimeNow();

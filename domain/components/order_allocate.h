@@ -14,9 +14,6 @@ struct OrderAllocate {
   std::vector<std::shared_ptr<utils::OrderContent>> order_list;
 
  private:
-  enum AssignMode { kCycle = 0, kShare = 1 };
-  AssignMode assign_mode_ = kCycle;
-
   const double minimum_account_available_ = 10000.0;
   bool BuildCycleOrderContent(utils::OrderContent &content);
   bool BuildShareOrderContent(utils::OrderContent &content);

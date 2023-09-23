@@ -5,25 +5,19 @@
 #include "common/self/utils.h"
 #include "trader/domain/trader_service.h"
 
-OrderAllocate::OrderAllocate() {
-  auto &json_cfg = utils::JsonConfig::GetInstance();
-  auto assign_mode = json_cfg.GetConfig("trader", "AccountAssignMode");
-  if (assign_mode == "cycle") {
-    assign_mode_ = kCycle;
-  } else if (assign_mode == "share") {
-    assign_mode_ = kShare;
-  }
-}
+OrderAllocate::OrderAllocate() {}
 
 void OrderAllocate::UpdateOrderList(utils::OrderContent &content) {
   auto &trader_ser = TraderService::GetInstance();
+  auto &json_cfg = utils::JsonConfig::GetInstance();
   bool ret = true;
 
   order_list.clear();
 
-  if (assign_mode_ == kCycle) {
+  auto assign_mode = json_cfg.GetConfig("trader", "AccountAssignMode").get<std::string>();
+  if (assign_mode == "cycle") {
     ret = BuildCycleOrderContent(content);
-  } else if (assign_mode_ == kShare) {
+  } else if (assign_mode == "share") {
     ret = BuildShareOrderContent(content);
   }
 

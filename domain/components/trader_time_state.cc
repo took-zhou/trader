@@ -134,8 +134,6 @@ void TraderTimeState::SetTimeState(int command) {
   }
 }
 
-void TraderTimeState::SetSubTimeState(int command) { INFO_LOG("not support"); }
-
 TraderTimeState::TraderTimeState() {
   auto &json_cfg = utils::JsonConfig::GetInstance();
 
@@ -186,4 +184,6 @@ SubTimeState TraderTimeState::GetSubTimeState() {
   }
 }
 
-struct tm *TraderTimeState::GetTimeNow() { return timenow_; }
+struct tm *TraderTimeState::GetTimeNow() {
+  return timenow_;
+}
