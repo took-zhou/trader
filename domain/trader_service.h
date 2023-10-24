@@ -15,7 +15,7 @@
 #include "trader/domain/components/trader_time_state.h"
 #include "trader/infra/recer_sender.h"
 
-enum TraderLoginState { kErrorState = 0, kLoginState = 1, kLogoutState = 2 };
+enum TraderLoginState { kErrorState = 0, kLoginState = 1, kLogoutState = 2, kManualExit = 3 };
 
 struct TraderService : OrderManage, TraderTimeState, AccountAssign, OrderLookup, OrderAllocate, HandleState {
   TraderService();
