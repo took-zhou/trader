@@ -140,7 +140,7 @@ void XtpEvent::OnTradeEventHandle(utils::ItpMsg &msg) {
     if (content->total_volume == content->success_volume) {
       auto &json_cfg = utils::JsonConfig::GetInstance();
       auto send_email = json_cfg.GetConfig("trader", "SendOrderEmail").get<std::string>();
-      if (send_email == "send") {
+      if (send_email == "yes") {
         SendEmail(*content);
       }
       INFO_LOG("the order was finished, ref[%d].", trade_report->order_client_id);

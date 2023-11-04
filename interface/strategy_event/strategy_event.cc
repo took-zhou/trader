@@ -76,7 +76,7 @@ void StrategyEvent::OrderCancelReqHandle(utils::ItpMsg &msg) {
 }
 
 void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {
-  PZone("OrderInsertReqHandle");
+  PZone("f");
 #ifdef BENCH_TEST
   ScopedTimer t("OrderInsertReqHandle");
 #endif
@@ -120,7 +120,6 @@ void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {
     recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
   } else {
     for (auto &order : order_allocate.order_list) {
-      PZone("InsertOrder");
       auto &recer_sender = RecerSender::GetInstance();
       bool result = recer_sender.ROLE(Sender).ROLE(ItpSender).InsertOrder(*order.get());
       if (result == false) {

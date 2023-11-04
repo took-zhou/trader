@@ -17,21 +17,25 @@ BtpSender::BtpSender() { ; }
 bool BtpSender::ReqUserLogin() {
   INFO_LOG("login time, is going to login.");
   bool ret = true;
-  Init();
-  auto &json_cfg = utils::JsonConfig::GetInstance();
-  auto users = json_cfg.GetConfig("trader", "User");
-  for (auto &user : users) {
-    const std::string user_id = json_cfg.GetDeepConfig("users", user, "UserID").get<std::string>();
+  if (Init() == false) {
+    Release();
+    ret = false;
+  } else {
+    auto &json_cfg = utils::JsonConfig::GetInstance();
+    auto users = json_cfg.GetConfig("trader", "User");
+    for (auto &user : users) {
+      const std::string user_id = json_cfg.GetDeepConfig("users", user, "UserID").get<std::string>();
 
-    BtpLoginLogoutStruct login;
-    strcpy(login.user_id, user_id.c_str());
-    uint64_t session = trader_api->Login(login);
-    INFO_LOG("%s login ok", user_id.c_str());
+      BtpLoginLogoutStruct login;
+      strcpy(login.user_id, user_id.c_str());
+      uint64_t session = trader_api->Login(login);
+      INFO_LOG("%s login ok", user_id.c_str());
 
-    BtpTraderInfo trader_info;
-    trader_info.user_id = user_id;
-    trader_info.user_name = user;
-    btp_trader_info_map[session] = trader_info;
+      BtpTraderInfo trader_info;
+      trader_info.user_id = user_id;
+      trader_info.user_name = user;
+      btp_trader_info_map[session] = trader_info;
+    }
   }
 
   return ret;
@@ -103,10 +107,15 @@ bool BtpSender::Init(void) {
     auto &json_cfg = utils::JsonConfig::GetInstance();
     auto temp_folder = json_cfg.GetConfig("trader", "ControlParaFilePath").get<std::string>();
     trader_api = btp::api::TraderApi::CreateTraderApi(temp_folder.c_str());
-
-    trader_spi = new BtpTraderSpi();
-    trader_api->RegisterSpi(trader_spi);
-    INFO_LOG("traderApi init ok.");
+    if (trader_api == nullptr) {
+      out = false;
+      INFO_LOG("traderApi init fail.");
+    } else {
+      out = true;
+      trader_spi = new BtpTraderSpi();
+      trader_api->RegisterSpi(trader_spi);
+      INFO_LOG("traderApi init ok.");
+    }
     is_init_ = true;
   }
 

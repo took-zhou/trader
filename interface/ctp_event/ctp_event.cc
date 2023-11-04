@@ -103,7 +103,6 @@ void CtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
 }
 
 void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
-  PZone("OnRtnTradeHandle");
   ipc::message message;
   message.ParseFromString(msg.pb_msg);
   auto &itp_msg = message.itp_msg();
@@ -118,7 +117,6 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
 #endif
   auto content = order_manage.GetOrder(trade->OrderRef);
   if (content != nullptr) {
-    PZone("SendResult");
     if (content->comboffset == strategy_trader::CombOffsetType::OPEN) {
       order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, 0, trade->Volume);
     } else if (content->comboffset == strategy_trader::CombOffsetType::CLOSE_TODAY) {
@@ -147,7 +145,7 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
     if (content->total_volume == content->success_volume) {
       auto &json_cfg = utils::JsonConfig::GetInstance();
       auto send_email = json_cfg.GetConfig("trader", "SendOrderEmail").get<std::string>();
-      if (send_email == "send") {
+      if (send_email == "yes") {
         SendEmail(*content);
       }
       INFO_LOG("the order was finished, order ref: %s.", trade->OrderRef);
