@@ -4,7 +4,7 @@
 #include <thread>
 #include "common/extern/log/log.h"
 #include "common/self/file_util.h"
-#include "common/self/semaphore.h"
+#include "common/self/global_sem.h"
 #include "common/self/utils.h"
 #include "trader/infra/recer/ftp_recer.h"
 
@@ -21,7 +21,7 @@ bool FtpSender::ReqUserLogin() {
   auto &json_cfg = utils::JsonConfig::GetInstance();
   auto users = json_cfg.GetConfig("trader", "User");
   for (auto &user : users) {
-    const std::string user_id = json_cfg.GetDeepConfig("users", user, "UserID").get<std::string>();
+    const auto user_id = json_cfg.GetDeepConfig("users", user, "UserID").get<std::string>();
 
     FtpLoginLogoutStruct login;
     strcpy(login.user_id, user_id.c_str());
@@ -42,7 +42,7 @@ bool FtpSender::ReqUserLogout() {
 
   auto &json_cfg = utils::JsonConfig::GetInstance();
   for (auto &item : ftp_trader_info_map) {
-    const std::string user_id = json_cfg.GetDeepConfig("users", item.second.user_name, "UserID").get<std::string>();
+    const auto user_id = json_cfg.GetDeepConfig("users", item.second.user_name, "UserID").get<std::string>();
 
     FtpLoginLogoutStruct logout;
     strcpy(logout.user_id, user_id.c_str());
@@ -98,7 +98,7 @@ bool FtpSender::CancelOrder(utils::OrderContent &content) {
 bool FtpSender::Init(void) {
   bool out = true;
 
-  if (is_init_ == false) {
+  if (!is_init_) {
     INFO_LOG("begin BtpTraderApi init");
     auto &json_cfg = utils::JsonConfig::GetInstance();
     auto temp_folder = json_cfg.GetConfig("trader", "ControlParaFilePath").get<std::string>();

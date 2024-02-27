@@ -12,7 +12,7 @@ void OrderAllocate::UpdateOrderList(utils::OrderContent &content) {
   auto &json_cfg = utils::JsonConfig::GetInstance();
   bool ret = true;
 
-  order_list.clear();
+  order_list_.clear();
 
   auto assign_mode = json_cfg.GetConfig("trader", "AccountAssignMode").get<std::string>();
   if (assign_mode == "cycle") {
@@ -21,14 +21,14 @@ void OrderAllocate::UpdateOrderList(utils::OrderContent &content) {
     ret = BuildShareOrderContent(content);
   }
 
-  for (auto &item : order_list) {
+  for (auto &item : order_list_) {
     trader_ser.ROLE(OrderManage).BuildOrder(item->order_ref, item);
     trader_ser.ROLE(OrderLookup).UpdateOrderIndex(item->instrument_id, item->index, item->user_id, item->order_ref);
     INFO_LOG("%s %s %s %d %d", item->instrument_id.c_str(), item->index.c_str(), item->order_ref.c_str(), item->comboffset,
              item->total_volume);
   }
 
-  if (ret == false) {
+  if (!ret) {
     ERROR_LOG("ins: %s, index: %s, allocate order fail, volume: %d", content.instrument_id.c_str(), content.index.c_str(),
               content.total_volume);
   }
@@ -67,20 +67,20 @@ bool OrderAllocate::CycleOpenOrder(utils::OrderContent &content) {
 
   bool ret = true;
   uint32_t find_count = 0;
-  for (static auto pos = account_assign.account_info_map.begin();; pos++) {
-    if (pos == account_assign.account_info_map.end()) {
-      pos = account_assign.account_info_map.begin();
+  auto &account_info_map = account_assign.GetAccountInfoMap();
+  for (static auto pos = account_info_map.begin();; pos++) {
+    if (pos == account_info_map.end()) {
+      pos = account_info_map.begin();
     }
-    if (pos->second->available >= minimum_account_available_ &&
-        pos->second->open_blacklist.find(temp_key) == pos->second->open_blacklist.end()) {
-      content.session_id = pos->second->session_id;
-      content.order_ref = to_string(pos->second->order_ref++);
+    if (pos->second->GetAvailable() >= minimum_account_available_ && pos->second->NotOnBlacklist(temp_key)) {
+      content.session_id = pos->second->GetSessionId();
+      content.order_ref = to_string(pos->second->IncOrderRef());
       content.user_id = pos->first;
       pos++;
-      order_list.push_back(std::make_shared<utils::OrderContent>(content));
+      order_list_.push_back(std::make_shared<utils::OrderContent>(content));
       break;
     }
-    if (find_count++ > account_assign.account_info_map.size()) {
+    if (find_count++ > account_info_map.size()) {
       ret = false;
       break;
     }
@@ -99,22 +99,23 @@ bool OrderAllocate::ShareOpenOrder(utils::OrderContent &content) {
 
   uint32_t total_volume = content.total_volume;
   double total_money = 0;
-  for (auto &item : account_assign.account_info_map) {
-    if (item.second->open_blacklist.find(temp_key) == item.second->open_blacklist.end()) {
-      total_money += item.second->available;
+  auto &account_info_map = account_assign.GetAccountInfoMap();
+  for (auto &item : account_info_map) {
+    if (item.second->NotOnBlacklist(temp_key)) {
+      total_money += item.second->GetAvailable();
     }
   }
   double sub_volume = 0;
-  for (auto &item : account_assign.account_info_map) {
-    if (item.second->open_blacklist.find(temp_key) == item.second->open_blacklist.end()) {
-      uint32_t volume = uint32_t(item.second->available / total_money * total_volume + 0.5000001 + sub_volume);
-      sub_volume += (item.second->available / total_money * total_volume - volume);
+  for (auto &item : account_info_map) {
+    if (item.second->NotOnBlacklist(temp_key)) {
+      auto volume = static_cast<uint32_t>(item.second->GetAvailable() / total_money * total_volume + 0.5000001 + sub_volume);
+      sub_volume += (item.second->GetAvailable() / total_money * total_volume - volume);
       if (volume > 0) {
-        content.session_id = item.second->session_id;
-        content.order_ref = to_string(item.second->order_ref++);
+        content.session_id = item.second->GetSessionId();
+        content.order_ref = to_string(item.second->IncOrderRef());
         content.user_id = item.first;
         content.total_volume = volume;
-        order_list.push_back(std::make_shared<utils::OrderContent>(content));
+        order_list_.push_back(std::make_shared<utils::OrderContent>(content));
       }
     }
   }
@@ -132,48 +133,49 @@ bool OrderAllocate::CloseOrder(utils::OrderContent &content) {
   temp_key += content.index;
 
   bool ret = true;
+  auto pos = order_lookup.GetOrderIndexMap().find(temp_key);
+  if (pos == order_lookup.GetOrderIndexMap().end()) {
+    ret = false;
+    return ret;
+  }
+
   uint32_t total_volume = content.total_volume;
   uint32_t send_volume = 0;
-
-  auto pos = order_lookup.order_index_map.find(temp_key);
-  if (pos != order_lookup.order_index_map.end()) {
-    for (auto &sub_item : pos->second) {
-      if (sub_item.second->yesterday_volume > 0 &&
-          account_assign.account_info_map.find(sub_item.first) != account_assign.account_info_map.end()) {
-        content.session_id = account_assign.account_info_map[sub_item.first]->session_id;
-        content.order_ref = to_string(account_assign.account_info_map[sub_item.first]->order_ref++);
-        content.user_id = sub_item.first;
-        content.comboffset = strategy_trader::CombOffsetType::CLOSE_YESTERDAY;
-        if (sub_item.second->yesterday_volume + send_volume < total_volume) {
-          content.total_volume = sub_item.second->yesterday_volume;
-          send_volume += sub_item.second->yesterday_volume;
-          order_list.push_back(std::make_shared<utils::OrderContent>(content));
-          continue;
-        } else {
-          content.total_volume = total_volume - send_volume;
-          send_volume = total_volume;
-          order_list.push_back(std::make_shared<utils::OrderContent>(content));
-          break;
-        }
+  auto &account_info_map = account_assign.GetAccountInfoMap();
+  for (auto &sub_item : pos->second) {
+    if (sub_item.second->GetYesterdayVolume() > 0 && account_info_map.find(sub_item.first) != account_info_map.end()) {
+      content.session_id = account_info_map[sub_item.first]->GetSessionId();
+      content.order_ref = to_string(account_info_map[sub_item.first]->IncOrderRef());
+      content.user_id = sub_item.first;
+      content.comboffset = strategy_trader::CombOffsetType::CLOSE_YESTERDAY;
+      if (sub_item.second->GetYesterdayVolume() + send_volume < total_volume) {
+        content.total_volume = sub_item.second->GetYesterdayVolume();
+        send_volume += sub_item.second->GetYesterdayVolume();
+        order_list_.push_back(std::make_shared<utils::OrderContent>(content));
+        continue;
+      } else {
+        content.total_volume = total_volume - send_volume;
+        send_volume = total_volume;
+        order_list_.push_back(std::make_shared<utils::OrderContent>(content));
+        break;
       }
+    }
 
-      if (sub_item.second->today_volume > 0 &&
-          account_assign.account_info_map.find(sub_item.first) != account_assign.account_info_map.end()) {
-        content.session_id = account_assign.account_info_map[sub_item.first]->session_id;
-        content.order_ref = to_string(account_assign.account_info_map[sub_item.first]->order_ref++);
-        content.user_id = sub_item.first;
-        content.comboffset = strategy_trader::CombOffsetType::CLOSE_TODAY;
-        if (sub_item.second->today_volume + send_volume < total_volume) {
-          content.total_volume = sub_item.second->today_volume;
-          send_volume += sub_item.second->today_volume;
-          order_list.push_back(std::make_shared<utils::OrderContent>(content));
-          continue;
-        } else {
-          content.total_volume = total_volume - send_volume;
-          send_volume = total_volume;
-          order_list.push_back(std::make_shared<utils::OrderContent>(content));
-          break;
-        }
+    if (sub_item.second->GetTodayVolume() > 0 && account_info_map.find(sub_item.first) != account_info_map.end()) {
+      content.session_id = account_info_map[sub_item.first]->GetSessionId();
+      content.order_ref = to_string(account_info_map[sub_item.first]->IncOrderRef());
+      content.user_id = sub_item.first;
+      content.comboffset = strategy_trader::CombOffsetType::CLOSE_TODAY;
+      if (sub_item.second->GetTodayVolume() + send_volume < total_volume) {
+        content.total_volume = sub_item.second->GetTodayVolume();
+        send_volume += sub_item.second->GetTodayVolume();
+        order_list_.push_back(std::make_shared<utils::OrderContent>(content));
+        continue;
+      } else {
+        content.total_volume = total_volume - send_volume;
+        send_volume = total_volume;
+        order_list_.push_back(std::make_shared<utils::OrderContent>(content));
+        break;
       }
     }
   }
@@ -199,3 +201,5 @@ bool OrderAllocate::CloseOrder(utils::OrderContent &content) {
 
   return ret;
 }
+
+std::vector<std::shared_ptr<utils::OrderContent>> &OrderAllocate::GetOderList() { return order_list_; }

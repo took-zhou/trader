@@ -23,9 +23,6 @@ class OtpTraderSpi {
   void OnQueryCashAsset(const OesApiSessionInfoT *session, const OesCashAssetItemT *cash_asset);
   /* 查询佣金信息回调 */
   void OnQueryCommissionRate(const OesApiSessionInfoT *session, const OesCommissionRateItemT *commission_rate);
-
- public:
-  int32_t current_request_id = 0;
 };
 
 #endif /* WORKSPACE_TRADER_INFRA_CTPRECER_H_ */

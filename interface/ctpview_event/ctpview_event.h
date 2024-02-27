@@ -14,6 +14,7 @@
 #include "common/self/utils.h"
 
 struct CtpviewEvent {
+ public:
   CtpviewEvent();
   void Handle(utils::ItpMsg &msg);
   void RegMsgFun();
@@ -23,7 +24,8 @@ struct CtpviewEvent {
   void ProfilerControlHandle(utils::ItpMsg &msg);
   void UpdateParaHandle(utils::ItpMsg &msg);
 
-  std::map<std::string, std::function<void(utils::ItpMsg &msg)>> msg_func_map;
+ private:
+  std::map<std::string, std::function<void(utils::ItpMsg &msg)>> msg_func_map_;
 };
 
 #endif /* WORKSPACE_TRADER_INTERFACE_CTPVIEWEVENT_CTPVIEWEVENT_H_ */

@@ -8,9 +8,9 @@
 #include "common/extern/log/log.h"
 #include "common/extern/protobuf/src/google/protobuf/text_format.h"
 #include "common/self/file_util.h"
+#include "common/self/global_sem.h"
 #include "common/self/profiler.h"
 #include "common/self/protobuf/strategy-trader.pb.h"
-#include "common/self/semaphore.h"
 #include "common/self/utils.h"
 #include "trader/domain/trader_service.h"
 #include "trader/infra/recer_sender.h"
@@ -35,6 +35,7 @@ void StrategyEvent::RegMsgFun() {
   msg_func_map_["OrderCancelReq"] = [this](utils::ItpMsg &msg) { OrderCancelReqHandle(msg); };
   msg_func_map_["TransactionCostReq"] = [this](utils::ItpMsg &msg) { TransactionCostReqHandle(msg); };
   msg_func_map_["ActiveSafetyRsp"] = [this](utils::ItpMsg &msg) { StrategyAliveRspHandle(msg); };
+  msg_func_map_["CheckTraderAliveReq"] = [this](utils::ItpMsg &msg) { CheckTraderAliveReqHandle(msg); };
 
   for (auto &iter : msg_func_map_) {
     INFO_LOG("msg_func_map_[%d] key is [%s]", cnt, iter.first.c_str());
@@ -53,7 +54,7 @@ void StrategyEvent::OrderCancelReqHandle(utils::ItpMsg &msg) {
   auto &order_cancel_req = message.order_cancel_req();
 
   auto &trader_ser = TraderService::GetInstance();
-  if (trader_ser.login_state != kLoginState) {
+  if (trader_ser.GetLoginState() != kLoginState) {
     ERROR_LOG("itp not login!");
     return;
   }
@@ -62,10 +63,10 @@ void StrategyEvent::OrderCancelReqHandle(utils::ItpMsg &msg) {
   temp_key += order_cancel_req.instrument();
   temp_key += ".";
   temp_key += order_cancel_req.index();
-  auto pos = trader_ser.ROLE(OrderLookup).order_index_map.find(temp_key);
-  if (pos != trader_ser.ROLE(OrderLookup).order_index_map.end()) {
+  auto pos = trader_ser.ROLE(OrderLookup).GetOrderIndexMap().find(temp_key);
+  if (pos != trader_ser.ROLE(OrderLookup).GetOrderIndexMap().end()) {
     for (auto &item : pos->second) {
-      auto content = trader_ser.ROLE(OrderManage).GetOrder(item.second->order_ref);
+      auto content = trader_ser.ROLE(OrderManage).GetOrder(item.second->GetOrderRef());
       if (content != nullptr && content->total_volume > (content->success_volume + content->fail_volume)) {
         content->active_cancle_indication = true;
         auto &recer_sender = RecerSender::GetInstance();
@@ -87,7 +88,7 @@ void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {
   auto &trader_ser = TraderService::GetInstance();
   auto &order_allocate = trader_ser.ROLE(OrderAllocate);
 
-  if (trader_ser.login_state != kLoginState) {
+  if (trader_ser.GetLoginState() != kLoginState) {
     ERROR_LOG("itp not login!");
     return;
   }
@@ -102,7 +103,7 @@ void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {
   content.comboffset = order_insert_req.order().comb_offset_flag();
   content.order_type = order_insert_req.order().order_type();
   order_allocate.UpdateOrderList(content);
-  if (order_allocate.order_list.size() == 0) {
+  if (order_allocate.GetOderList().size() == 0) {
     strategy_trader::message message;
     auto *insert_rsp = message.mutable_order_insert_rsp();
     insert_rsp->set_instrument(content.instrument_id);
@@ -119,10 +120,10 @@ void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
   } else {
-    for (auto &order : order_allocate.order_list) {
+    for (auto &order : order_allocate.GetOderList()) {
       auto &recer_sender = RecerSender::GetInstance();
       bool result = recer_sender.ROLE(Sender).ROLE(ItpSender).InsertOrder(*order.get());
-      if (result == false) {
+      if (!result) {
         trader_ser.ROLE(OrderManage).DelOrder(order->order_ref);
       }
     }
@@ -134,7 +135,7 @@ void StrategyEvent::TransactionCostReqHandle(utils::ItpMsg &msg) {
   strategy_trader::message message;
   message.ParseFromString(msg.pb_msg);
   auto &trader_ser = TraderService::GetInstance();
-  if (trader_ser.login_state != kLoginState) {
+  if (trader_ser.GetLoginState() != kLoginState) {
     ERROR_LOG("itp not login!");
     return;
   }
@@ -147,4 +148,16 @@ void StrategyEvent::TransactionCostReqHandle(utils::ItpMsg &msg) {
   recer_sender.ROLE(Sender).ROLE(ItpSender).ReqTransactionCost(ins_exch);
 }
 
-void StrategyEvent::StrategyAliveRspHandle(utils::ItpMsg &msg) { GlobalSem::GetInstance().PostSemBySemName(GlobalSem::kStrategyRsp); }
+void StrategyEvent::StrategyAliveRspHandle(utils::ItpMsg &msg) { GlobalSem::GetInstance().PostSemBySemName(SemName::kStrategyRsp); }
+
+void StrategyEvent::CheckTraderAliveReqHandle(utils::ItpMsg &msg) {
+  strategy_trader::message message;
+  auto *trader_alive = message.mutable_trader_alive_rsp();
+  trader_alive->set_alive_rsp(true);
+
+  utils::ItpMsg send_msg;
+  message.SerializeToString(&send_msg.pb_msg);
+  send_msg.session_name = "strategy_trader";
+  send_msg.msg_name = "CheckTraderAliveRsp";
+  RecerSender::GetInstance().ROLE(Sender).ROLE(ProxySender).SendMsg(send_msg);
+}

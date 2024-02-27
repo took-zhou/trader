@@ -15,12 +15,12 @@ struct ProxyRecer {
  public:
   ProxyRecer();
   bool ReceMsg(utils::ItpMsg &msg);
-  bool IsTopicInSubTopics(std::string);
-  std::vector<std::string> topic_list;
+  bool IsTopicInSubTopics(const std::string &title);
 
  private:
   void SubscribeTopic();
   void UnSubscribeTopic();
+  std::vector<std::string> topic_list_;
   void *receiver_{nullptr};
 };
 

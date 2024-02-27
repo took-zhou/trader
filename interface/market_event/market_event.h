@@ -16,6 +16,7 @@
 #include "common/self/utils.h"
 
 struct MarketEvent {
+ public:
   MarketEvent();
 
   void Handle(utils::ItpMsg &msg);
@@ -24,7 +25,8 @@ struct MarketEvent {
   void QryInstrumentReqHandle(utils::ItpMsg &msg);
   void MarketStateReqHandle(utils::ItpMsg &msg);
 
-  std::map<std::string, std::function<void(utils::ItpMsg &msg)>> msg_func_map;
+ private:
+  std::map<std::string, std::function<void(utils::ItpMsg &msg)>> msg_func_map_;
 };
 
 #endif /* WORKSPACE_TRADER_INTERFACE_MARKETEVENT_H_ */

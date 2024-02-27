@@ -25,6 +25,7 @@
 #include "common/self/utils.h"
 
 struct TraderEvent : BtpEvent, CtpEvent, OtpEvent, XtpEvent, FtpEvent, StrategyEvent, MarketEvent, CtpviewEvent, SelfEvent {
+ public:
   TraderEvent();
   TraderEvent(const TraderEvent &) = delete;
   TraderEvent &operator=(const TraderEvent &) = delete;
@@ -45,7 +46,8 @@ struct TraderEvent : BtpEvent, CtpEvent, OtpEvent, XtpEvent, FtpEvent, StrategyE
   IMPL_ROLE(CtpviewEvent);
   IMPL_ROLE(SelfEvent);
 
-  std::map<std::string, std::function<void(utils::ItpMsg msg)>> session_func_map;
+ private:
+  std::map<std::string, std::function<void(utils::ItpMsg msg)>> session_func_map_;
 };
 
 #endif /* WORKSPACE_TRADER_INTERFACE_TRADEREVENT_H_ */

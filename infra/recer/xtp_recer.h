@@ -69,7 +69,10 @@ class XtpTraderSpi : public XTP::API::TraderSpi {
 
   void OnRspUserLogin(void);
   void OnRspUserLogout(void);
-  bool front_disconnected = false;
+  bool GetFrontDisconnect(void);
+
+ private:
+  bool front_disconnected_ = false;
 };
 
 #endif /* WORKSPACE_TRADER_INFRA_CTPRECER_H_ */

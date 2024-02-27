@@ -18,19 +18,19 @@ MarketEvent::MarketEvent() { RegMsgFun(); }
 
 void MarketEvent::RegMsgFun() {
   int cnt = 0;
-  msg_func_map.clear();
-  msg_func_map["QryInstrumentReq"] = [this](utils::ItpMsg &msg) { QryInstrumentReqHandle(msg); };
-  msg_func_map["MarketStateReq"] = [this](utils::ItpMsg &msg) { MarketStateReqHandle(msg); };
+  msg_func_map_.clear();
+  msg_func_map_["QryInstrumentReq"] = [this](utils::ItpMsg &msg) { QryInstrumentReqHandle(msg); };
+  msg_func_map_["MarketStateReq"] = [this](utils::ItpMsg &msg) { MarketStateReqHandle(msg); };
 
-  for (auto &iter : msg_func_map) {
-    INFO_LOG("msg_func_map[%d] key is [%s]", cnt, iter.first.c_str());
+  for (auto &iter : msg_func_map_) {
+    INFO_LOG("msg_func_map_[%d] key is [%s]", cnt, iter.first.c_str());
     cnt++;
   }
 }
 
 void MarketEvent::Handle(utils::ItpMsg &msg) {
-  auto iter = msg_func_map.find(msg.msg_name);
-  if (iter != msg_func_map.end()) {
+  auto iter = msg_func_map_.find(msg.msg_name);
+  if (iter != msg_func_map_.end()) {
     iter->second(msg);
     return;
   }
@@ -42,7 +42,7 @@ void MarketEvent::QryInstrumentReqHandle(utils::ItpMsg &msg) {
   market_trader::message message;
   message.ParseFromString(msg.pb_msg);
   auto &trader_ser = TraderService::GetInstance();
-  if (trader_ser.login_state != kLoginState) {
+  if (trader_ser.GetLoginState() != kLoginState) {
     ERROR_LOG("itp not login!");
     return;
   }
@@ -69,7 +69,7 @@ void MarketEvent::MarketStateReqHandle(utils::ItpMsg &msg) {
   auto state = market_state.market_state();
   auto date = market_state.date();
 
-  trader_ser.ROLE(HandleState).trder_date = date;
+  trader_ser.ROLE(HandleState).GetTraderDate() = date;
   if (state == market_trader::MarketStateReq_MarketState_day_open || state == market_trader::MarketStateReq_MarketState_night_open) {
     recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogin();
     trader_ser.UpdateLoginState(kLoginState);

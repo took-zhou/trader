@@ -11,8 +11,8 @@
 
 ProxyRecer::ProxyRecer() {
   auto &zmq_base = BaseZmq::GetInstance();
-  receiver_ = zmq_socket(zmq_base.context, ZMQ_SUB);
-  string sub_ipaddport = "tcp://" + zmq_base.local_ip + ":8100";
+  receiver_ = zmq_socket(zmq_base.GetContext(), ZMQ_SUB);
+  string sub_ipaddport = "tcp://" + zmq_base.GetLocalIp() + ":8100";
   int result = zmq_connect(receiver_, sub_ipaddport.c_str());
   std::this_thread::sleep_for(std::chrono::seconds(1));
   if (result != 0) {
@@ -24,8 +24,8 @@ ProxyRecer::ProxyRecer() {
   SubscribeTopic();
 }
 
-bool ProxyRecer::IsTopicInSubTopics(std::string title) {
-  for (auto &topic : topic_list) {
+bool ProxyRecer::IsTopicInSubTopics(const std::string &title) {
+  for (auto &topic : topic_list_) {
     if (topic == title) {
       return true;
     }
@@ -34,20 +34,21 @@ bool ProxyRecer::IsTopicInSubTopics(std::string title) {
 }
 
 void ProxyRecer::SubscribeTopic() {
-  topic_list.clear();
+  topic_list_.clear();
 
-  topic_list.push_back("strategy_trader.ActiveSafetyRsp");
-  topic_list.push_back("strategy_trader.TransactionCostReq");
-  topic_list.push_back("market_trader.QryInstrumentReq");
-  topic_list.push_back("market_trader.MarketStateReq");
-  topic_list.push_back("ctpview_trader.LoginControl");
-  topic_list.push_back("ctpview_trader.BugInjection");
-  topic_list.push_back("ctpview_trader.ProfilerControl");
-  topic_list.push_back("ctpview_trader.UpdatePara");
-  topic_list.push_back("trader_trader.AccountStatusReq");
-  topic_list.push_back("trader_trader.SendEmail");
+  topic_list_.push_back("strategy_trader.ActiveSafetyRsp");
+  topic_list_.push_back("strategy_trader.TransactionCostReq");
+  topic_list_.push_back("strategy_trader.CheckTraderAliveReq");
+  topic_list_.push_back("market_trader.QryInstrumentReq");
+  topic_list_.push_back("market_trader.MarketStateReq");
+  topic_list_.push_back("ctpview_trader.LoginControl");
+  topic_list_.push_back("ctpview_trader.BugInjection");
+  topic_list_.push_back("ctpview_trader.ProfilerControl");
+  topic_list_.push_back("ctpview_trader.UpdatePara");
+  topic_list_.push_back("trader_trader.AccountStatusReq");
+  topic_list_.push_back("trader_trader.SendEmail");
 
-  for (auto &topic : topic_list) {
+  for (auto &topic : topic_list_) {
     zmq_setsockopt(receiver_, ZMQ_SUBSCRIBE, topic.c_str(), strlen(topic.c_str()));
   }
 }

@@ -14,8 +14,11 @@ struct FdManage {
   }
 
   void OpenThingsUp(void);
-  sqlite3 *trader_conn = NULL;
-  std::string trader_data_path = "";
+  sqlite3 *GetTraderConn();
+
+ private:
+  sqlite3 *trader_conn_ = NULL;
+  std::string trader_data_path_ = "";
 };
 
 #endif

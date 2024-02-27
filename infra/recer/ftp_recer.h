@@ -12,7 +12,7 @@ class FtpTraderSpi : public ftp::api::TraderSpi {
   virtual void OnRspUserLogout(const FtpLoginLogoutStruct *logout_info);
   virtual void OnRtnTrade(const FtpOrderInfoStruct *trade_info);
   virtual void OnRtnOrder(const FtpOrderInfoStruct *order_info);
-  virtual void OnRtnOrderInsert(const FtpOrderInfoStruct *trade_info);
+  virtual void OnRtnOrderInsert(const FtpOrderInfoStruct *order_info);
   virtual void OnRtnOrderAction(const FtpOrderInfoStruct *order_info);
   virtual void OnRspTradingAccount(const FtpAccountInfo *account_info);
   virtual void OnRspMarginRate(const FtpMarginInfo *margin_info);

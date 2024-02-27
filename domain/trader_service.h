@@ -8,6 +8,7 @@
 #define WORKSPACE_TRADER_DOMAIN_TRADERSERVICE_H_
 
 #include "trader/domain/components/account_assign.h"
+#include "trader/domain/components/diagnostic.h"
 #include "trader/domain/components/handle_state.h"
 #include "trader/domain/components/order_allocate.h"
 #include "trader/domain/components/order_lookup.h"
@@ -15,9 +16,9 @@
 #include "trader/domain/components/trader_time_state.h"
 #include "trader/infra/recer_sender.h"
 
-enum TraderLoginState { kErrorState = 0, kLoginState = 1, kLogoutState = 2, kManualExit = 3 };
+enum TraderLoginState { kErrorState = 0, kLoginState = 1, kLogoutState = 2, kManualExit = 3, kLossConnection = 4 };
 
-struct TraderService : OrderManage, TraderTimeState, AccountAssign, OrderLookup, OrderAllocate, HandleState {
+struct TraderService : OrderManage, TraderTimeState, AccountAssign, OrderLookup, OrderAllocate, HandleState, Diagnostic {
   TraderService();
   TraderService(const TraderService &) = delete;
   TraderService &operator=(const TraderService &) = delete;
@@ -32,16 +33,22 @@ struct TraderService : OrderManage, TraderTimeState, AccountAssign, OrderLookup,
   IMPL_ROLE(OrderLookup);
   IMPL_ROLE(OrderAllocate);
   IMPL_ROLE(HandleState);
+  IMPL_ROLE(Diagnostic);
 
   bool UpdateLoginState(TraderLoginState state);
-  TraderLoginState login_state = kLogoutState;
+  TraderLoginState GetLoginState();
 
  private:
+  void FastBackTask();
+  void RealTimeTask();
+  bool HandleErrorState();
+  bool HandleLoginState();
+  bool HandleLogoutState();
+  bool HandleLossConnection();
   bool RealTimeLoginLogoutChange();
   bool FastBackLoginLogoutChange();
-  bool HandleAccountExitException();
   void InitDatabase();
-  bool init_database_flag_ = false;
+  TraderLoginState login_state_ = kLogoutState;
   uint32_t try_login_heartbeat_ = 0;
   uint32_t try_login_count_ = 0;
 };

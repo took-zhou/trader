@@ -46,6 +46,7 @@ struct CtpSender : SendApi {
   bool BuildOrder(utils::OrderContent &content, CThostFtdcInputOrderField &order);
   bool Init(void);
   bool Authenticate(void);
+  bool Login(void);
   bool Confirm(void);
   bool Release(void);
 

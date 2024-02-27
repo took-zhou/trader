@@ -4,7 +4,7 @@
 #include <thread>
 #include "common/extern/log/log.h"
 #include "common/self/file_util.h"
-#include "common/self/semaphore.h"
+#include "common/self/global_sem.h"
 #include "common/self/utils.h"
 #include "oes_api/oes_api.h"
 #include "trader/infra/recer/otp_recer.h"
@@ -23,7 +23,7 @@ OtpSender::OtpSender() { ; }
 bool OtpSender::ReqUserLogin() {
   INFO_LOG("login time, is going to login.");
   bool ret = true;
-  if (Init() == false) {
+  if (!Init()) {
     Release();
     ret = false;
   } else {
@@ -96,7 +96,7 @@ bool OtpSender::CancelOrder(utils::OrderContent &content) {
 bool OtpSender::Init(void) {
   bool out = true;
 
-  if (is_init_ == false) {
+  if (!is_init_) {
     INFO_LOG("begin OtpTraderApi init");
     if (!__OesApi_CheckApiVersion()) {
       ERROR_LOG("Api version error, version[%s], libversion[%s]", OES_APPL_VER_ID, OesApi_GetApiVersion());
@@ -126,9 +126,9 @@ bool OtpSender::Init(void) {
       OtpTraderInfo trader_info;
       trader_info.trader_spi = new OtpTraderSpi();
       OesApiRemoteCfgT remote_cfg = {NULLOBJ_OESAPI_REMOTE_CFG};
-      auto ord_server = json_cfg.GetDeepConfig("users", (std::string)user, "FrontOrdServer").get<std::string>();
-      auto rpt_server = json_cfg.GetDeepConfig("users", (std::string)user, "FrontRptServer").get<std::string>();
-      auto qry_server = json_cfg.GetDeepConfig("users", (std::string)user, "FrontQryServer").get<std::string>();
+      auto ord_server = json_cfg.GetDeepConfig("users", static_cast<std::string>(user), "FrontOrdServer").get<std::string>();
+      auto rpt_server = json_cfg.GetDeepConfig("users", static_cast<std::string>(user), "FrontRptServer").get<std::string>();
+      auto qry_server = json_cfg.GetDeepConfig("users", static_cast<std::string>(user), "FrontQryServer").get<std::string>();
       auto user_id = json_cfg.GetDeepConfig("users", user, "UserID").get<std::string>();
       auto password = json_cfg.GetDeepConfig("users", user, "Password").get<std::string>();
       strcpy(remote_cfg.username, user_id.c_str());
@@ -189,7 +189,7 @@ bool OtpSender::Release() {
 
 bool OtpSender::ReqAvailableFunds() {
   for (auto &item : otp_trader_info_map) {
-    if (OesAsyncApi_QueryCashAsset(item.second.ord_channel, nullptr, ApiQueryCashAsset, (void *)item.second.trader_spi) < 0) {
+    if (OesAsyncApi_QueryCashAsset(item.second.ord_channel, nullptr, ApiQueryCashAsset, static_cast<void *>(item.second.trader_spi)) < 0) {
       ERROR_LOG("query fund error.");
     }
   }
@@ -204,7 +204,8 @@ bool OtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) {
 
 bool OtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
   for (auto &item : otp_trader_info_map) {
-    if (OesAsyncApi_QueryCommissionRate(item.second.ord_channel, nullptr, ApiQueryCommissionRate, (void *)item.second.trader_spi) < 0) {
+    if (OesAsyncApi_QueryCommissionRate(item.second.ord_channel, nullptr, ApiQueryCommissionRate,
+                                        static_cast<void *>(item.second.trader_spi)) < 0) {
       ERROR_LOG("query transation cost error.");
     }
     break;
@@ -215,8 +216,8 @@ bool OtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
 bool OtpSender::LossConnection() { return false; }
 
 static int32 ApiAsyncConnect(OesAsyncApiChannelT *async_channel, void *callback) {
-  OesApiSubscribeInfoT *subscribe_info = (OesApiSubscribeInfoT *)NULL;
-  OtpTraderSpi *trader_spi = (OtpTraderSpi *)callback;
+  auto *subscribe_info = static_cast<OesApiSubscribeInfoT *>(NULL);
+  auto *trader_spi = static_cast<OtpTraderSpi *>(callback);
   int32 ret = 0;
 
   if (async_channel->pChannelCfg->channelType == OESAPI_CHANNEL_TYPE_REPORT) {
@@ -226,7 +227,8 @@ static int32 ApiAsyncConnect(OesAsyncApiChannelT *async_channel, void *callback)
                 async_channel->pChannelCfg->channelTag);
     }
   }
-  ret = trader_spi->OnConnected((eOesApiChannelTypeT)async_channel->pChannelCfg->channelType, async_channel->pSessionInfo, subscribe_info);
+  ret = trader_spi->OnConnected(static_cast<eOesApiChannelTypeT>(async_channel->pChannelCfg->channelType), async_channel->pSessionInfo,
+                                subscribe_info);
   if ((ret < 0)) {
     ERROR_LOG("Call SPI.OnConnected failure! channelType[%d], ret[%d]", async_channel->pChannelCfg->channelType, ret);
   }
@@ -234,10 +236,10 @@ static int32 ApiAsyncConnect(OesAsyncApiChannelT *async_channel, void *callback)
 }
 
 static int32 ApiAsyncDisconnect(OesAsyncApiChannelT *async_channel, void *callback) {
-  OtpTraderSpi *trader_spi = (OtpTraderSpi *)callback;
+  auto *trader_spi = static_cast<OtpTraderSpi *>(callback);
   int32 ret = 0;
 
-  ret = trader_spi->OnDisconnected((eOesApiChannelTypeT)async_channel->pChannelCfg->channelType, async_channel->pSessionInfo);
+  ret = trader_spi->OnDisconnected(static_cast<eOesApiChannelTypeT>(async_channel->pChannelCfg->channelType), async_channel->pSessionInfo);
   if ((ret < 0)) {
     ERROR_LOG("Call SPI.OnDisconnected failure! channelType[%d], ret[%d]", async_channel->pChannelCfg->channelType, ret);
   }
@@ -248,8 +250,8 @@ static int32 ApiAsyncDisconnect(OesAsyncApiChannelT *async_channel, void *callba
 static int32 HandleOrderRsp(OesApiSessionInfoT *session, SMsgHeadT *head, void *item, void *callback) { return 0; }
 
 static int32 HandleReportMsg(OesApiSessionInfoT *rpt_channel, SMsgHeadT *head, void *item, void *callback) {
-  OtpTraderSpi *trader_spi = (OtpTraderSpi *)callback;
-  OesRspMsgBodyT *rsp_msg = (OesRspMsgBodyT *)item;
+  auto *trader_spi = static_cast<OtpTraderSpi *>(callback);
+  auto *rsp_msg = static_cast<OesRspMsgBodyT *>(item);
   OesRptMsgT *rpt_msg = &rsp_msg->rptMsg;
 
   switch (head->msgId) {
@@ -273,13 +275,13 @@ static int32 HandleReportMsg(OesApiSessionInfoT *rpt_channel, SMsgHeadT *head, v
 }
 
 static int32 ApiQueryCashAsset(OesApiSessionInfoT *session, SMsgHeadT *head, void *item, OesQryCursorT *qry_cursor, void *callback) {
-  auto trader_spi = (OtpTraderSpi *)callback;
-  trader_spi->OnQueryCashAsset(session, (OesCashAssetItemT *)item);
+  auto trader_spi = static_cast<OtpTraderSpi *>(callback);
+  trader_spi->OnQueryCashAsset(session, static_cast<OesCashAssetItemT *>(item));
   return 0;
 }
 
 static int32 ApiQueryCommissionRate(OesApiSessionInfoT *session, SMsgHeadT *head, void *item, OesQryCursorT *qry_cursor, void *callback) {
-  auto trader_spi = (OtpTraderSpi *)callback;
-  trader_spi->OnQueryCommissionRate(session, (OesCommissionRateItemT *)item);
+  auto trader_spi = static_cast<OtpTraderSpi *>(callback);
+  trader_spi->OnQueryCommissionRate(session, static_cast<OesCommissionRateItemT *>(item));
   return 0;
 }

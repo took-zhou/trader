@@ -12,10 +12,10 @@ struct HandleState {
   // 实时模式
   void HandleEvent(void);
   void HandleStateChange(void);
-
-  std::string trder_date = "";
+  std::string &GetTraderDate();
 
  private:
+  std::string trder_date_ = "";
   void GetTradeData(char *);
 };
 

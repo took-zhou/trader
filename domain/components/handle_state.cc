@@ -1,7 +1,7 @@
 #include "trader/domain/components/handle_state.h"
 #include "common/extern/log/log.h"
+#include "common/self/global_sem.h"
 #include "common/self/protobuf/strategy-market.pb.h"
-#include "common/self/semaphore.h"
 #include "trader/domain/components/trader_time_state.h"
 #include "trader/domain/trader_service.h"
 
@@ -12,7 +12,7 @@ void HandleState::HandleEvent(void) {
   static SubTimeState prev_sub_time_state = kInInitSts;
   SubTimeState now_sub_time_state = market_ser.ROLE(TraderTimeState).GetSubTimeState();
 
-  if (prev_sub_time_state != now_sub_time_state && market_ser.login_state == kLoginState) {
+  if (prev_sub_time_state != now_sub_time_state && market_ser.GetLoginState() == kLoginState) {
     HandleStateChange();
     prev_sub_time_state = now_sub_time_state;
   }
@@ -21,7 +21,7 @@ void HandleState::HandleEvent(void) {
 void HandleState::HandleStateChange(void) {
   char date_buff[10];
   GetTradeData(date_buff);
-  trder_date = date_buff;
+  trder_date_ = date_buff;
   auto &trader_ser = TraderService::GetInstance();
 
   if (trader_ser.ROLE(TraderTimeState).GetSubTimeState() == kInNightLogin ||
@@ -53,3 +53,5 @@ void HandleState::GetTradeData(char *buff) {
     }
   }
 }
+
+std::string &HandleState::GetTraderDate() { return trder_date_; }

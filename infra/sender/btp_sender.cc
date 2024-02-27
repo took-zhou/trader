@@ -4,7 +4,7 @@
 #include <thread>
 #include "common/extern/log/log.h"
 #include "common/self/file_util.h"
-#include "common/self/semaphore.h"
+#include "common/self/global_sem.h"
 #include "common/self/utils.h"
 #include "trader/infra/recer/btp_recer.h"
 
@@ -17,14 +17,14 @@ BtpSender::BtpSender() { ; }
 bool BtpSender::ReqUserLogin() {
   INFO_LOG("login time, is going to login.");
   bool ret = true;
-  if (Init() == false) {
+  if (!Init()) {
     Release();
     ret = false;
   } else {
     auto &json_cfg = utils::JsonConfig::GetInstance();
     auto users = json_cfg.GetConfig("trader", "User");
     for (auto &user : users) {
-      const std::string user_id = json_cfg.GetDeepConfig("users", user, "UserID").get<std::string>();
+      const auto user_id = json_cfg.GetDeepConfig("users", user, "UserID").get<std::string>();
 
       BtpLoginLogoutStruct login;
       strcpy(login.user_id, user_id.c_str());
@@ -46,7 +46,7 @@ bool BtpSender::ReqUserLogout() {
 
   auto &json_cfg = utils::JsonConfig::GetInstance();
   for (auto &item : btp_trader_info_map) {
-    const std::string user_id = json_cfg.GetDeepConfig("users", item.second.user_name, "UserID").get<std::string>();
+    const auto user_id = json_cfg.GetDeepConfig("users", item.second.user_name, "UserID").get<std::string>();
 
     BtpLoginLogoutStruct logout;
     strcpy(logout.user_id, user_id.c_str());
@@ -102,7 +102,7 @@ bool BtpSender::CancelOrder(utils::OrderContent &content) {
 bool BtpSender::Init(void) {
   bool out = true;
 
-  if (is_init_ == false) {
+  if (!is_init_) {
     INFO_LOG("begin BtpTraderApi init");
     auto &json_cfg = utils::JsonConfig::GetInstance();
     auto temp_folder = json_cfg.GetConfig("trader", "ControlParaFilePath").get<std::string>();

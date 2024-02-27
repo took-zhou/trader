@@ -7,30 +7,30 @@
 #include "trader/infra/recer/ctp_recer.h"
 #include "common/extern/log/log.h"
 #include "common/self/file_util.h"
+#include "common/self/global_sem.h"
 #include "common/self/protobuf/ipc.pb.h"
-#include "common/self/semaphore.h"
 #include "common/self/utils.h"
 #include "trader/infra/recer_sender.h"
 
 void CtpTraderSpi::OnFrontConnected() {
-  INFO_LOG("OnFrontConnected():is excuted, re_connect : %d.", re_connect);
-  if (re_connect++ == 0) {
+  INFO_LOG("OnFrontConnected():is excuted, re_connect : %d.", re_connect_);
+  if (re_connect_++ == 0) {
     auto &global_sem = GlobalSem::GetInstance();
-    global_sem.PostSemBySemName(GlobalSem::kLoginLogout);
+    global_sem.PostSemBySemName(SemName::kLoginLogout);
   }
 }
 
 void CtpTraderSpi::OnFrontDisconnected(int reason) {
   if (reason != 0x1001) {
-    ERROR_LOG("front_disconnected, ErrorCode:%#x", reason);
+    ERROR_LOG("front_disconnected_, ErrorCode:%#x", reason);
   }
-  front_disconnected = true;
+  front_disconnected_ = true;
 }
 
 void CtpTraderSpi::OnRspAuthenticate(CThostFtdcRspAuthenticateField *rsp_authenticate_field, CThostFtdcRspInfoField *rsp_info,
                                      int request_id, bool is_last) {
   auto &global_sem = GlobalSem::GetInstance();
-  global_sem.PostSemBySemName(GlobalSem::kLoginLogout);
+  global_sem.PostSemBySemName(SemName::kLoginLogout);
 }
 
 void CtpTraderSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *rsp_user_login, CThostFtdcRspInfoField *rsp_info, int request_id,
@@ -40,12 +40,12 @@ void CtpTraderSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *rsp_user_login, C
   }
 
   if (rsp_user_login != nullptr) {
-    session_id = (uint64_t)rsp_user_login->SessionID;
-    front_id = rsp_user_login->FrontID;
-    user_id = rsp_user_login->UserID;
+    session_id_ = static_cast<uint64_t>(rsp_user_login->SessionID);
+    front_id_ = rsp_user_login->FrontID;
+    user_id_ = rsp_user_login->UserID;
     auto &global_sem = GlobalSem::GetInstance();
-    global_sem.PostSemBySemName(GlobalSem::kLoginLogout);
-    front_disconnected = false;
+    global_sem.PostSemBySemName(SemName::kLoginLogout);
+    front_disconnected_ = false;
   } else {
     ERROR_LOG("rsp_user_login is nullptr");
   }
@@ -53,13 +53,30 @@ void CtpTraderSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *rsp_user_login, C
 
 void CtpTraderSpi::OnRspUserLogout(CThostFtdcUserLogoutField *user_logout, CThostFtdcRspInfoField *rsp_info, int request_id, bool is_last) {
   auto &global_sem = GlobalSem::GetInstance();
-  global_sem.PostSemBySemName(GlobalSem::kLoginLogout);
+  global_sem.PostSemBySemName(SemName::kLoginLogout);
 }
 
 void CtpTraderSpi::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *settlement_info_confirm,
                                               CThostFtdcRspInfoField *rsp_info, int request_id, bool is_last) {
-  auto &global_sem = GlobalSem::GetInstance();
-  global_sem.PostSemBySemName(GlobalSem::kLoginLogout);
+  if (rsp_info != nullptr && rsp_info->ErrorID != 0) {
+    ERROR_LOG("id: %d, msg: %s.", rsp_info->ErrorID, rsp_info->ErrorMsg);
+  }
+  if (settlement_info_confirm != nullptr) {
+    auto &global_sem = GlobalSem::GetInstance();
+    global_sem.PostSemBySemName(SemName::kLoginLogout);
+  }
+}
+
+void CtpTraderSpi::OnRspQrySettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *settlement_info_confirm,
+                                                 CThostFtdcRspInfoField *rsp_info, int request_id, bool is_last) {
+  if (rsp_info != nullptr && rsp_info->ErrorID != 0) {
+    ERROR_LOG("id: %d, msg: %s.", rsp_info->ErrorID, rsp_info->ErrorMsg);
+  }
+  if (settlement_info_confirm != nullptr) {
+    auto &global_sem = GlobalSem::GetInstance();
+    global_sem.PostSemBySemName(SemName::kLoginLogout);
+    confirmed_date_ = settlement_info_confirm->ConfirmDate;
+  }
 }
 
 void CtpTraderSpi::OnRtnOrder(CThostFtdcOrderField *order) {
@@ -75,7 +92,7 @@ void CtpTraderSpi::OnRtnOrder(CThostFtdcOrderField *order) {
     auto &global_sem = GlobalSem::GetInstance();
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(InnerSender).SendMsg(msg);
-    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
     ERROR_LOG("order is nullptr");
   }
@@ -94,7 +111,7 @@ void CtpTraderSpi::OnRtnTrade(CThostFtdcTradeField *trade) {
     auto &global_sem = GlobalSem::GetInstance();
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(InnerSender).SendMsg(msg);
-    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
     ERROR_LOG("trade is nullptr");
   }
@@ -110,8 +127,8 @@ void CtpTraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *trading
     ipc::message req_msg;
     auto send_msg = req_msg.mutable_itp_msg();
     send_msg->set_address(reinterpret_cast<int64_t>(trading_account));
-    send_msg->set_user_id(user_id);
-    send_msg->set_session_id(session_id);
+    send_msg->set_user_id(user_id_);
+    send_msg->set_session_id(session_id_);
     send_msg->set_is_last(is_last);
     utils::ItpMsg msg;
     req_msg.SerializeToString(&msg.pb_msg);
@@ -121,7 +138,7 @@ void CtpTraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *trading
     auto &global_sem = GlobalSem::GetInstance();
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(InnerSender).SendMsg(msg);
-    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
     ERROR_LOG("trading_account is nullptr");
   }
@@ -146,7 +163,7 @@ void CtpTraderSpi::OnRspQryInstrument(CThostFtdcInstrumentField *instrument, CTh
     auto &global_sem = GlobalSem::GetInstance();
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(InnerSender).SendMsg(msg);
-    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
     ERROR_LOG("instrument is nullptr");
   }
@@ -172,7 +189,7 @@ void CtpTraderSpi::OnRspOrderInsert(CThostFtdcInputOrderField *input_order, CTho
     auto &global_sem = GlobalSem::GetInstance();
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(InnerSender).SendMsg(msg);
-    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
     ERROR_LOG("input_order_action is nullptr");
   }
@@ -197,7 +214,7 @@ void CtpTraderSpi::OnRspOrderAction(CThostFtdcInputOrderActionField *input_order
     auto &global_sem = GlobalSem::GetInstance();
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(InnerSender).SendMsg(msg);
-    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
     ERROR_LOG("input_order_action is nullptr");
   }
@@ -213,12 +230,12 @@ void CtpTraderSpi::OnRspQryInstrumentMarginRate(CThostFtdcInstrumentMarginRateFi
     ipc::message req_msg;
     auto send_msg = req_msg.mutable_itp_msg();
     send_msg->set_address(reinterpret_cast<int64_t>(instrument_margin_rate));
-    send_msg->set_user_id(user_id);
+    send_msg->set_user_id(user_id_);
     send_msg->set_is_last(is_last);
 
     // fix bug of exch ins not right
-    strcpy(instrument_margin_rate->ExchangeID, req_transaction_cost_exchange.c_str());
-    strcpy(instrument_margin_rate->InstrumentID, req_transaction_cost_instrument.c_str());
+    strcpy(instrument_margin_rate->ExchangeID, req_transaction_cost_exchange_.c_str());
+    strcpy(instrument_margin_rate->InstrumentID, req_transaction_cost_instrument_.c_str());
     utils::ItpMsg msg;
     req_msg.SerializeToString(&msg.pb_msg);
     msg.session_name = "ctp_trader";
@@ -227,7 +244,7 @@ void CtpTraderSpi::OnRspQryInstrumentMarginRate(CThostFtdcInstrumentMarginRateFi
     auto &global_sem = GlobalSem::GetInstance();
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(InnerSender).SendMsg(msg);
-    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
     ERROR_LOG("instrument_margin_rate is null.");
   }
@@ -243,12 +260,12 @@ void CtpTraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissi
     ipc::message req_msg;
     auto send_msg = req_msg.mutable_itp_msg();
     send_msg->set_address(reinterpret_cast<int64_t>(instrument_commission_rate));
-    send_msg->set_user_id(user_id);
+    send_msg->set_user_id(user_id_);
     send_msg->set_is_last(is_last);
 
     // fix bug of exch ins not right
-    strcpy(instrument_commission_rate->ExchangeID, req_transaction_cost_exchange.c_str());
-    strcpy(instrument_commission_rate->InstrumentID, req_transaction_cost_instrument.c_str());
+    strcpy(instrument_commission_rate->ExchangeID, req_transaction_cost_exchange_.c_str());
+    strcpy(instrument_commission_rate->InstrumentID, req_transaction_cost_instrument_.c_str());
     utils::ItpMsg msg;
     req_msg.SerializeToString(&msg.pb_msg);
     msg.session_name = "ctp_trader";
@@ -257,7 +274,7 @@ void CtpTraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissi
     auto &global_sem = GlobalSem::GetInstance();
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(InnerSender).SendMsg(msg);
-    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
     ERROR_LOG("instrument_commission_rate is null.");
   }
@@ -273,12 +290,12 @@ void CtpTraderSpi::OnRspQryOptionInstrCommRate(CThostFtdcOptionInstrCommRateFiel
     ipc::message req_msg;
     auto send_msg = req_msg.mutable_itp_msg();
     send_msg->set_address(reinterpret_cast<int64_t>(option_instr_comm_rate));
-    send_msg->set_user_id(user_id);
+    send_msg->set_user_id(user_id_);
     send_msg->set_is_last(is_last);
 
     // fix bug of exch ins not right
-    strcpy(option_instr_comm_rate->ExchangeID, req_transaction_cost_exchange.c_str());
-    strcpy(option_instr_comm_rate->InstrumentID, req_transaction_cost_instrument.c_str());
+    strcpy(option_instr_comm_rate->ExchangeID, req_transaction_cost_exchange_.c_str());
+    strcpy(option_instr_comm_rate->InstrumentID, req_transaction_cost_instrument_.c_str());
     utils::ItpMsg msg;
     req_msg.SerializeToString(&msg.pb_msg);
     msg.session_name = "ctp_trader";
@@ -287,8 +304,20 @@ void CtpTraderSpi::OnRspQryOptionInstrCommRate(CThostFtdcOptionInstrCommRateFiel
     auto &global_sem = GlobalSem::GetInstance();
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(InnerSender).SendMsg(msg);
-    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
     ERROR_LOG("mm_option_instr_comm_rate is null.");
   }
 };
+
+uint64_t CtpTraderSpi::GetSessionId() { return session_id_; }
+
+int CtpTraderSpi::GetFrontid() { return front_id_; }
+
+bool CtpTraderSpi::GetFrontDisconnected() { return front_disconnected_; }
+
+void CtpTraderSpi::SetTransactionCostExchange(const std::string &exch) { req_transaction_cost_exchange_ = exch; }
+
+void CtpTraderSpi::SetTransactionCostInstrument(const std::string &ins) { req_transaction_cost_instrument_ = ins; }
+
+const std::string &CtpTraderSpi::GetConfirmedDate(void) { return confirmed_date_; }

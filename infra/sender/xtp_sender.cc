@@ -3,8 +3,8 @@
 #include <thread>
 #include "common/extern/log/log.h"
 #include "common/self/file_util.h"
+#include "common/self/global_sem.h"
 #include "common/self/protobuf/strategy-trader.pb.h"
-#include "common/self/semaphore.h"
 #include "common/self/utils.h"
 #include "trader/infra/recer/xtp_recer.h"
 
@@ -21,9 +21,9 @@ bool XtpSender::ReqUserLogin() {
   auto &json_cfg = utils::JsonConfig::GetInstance();
   auto users = json_cfg.GetConfig("trader", "User");
   for (auto &user : users) {
-    const std::string frontaddr = json_cfg.GetDeepConfig("users", user, "FrontAddr").get<std::string>();
-    const std::string user_id = json_cfg.GetDeepConfig("users", user, "UserID").get<std::string>();
-    const std::string password = json_cfg.GetDeepConfig("users", user, "Password").get<std::string>();
+    const auto frontaddr = json_cfg.GetDeepConfig("users", user, "FrontAddr").get<std::string>();
+    const auto user_id = json_cfg.GetDeepConfig("users", user, "UserID").get<std::string>();
+    const auto password = json_cfg.GetDeepConfig("users", user, "Password").get<std::string>();
 
     auto protocol_ip_port = utils::SplitString(frontaddr, ":");
     std::string ip_str = utils::SplitString(protocol_ip_port[1], "//")[1];
@@ -43,7 +43,7 @@ bool XtpSender::ReqUserLogin() {
       ret = false;
     } else {
       auto &global_sem = GlobalSem::GetInstance();
-      if (global_sem.WaitSemBySemName(GlobalSem::kLoginLogout, 1) != 0) {
+      if (global_sem.WaitSemBySemName(SemName::kLoginLogout, 1) != 0) {
         INFO_LOG("%s login ok", user_id.c_str());
         trader_spi->OnRspUserLogin();
       }
@@ -62,13 +62,13 @@ bool XtpSender::ReqUserLogout() {
 
   auto &json_cfg = utils::JsonConfig::GetInstance();
   for (auto &item : xtp_trader_info_map) {
-    const std::string user_id = json_cfg.GetDeepConfig("users", item.second.user_name, "UserID").get<std::string>();
+    const auto user_id = json_cfg.GetDeepConfig("users", item.second.user_name, "UserID").get<std::string>();
     if (trader_api != nullptr) {
       int result = trader_api->Logout(item.first);
       INFO_LOG("ReqUserLogout send result is [%d]", result);
 
       auto &global_sem = GlobalSem::GetInstance();
-      if (global_sem.WaitSemBySemName(GlobalSem::kLoginLogout, 3) != 0) {
+      if (global_sem.WaitSemBySemName(SemName::kLoginLogout, 3) != 0) {
         trader_spi->OnRspUserLogout();
       }
     }
@@ -103,9 +103,9 @@ bool XtpSender::InsertOrder(utils::OrderContent &content) {
       orderinfo.side = XTP_SIDE_SELL;
     }
 
-    orderinfo.price_type = (XTP_PRICE_TYPE)1;
-    orderinfo.business_type = (XTP_BUSINESS_TYPE)0;
-    orderinfo.position_effect = (XTP_POSITION_EFFECT_TYPE)0;
+    orderinfo.price_type = static_cast<XTP_PRICE_TYPE>(1);
+    orderinfo.business_type = static_cast<XTP_BUSINESS_TYPE>(0);
+    orderinfo.position_effect = static_cast<XTP_POSITION_EFFECT_TYPE>(0);
     content.xtp_order_id = trader_api->InsertOrder(&orderinfo, pos->first);
   } else {
     ret = false;
@@ -126,19 +126,19 @@ bool XtpSender::CancelOrder(utils::OrderContent &content) {
 bool XtpSender::Init(void) {
   bool out = true;
 
-  if (is_init_ == false) {
+  if (!is_init_) {
     auto &json_cfg = utils::JsonConfig::GetInstance();
-    uint8_t client_id = json_cfg.GetConfig("common", "ClientId").get<std::uint8_t>();
+    auto client_id = json_cfg.GetConfig("common", "ClientId").get<std::uint8_t>();
     auto users = json_cfg.GetConfig("trader", "User");
     for (auto &user : users) {
       INFO_LOG("begin CtpTraderApi init");
-      std::string con_path = json_cfg.GetConfig("trader", "ConPath").get<std::string>() + "/" + (std::string)user + "/";
+      std::string con_path = json_cfg.GetConfig("trader", "ConPath").get<std::string>() + "/" + static_cast<std::string>(user) + "/";
       utils::CreatFolder(con_path);
 
       trader_api = XTP::API::TraderApi::CreateTraderApi(client_id, con_path.c_str(), XTP_LOG_LEVEL_DEBUG);
       INFO_LOG("xtp version: %s.", trader_api->GetApiVersion());
 
-      const std::string auth_code = json_cfg.GetDeepConfig("users", (std::string)user, "AuthCode").get<std::string>();
+      const auto auth_code = json_cfg.GetDeepConfig("users", static_cast<std::string>(user), "AuthCode").get<std::string>();
       trader_api->SetSoftwareKey(auth_code.c_str());
 
       trader_spi = new XtpTraderSpi();
@@ -194,7 +194,7 @@ bool XtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
 
 bool XtpSender::LossConnection() {
   bool ret = false;
-  if (trader_spi != nullptr && trader_spi->front_disconnected == true) {
+  if (trader_spi != nullptr && trader_spi->GetFrontDisconnect()) {
     ret = true;
   }
 

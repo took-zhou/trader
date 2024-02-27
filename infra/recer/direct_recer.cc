@@ -11,8 +11,8 @@
 
 DirectRecer::DirectRecer() {
   auto &zmq_base = BaseZmq::GetInstance();
-  receiver_ = zmq_socket(zmq_base.context, ZMQ_SUB);
-  string sub_ipaddport = "tcp://" + zmq_base.local_ip + ":8101";
+  receiver_ = zmq_socket(zmq_base.GetContext(), ZMQ_SUB);
+  string sub_ipaddport = "tcp://" + zmq_base.GetLocalIp() + ":8101";
   int result = zmq_bind(receiver_, sub_ipaddport.c_str());
   std::this_thread::sleep_for(std::chrono::seconds(1));
   if (result != 0) {
@@ -24,8 +24,8 @@ DirectRecer::DirectRecer() {
   SubscribeTopic();
 }
 
-bool DirectRecer::IsTopicInSubTopics(std::string title) {
-  for (auto &topic : topic_list) {
+bool DirectRecer::IsTopicInSubTopics(const std::string &title) {
+  for (auto &topic : topic_list_) {
     if (topic == title) {
       return true;
     }

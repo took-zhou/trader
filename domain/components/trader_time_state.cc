@@ -137,7 +137,7 @@ void TraderTimeState::SetTimeState(int command) {
 TraderTimeState::TraderTimeState() {
   auto &json_cfg = utils::JsonConfig::GetInstance();
 
-  string time_str = json_cfg.GetConfig("trader", "LogInTimeList").get<std::string>();
+  auto time_str = json_cfg.GetConfig("trader", "LogInTimeList").get<std::string>();
   vector<string> time_duration_splited = utils::SplitString(time_str, ";");
   if (time_duration_splited.size() == 1) {
     vector<string> day_time_str_split = utils::SplitString(time_duration_splited[0], "-");
@@ -184,6 +184,4 @@ SubTimeState TraderTimeState::GetSubTimeState() {
   }
 }
 
-struct tm *TraderTimeState::GetTimeNow() {
-  return timenow_;
-}
+struct tm *TraderTimeState::GetTimeNow() { return timenow_; }

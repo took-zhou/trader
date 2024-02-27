@@ -36,12 +36,12 @@ int main(int argc, char *agrv[]) {
   auto &json_cfg = utils::JsonConfig::GetInstance();
   json_cfg.SetFileName("/etc/marktrade/config.json");
 
-  std::string trader_log_path = json_cfg.GetConfig("trader", "LogPath").get<std::string>();
+  auto trader_log_path = json_cfg.GetConfig("trader", "LogPath").get<std::string>();
   utils::CreatFolder(trader_log_path);
   LOG_INIT(trader_log_path.c_str(), "traderlog", 6);
   INFO_LOG("trade log path is %s", trader_log_path.c_str());
 
-  std::string trader_data_path = json_cfg.GetConfig("trader", "ControlParaFilePath").get<std::string>();
+  auto trader_data_path = json_cfg.GetConfig("trader", "ControlParaFilePath").get<std::string>();
   utils::CreatFolder(trader_data_path);
   profiler::FlameGraphWriter::Instance().SetFilePath(trader_data_path);
 

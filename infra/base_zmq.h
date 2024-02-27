@@ -11,6 +11,7 @@
 #include "common/extern/libzmq/include/zmq.h"
 
 struct BaseZmq {
+ public:
   BaseZmq();
   BaseZmq(const BaseZmq &) = delete;
   BaseZmq &operator=(const BaseZmq &) = delete;
@@ -18,10 +19,14 @@ struct BaseZmq {
     static BaseZmq instance;
     return instance;
   }
+  std::string &GetLocalIp();
+  std::string &GetInprocAddress();
+  void *GetContext();
 
-  std::string local_ip{""};
-  std::string inproc_address{"inproc://innerzmq"};
-  void *context{nullptr};
+ private:
+  std::string local_ip_{""};
+  std::string inproc_address_{"inproc://innerzmq"};
+  void *context_{nullptr};
 };
 
 #endif /* WORKSPACE_MARKET_INFRA_ZMQBASE_H_ */

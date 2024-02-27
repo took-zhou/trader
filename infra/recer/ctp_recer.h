@@ -182,7 +182,7 @@ class CtpTraderSpi : public CThostFtdcTraderSpi {
 
   ///请求查询结算信息确认响应
   void OnRspQrySettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *settlement_info_confirm, CThostFtdcRspInfoField *rsp_info,
-                                     int request_id, bool is_last){};
+                                     int request_id, bool is_last);
 
   ///请求查询投资者持仓明细响应
   void OnRspQryInvestorPositionCombineDetail(CThostFtdcInvestorPositionCombineDetailField *investor_position_combine_detail,
@@ -452,13 +452,22 @@ class CtpTraderSpi : public CThostFtdcTraderSpi {
   ///银行发起变更银行账号通知
   void OnRtnChangeAccountByBank(CThostFtdcChangeAccountField *change_account){};
 
-  bool front_disconnected = false;
-  int re_connect = 0;
-  uint64_t session_id = 0;
-  int front_id = 0;
-  std::string user_id;
-  std::string req_transaction_cost_exchange;
-  std::string req_transaction_cost_instrument;
+  uint64_t GetSessionId(void);
+  int GetFrontid(void);
+  bool GetFrontDisconnected(void);
+  void SetTransactionCostExchange(const std::string &exch);
+  void SetTransactionCostInstrument(const std::string &ins);
+  const std::string &GetConfirmedDate(void);
+
+ private:
+  bool front_disconnected_ = false;
+  int re_connect_ = 0;
+  uint64_t session_id_ = 0;
+  int front_id_ = 0;
+  std::string user_id_;
+  std::string req_transaction_cost_exchange_;
+  std::string req_transaction_cost_instrument_;
+  std::string confirmed_date_;
 };
 
 #endif /* WORKSPACE_TRADER_INFRA_CTPRECER_H_ */

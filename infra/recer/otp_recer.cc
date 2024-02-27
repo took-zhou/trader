@@ -1,8 +1,8 @@
 #include "trader/infra/recer/otp_recer.h"
 #include "common/extern/log/log.h"
 #include "common/self/file_util.h"
+#include "common/self/global_sem.h"
 #include "common/self/protobuf/ipc.pb.h"
-#include "common/self/semaphore.h"
 #include "common/self/utils.h"
 #include "trader/infra/recer_sender.h"
 
@@ -26,7 +26,7 @@ void OtpTraderSpi::OnBusinessReject(const OesOrdRejectT *order_reject) {
     auto &global_sem = GlobalSem::GetInstance();
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(InnerSender).SendMsg(msg);
-    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
     ERROR_LOG("order_reject is nullptr");
   }
@@ -45,7 +45,7 @@ void OtpTraderSpi::OnOrderReport(const OesOrdCnfmT *order_report) {
     auto &global_sem = GlobalSem::GetInstance();
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(InnerSender).SendMsg(msg);
-    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
     ERROR_LOG("order_reject is nullptr");
   }
@@ -64,7 +64,7 @@ void OtpTraderSpi::OnTradeReport(const OesTrdCnfmT *trade_report) {
     auto &global_sem = GlobalSem::GetInstance();
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(InnerSender).SendMsg(msg);
-    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
     ERROR_LOG("order_reject is nullptr");
   }
@@ -86,7 +86,7 @@ void OtpTraderSpi::OnQueryCashAsset(const OesApiSessionInfoT *session, const Oes
     auto &global_sem = GlobalSem::GetInstance();
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(InnerSender).SendMsg(msg);
-    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
     ERROR_LOG("order_reject is nullptr");
   }
@@ -105,7 +105,7 @@ void OtpTraderSpi::OnQueryCommissionRate(const OesApiSessionInfoT *session, cons
     auto &global_sem = GlobalSem::GetInstance();
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(InnerSender).SendMsg(msg);
-    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
     ERROR_LOG("order_reject is nullptr");
   }

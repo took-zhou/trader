@@ -7,8 +7,8 @@
 #include "trader/infra/recer/xtp_recer.h"
 #include "common/extern/log/log.h"
 #include "common/self/file_util.h"
+#include "common/self/global_sem.h"
 #include "common/self/protobuf/ipc.pb.h"
-#include "common/self/semaphore.h"
 #include "common/self/utils.h"
 #include "trader/infra/recer_sender.h"
 #include "trader/infra/sender/xtp_sender.h"
@@ -20,10 +20,10 @@ void XtpTraderSpi::OnError(XTPRI *error_info) {
 
 void XtpTraderSpi::OnDisconnected(uint64_t session_id, int reason) {
   ERROR_LOG("front_disconnected, ErrorCode:%#x", reason);
-  front_disconnected = true;
+  front_disconnected_ = true;
 }
 
-void XtpTraderSpi::OnRspUserLogin() { front_disconnected = false; }
+void XtpTraderSpi::OnRspUserLogin() { front_disconnected_ = false; }
 
 void XtpTraderSpi::OnRspUserLogout() {}
 
@@ -42,7 +42,7 @@ void XtpTraderSpi::OnOrderEvent(XTPOrderInfo *order_info, XTPRI *error_info, uin
     auto &global_sem = GlobalSem::GetInstance();
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(InnerSender).SendMsg(msg);
-    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
     ERROR_LOG("order_info is nullptr");
   }
@@ -61,7 +61,7 @@ void XtpTraderSpi::OnTradeEvent(XTPTradeReport *trade_info, uint64_t session_id)
     auto &global_sem = GlobalSem::GetInstance();
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(InnerSender).SendMsg(msg);
-    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
     ERROR_LOG("trade_info is nullptr");
   }
@@ -82,7 +82,7 @@ void XtpTraderSpi::OnCancelOrderError(XTPOrderCancelInfo *cancel_info, XTPRI *er
     auto &global_sem = GlobalSem::GetInstance();
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(InnerSender).SendMsg(msg);
-    global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+    global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
     ERROR_LOG("cancel_info is nullptr");
   }
@@ -115,7 +115,7 @@ void XtpTraderSpi::OnQueryAsset(XTPQueryAssetRsp *trading_account, XTPRI *error_
       auto &global_sem = GlobalSem::GetInstance();
       auto &recer_sender = RecerSender::GetInstance();
       recer_sender.ROLE(InnerSender).SendMsg(msg);
-      global_sem.WaitSemBySemName(GlobalSem::kApiRecv);
+      global_sem.WaitSemBySemName(SemName::kApiRecv);
     }
   } else {
     ERROR_LOG("trading_account is nullptr");
@@ -163,3 +163,5 @@ void XtpTraderSpi::OnQueryCreditTickerAssignInfo(XTPClientQueryCrdPositionStkInf
 
 void XtpTraderSpi::OnQueryCreditExcessStock(XTPClientQueryCrdSurplusStkRspInfo *stock_info, XTPRI *error_info, int request_id,
                                             uint64_t session_id) {}
+
+bool XtpTraderSpi::GetFrontDisconnect(void) { return front_disconnected_; }
