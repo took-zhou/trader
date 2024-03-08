@@ -5,6 +5,7 @@
 #include "trader/infra/recer/proxy_recer.h"
 #include <map>
 #include <thread>
+#include "common/extern/libzmq/include/zmq.h"
 #include "common/extern/log/log.h"
 #include "common/self/utils.h"
 #include "trader/infra/base_zmq.h"
@@ -45,6 +46,7 @@ void ProxyRecer::SubscribeTopic() {
   topic_list_.push_back("ctpview_trader.BugInjection");
   topic_list_.push_back("ctpview_trader.ProfilerControl");
   topic_list_.push_back("ctpview_trader.UpdatePara");
+  topic_list_.push_back("ctpview_trader.ClearDiagnosticEvent");
   topic_list_.push_back("trader_trader.AccountStatusReq");
   topic_list_.push_back("trader_trader.SendEmail");
 

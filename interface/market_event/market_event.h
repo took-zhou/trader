@@ -10,9 +10,7 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "common/extern/ctp/inc/ThostFtdcTraderApi.h"
 
-#include "common/self/dci/role.h"
 #include "common/self/utils.h"
 
 struct MarketEvent {

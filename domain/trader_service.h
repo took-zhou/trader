@@ -7,6 +7,7 @@
 #ifndef WORKSPACE_TRADER_DOMAIN_TRADERSERVICE_H_
 #define WORKSPACE_TRADER_DOMAIN_TRADERSERVICE_H_
 
+#include "common/self/dci/role.h"
 #include "trader/domain/components/account_assign.h"
 #include "trader/domain/components/diagnostic.h"
 #include "trader/domain/components/handle_state.h"
@@ -14,7 +15,6 @@
 #include "trader/domain/components/order_lookup.h"
 #include "trader/domain/components/order_manage.h"
 #include "trader/domain/components/trader_time_state.h"
-#include "trader/infra/recer_sender.h"
 
 enum TraderLoginState { kErrorState = 0, kLoginState = 1, kLogoutState = 2, kManualExit = 3, kLossConnection = 4 };
 

@@ -1,21 +1,11 @@
-/*
- * order.cpp
- *
- *      Author: Administrator
- */
-
 #include "trader/domain/components/order_lookup.h"
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <memory>
-#include "common/extern/json/json.h"
 #include "common/extern/log/log.h"
 
-#include "common/self/file_util.h"
-#include "common/self/utils.h"
 #include "trader/domain/components/fd_manage.h"
-#include "trader/interface/trader_event.h"
 
 OrderLookup::OrderLookup() {
   InitDatabase();

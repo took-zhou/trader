@@ -8,8 +8,8 @@
 #include "trader/interface/trader_event.h"
 #include <chrono>
 #include <thread>
+#include "common/extern/log/log.h"
 #include "common/self/global_sem.h"
-#include "trader/domain/trader_service.h"
 #include "trader/infra/recer_sender.h"
 
 TraderEvent::TraderEvent() { RegSessionFunc(); }

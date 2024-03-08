@@ -8,12 +8,9 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include "common/extern/json/json.h"
 #include "common/extern/log/log.h"
 
-#include "common/self/file_util.h"
 #include "common/self/utils.h"
-#include "trader/interface/trader_event.h"
 
 OrderManage::OrderManage() { ; }
 

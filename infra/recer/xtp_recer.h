@@ -2,7 +2,6 @@
 #define WORKSPACE_TRADER_INFRA_XTPRECER_H_
 
 #include "common/extern/xtp/inc/xtp_trader_api.h"
-#include "common/self/utils.h"
 
 class XtpTraderSpi : public XTP::API::TraderSpi {
  public:

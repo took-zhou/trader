@@ -9,9 +9,7 @@
 #define WORKSPACE_TRADER_DOMAIN_COMPONENTS_ORDER_H_
 #include <map>
 #include <string>
-#include "common/extern/ctp/inc/ThostFtdcUserApiStruct.h"
 
-#include "common/self/dci/role.h"
 #include "common/self/protobuf/strategy-trader.pb.h"
 #include "common/self/utils.h"
 

@@ -6,8 +6,6 @@
 #include <iostream>
 
 #include "common/extern/log/log.h"
-#include "common/extern/protobuf/src/google/protobuf/text_format.h"
-#include "common/self/file_util.h"
 #include "common/self/global_sem.h"
 #include "common/self/profiler.h"
 #include "common/self/protobuf/strategy-trader.pb.h"

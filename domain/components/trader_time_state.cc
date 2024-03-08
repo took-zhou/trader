@@ -10,7 +10,6 @@
 #include "common/extern/log/log.h"
 #include "common/self/file_util.h"
 #include "common/self/protobuf/ctpview-trader.pb.h"
-#include "common/self/timer.h"
 #include "common/self/utils.h"
 
 uint8_t TraderTimeState::IsDuringDayLogoutTime(void) {
@@ -184,4 +183,6 @@ SubTimeState TraderTimeState::GetSubTimeState() {
   }
 }
 
-struct tm *TraderTimeState::GetTimeNow() { return timenow_; }
+struct tm *TraderTimeState::GetTimeNow() {
+  return timenow_;
+}

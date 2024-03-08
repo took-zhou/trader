@@ -4,7 +4,6 @@
 #include <thread>
 #include "common/extern/log/log.h"
 #include "common/self/file_util.h"
-#include "common/self/global_sem.h"
 #include "common/self/utils.h"
 #include "trader/infra/recer/ftp_recer.h"
 

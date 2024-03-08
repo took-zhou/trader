@@ -2,7 +2,6 @@
 #define WORKSPACE_TRADER_INFRA_FTPRECER_H_
 
 #include "common/extern/ftp/inc/ftp_trader_api.h"
-#include "common/self/utils.h"
 
 class FtpTraderSpi : public ftp::api::TraderSpi {
  public:

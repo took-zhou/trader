@@ -7,6 +7,7 @@
 
 #include "trader/infra/sender/proxy_sender.h"
 #include <thread>
+#include "common/extern/libzmq/include/zmq.h"
 #include "common/extern/log/log.h"
 #include "trader/infra/base_zmq.h"
 

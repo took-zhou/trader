@@ -12,7 +12,6 @@
 #include "common/self/utils.h"
 #include "trader/domain/trader_service.h"
 #include "trader/infra/recer_sender.h"
-#include "trader/interface/ctp_event/ctp_event.h"
 
 MarketEvent::MarketEvent() { RegMsgFun(); }
 

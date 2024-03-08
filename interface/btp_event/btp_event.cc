@@ -8,10 +8,9 @@
 #include "trader/interface/btp_event/btp_event.h"
 #include <algorithm>
 #include <mutex>
-#include "common/extern/btp/inc/btp_trader_api.h"
+#include "common/extern/btp/inc/btp_trader_struct.h"
 #include "common/extern/log/log.h"
 #include "common/self/file_util.h"
-#include "common/self/global_sem.h"
 #include "common/self/protobuf/ipc.pb.h"
 #include "common/self/protobuf/market-trader.pb.h"
 #include "common/self/protobuf/strategy-trader.pb.h"

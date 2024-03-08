@@ -10,10 +10,10 @@
 #include <mutex>
 #include <string>
 #include "common/extern/log/log.h"
-#include "common/extern/otp/inc/oes_api/oes_async_api.h"
+#include "common/extern/otp/inc/oes_api/errors/oes_errors.h"
+#include "common/extern/otp/inc/oes_global/oes_base_model.h"
+#include "common/extern/otp/inc/oes_global/oes_qry_packets.h"
 #include "common/self/file_util.h"
-#include "common/self/global_sem.h"
-#include "common/self/profiler.h"
 #include "common/self/protobuf/ipc.pb.h"
 #include "common/self/protobuf/market-trader.pb.h"
 #include "common/self/protobuf/strategy-trader.pb.h"

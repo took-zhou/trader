@@ -5,6 +5,7 @@
  *      Author: Administrator
  */
 
+#include <signal.h>
 #include <chrono>
 #include <string>
 #include <thread>
@@ -15,7 +16,6 @@
 #include "common/self/utils.h"
 #include "trader/domain/components/fd_manage.h"
 #include "trader/domain/trader_service.h"
-#include "trader/infra/recer_sender.h"
 #include "trader/interface/trader_event.h"
 
 void SignalHandler(int signal) {

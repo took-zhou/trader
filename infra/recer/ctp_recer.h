@@ -8,8 +8,8 @@
 #ifndef WORKSPACE_TRADER_INFRA_CTPRECER_H_
 #define WORKSPACE_TRADER_INFRA_CTPRECER_H_
 
+#include <string>
 #include "common/extern/ctp/inc/ThostFtdcTraderApi.h"
-#include "common/self/utils.h"
 
 class CtpTraderSpi : public CThostFtdcTraderSpi {
  public:

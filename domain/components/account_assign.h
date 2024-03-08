@@ -1,10 +1,10 @@
 #ifndef TRADER_ACCOUNT_STATUS_H
 #define TRADER_ACCOUNT_STATUS_H
 #include <memory>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include "common/extern/sqlite3/sqlite3.h"
-#include "common/self/utils.h"
 
 struct AccountInfo {
  public:

@@ -8,7 +8,6 @@
 #ifndef WORKSPACE_TRADER_INFRA_RECERSENDER_H_
 #define WORKSPACE_TRADER_INFRA_RECERSENDER_H_
 
-#include "trader/infra/base_zmq.h"
 #include "trader/infra/recer/direct_recer.h"
 #include "trader/infra/recer/inner_recer.h"
 #include "trader/infra/recer/proxy_recer.h"
@@ -19,7 +18,6 @@
 #include "trader/infra/sender/proxy_sender.h"
 
 #include <thread>
-#include "common/extern/log/log.h"
 #include "common/self/dci/role.h"
 
 struct Recer : InnerRecer, ProxyRecer, DirectRecer {

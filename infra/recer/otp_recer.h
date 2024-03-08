@@ -1,8 +1,7 @@
 #ifndef WORKSPACE_TRADER_INFRA_OTPRECER_H_
 #define WORKSPACE_TRADER_INFRA_OTPRECER_H_
 
-#include "common/extern/otp/inc/oes_api/oes_async_api.h"
-#include "common/self/utils.h"
+#include "common/extern/otp/inc/oes_api/oes_api.h"
 
 class OtpTraderSpi {
  public:

@@ -9,9 +9,8 @@
 #include <algorithm>
 #include <mutex>
 #include "common/extern/log/log.h"
-#include "common/extern/xtp/inc/xtp_trader_api.h"
+#include "common/extern/xtp/inc/xoms_api_struct.h"
 #include "common/self/file_util.h"
-#include "common/self/global_sem.h"
 #include "common/self/protobuf/ipc.pb.h"
 #include "common/self/protobuf/market-trader.pb.h"
 #include "common/self/protobuf/strategy-trader.pb.h"

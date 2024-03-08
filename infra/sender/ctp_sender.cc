@@ -15,7 +15,6 @@
 #include "common/self/global_sem.h"
 #include "common/self/protobuf/strategy-trader.pb.h"
 #include "common/self/utils.h"
-#include "trader/domain/components/fd_manage.h"
 #include "trader/infra/recer/ctp_recer.h"
 
 std::map<std::string, CtpApiSpiInfo> CtpSender::ctp_api_spi_info_map;

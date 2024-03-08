@@ -11,7 +11,6 @@
 #include "common/self/profiler.h"
 #include "common/self/protobuf/ctpview-trader.pb.h"
 #include "trader/domain/trader_service.h"
-#include "trader/infra/recer_sender.h"
 
 CtpviewEvent::CtpviewEvent() { RegMsgFun(); }
 
@@ -22,6 +21,7 @@ void CtpviewEvent::RegMsgFun() {
   msg_func_map_["BugInjection"] = [this](utils::ItpMsg &msg) { BugInjectionHandle(msg); };
   msg_func_map_["ProfilerControl"] = [this](utils::ItpMsg &msg) { ProfilerControlHandle(msg); };
   msg_func_map_["UpdatePara"] = [this](utils::ItpMsg &msg) { UpdateParaHandle(msg); };
+  msg_func_map_["ClearDiagnosticEvent"] = [this](utils::ItpMsg &msg) { ClearDiagnosticEventHandle(msg); };
 
   for (auto &iter : msg_func_map_) {
     INFO_LOG("msg_func_map_[%d] key is [%s]", cnt, iter.first.c_str());
@@ -92,4 +92,14 @@ void CtpviewEvent::UpdateParaHandle(utils::ItpMsg &msg) {
     utils::JsonConfig::GetInstance().GetConfig();
     INFO_LOG("reload config file");
   }
+}
+
+void CtpviewEvent::ClearDiagnosticEventHandle(utils::ItpMsg &msg) {
+  auto &trader_ser = TraderService::GetInstance();
+  ctpview_trader::message message;
+  message.ParseFromString(msg.pb_msg);
+  auto clear_diagnostic_event = message.clear_diagnostic_event();
+  auto event_id = clear_diagnostic_event.diagnostic_event_id();
+
+  trader_ser.ROLE(Diagnostic).ClearStatus(static_cast<DiagnosticEventId>(event_id));
 }

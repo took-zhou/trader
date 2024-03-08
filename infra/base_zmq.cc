@@ -6,6 +6,7 @@
  */
 #include "trader/infra/base_zmq.h"
 #include <string>
+#include "common/extern/libzmq/include/zmq.h"
 #include "common/self/utils.h"
 
 BaseZmq::BaseZmq() {

@@ -2,7 +2,6 @@
 #define WORKSPACE_TRADER_INFRA_BTPRECER_H_
 
 #include "common/extern/btp/inc/btp_trader_api.h"
-#include "common/self/utils.h"
 
 class BtpTraderSpi : public btp::api::TraderSpi {
  public:

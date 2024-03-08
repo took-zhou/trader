@@ -1,6 +1,4 @@
 #include "trader/domain/components/handle_state.h"
-#include "common/extern/log/log.h"
-#include "common/self/global_sem.h"
 #include "common/self/protobuf/strategy-market.pb.h"
 #include "trader/domain/components/trader_time_state.h"
 #include "trader/domain/trader_service.h"

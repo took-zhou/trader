@@ -3,6 +3,7 @@
 #include <cstring>
 #include <memory>
 #include <thread>
+#include "common/extern/log/log.h"
 #include "common/self/file_util.h"
 #include "common/self/protobuf/ipc.pb.h"
 #include "trader/domain/components/fd_manage.h"

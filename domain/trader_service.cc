@@ -10,6 +10,7 @@
 #include "common/extern/log/log.h"
 #include "common/self/file_util.h"
 #include "trader/domain/components/fd_manage.h"
+#include "trader/infra/recer_sender.h"
 
 TraderService::TraderService() {
   auto &json_cfg = utils::JsonConfig::GetInstance();

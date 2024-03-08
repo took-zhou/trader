@@ -12,7 +12,6 @@
 #include <string>
 #include <vector>
 
-#include "common/self/dci/role.h"
 #include "common/self/utils.h"
 
 struct BtpEvent {
