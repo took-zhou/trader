@@ -71,6 +71,7 @@ void MarketEvent::MarketStateReqHandle(utils::ItpMsg &msg) {
   trader_ser.ROLE(HandleState).GetTraderDate() = date;
   if (state == market_trader::MarketStateReq_MarketState_day_open || state == market_trader::MarketStateReq_MarketState_night_open) {
     recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogin();
+    recer_sender.ROLE(Sender).ROLE(ItpSender).ReqAvailableFunds();
     trader_ser.UpdateLoginState(kLoginState);
     trader_ser.ROLE(AccountAssign).HandleTraderOpen();
   }

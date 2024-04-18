@@ -84,6 +84,7 @@ bool TraderService::HandleErrorState() {
   auto &recer_sender = RecerSender::GetInstance();
   if (ROLE(TraderTimeState).GetTimeState() == kLoginTime) {
     if (try_login_heartbeat_++ % 600 == 599 && try_login_count_++ <= 3 && recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogin()) {
+      recer_sender.ROLE(Sender).ROLE(ItpSender).ReqAvailableFunds();
       UpdateLoginState(kLoginState);
     }
   } else if (ROLE(TraderTimeState).GetTimeState() == kLogoutTime) {
@@ -110,6 +111,7 @@ bool TraderService::HandleLogoutState() {
     try_login_heartbeat_ = 0;
     try_login_count_ = 0;
     if (recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogin()) {
+      recer_sender.ROLE(Sender).ROLE(ItpSender).ReqAvailableFunds();
       UpdateLoginState(kLoginState);
     } else {
       UpdateLoginState(kErrorState);
@@ -123,6 +125,7 @@ bool TraderService::HandleLossConnection() {
   if (ROLE(TraderTimeState).GetTimeState() == kLoginTime) {
     if (try_login_count_++ <= 60) {
       if (recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogin()) {
+        recer_sender.ROLE(Sender).ROLE(ItpSender).ReqAvailableFunds();
         UpdateLoginState(kLoginState);
       }
     }
