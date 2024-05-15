@@ -40,6 +40,7 @@ void ProxyRecer::SubscribeTopic() {
   topic_list_.push_back("strategy_trader.ActiveSafetyRsp");
   topic_list_.push_back("strategy_trader.TransactionCostReq");
   topic_list_.push_back("strategy_trader.CheckTraderAliveReq");
+  topic_list_.push_back("strategy_trader.OrderPositionReq");
   topic_list_.push_back("market_trader.QryInstrumentReq");
   topic_list_.push_back("market_trader.MarketStateReq");
   topic_list_.push_back("ctpview_trader.LoginControl");

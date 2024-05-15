@@ -1,6 +1,7 @@
 /*
  * strategyEvent.cpp
  */
+#include <cstdint>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -34,6 +35,7 @@ void StrategyEvent::RegMsgFun() {
   msg_func_map_["TransactionCostReq"] = [this](utils::ItpMsg &msg) { TransactionCostReqHandle(msg); };
   msg_func_map_["ActiveSafetyRsp"] = [this](utils::ItpMsg &msg) { StrategyAliveRspHandle(msg); };
   msg_func_map_["CheckTraderAliveReq"] = [this](utils::ItpMsg &msg) { CheckTraderAliveReqHandle(msg); };
+  msg_func_map_["OrderPositionReq"] = [this](utils::ItpMsg &msg) { OrderPositionReqHandle(msg); };
 
   for (auto &iter : msg_func_map_) {
     INFO_LOG("msg_func_map_[%d] key is [%s]", cnt, iter.first.c_str());
@@ -157,5 +159,44 @@ void StrategyEvent::CheckTraderAliveReqHandle(utils::ItpMsg &msg) {
   message.SerializeToString(&send_msg.pb_msg);
   send_msg.session_name = "strategy_trader";
   send_msg.msg_name = "CheckTraderAliveRsp";
+  RecerSender::GetInstance().ROLE(Sender).ROLE(ProxySender).SendMsg(send_msg);
+}
+
+void StrategyEvent::OrderPositionReqHandle(utils::ItpMsg &msg) {
+  strategy_trader::message message;
+  message.ParseFromString(msg.pb_msg);
+
+  auto &trader_ser = TraderService::GetInstance();
+  auto &account_assign = trader_ser.ROLE(AccountAssign);
+  auto &order_lookup = trader_ser.ROLE(OrderLookup);
+  auto &position_req = message.position_req();
+
+  std::string temp_key;
+  temp_key += position_req.instrument();
+  temp_key += ".";
+  temp_key += position_req.index();
+
+  uint32_t volume = 0;
+  auto lookup_pos = order_lookup.GetOrderIndexMap().find(temp_key);
+  if (lookup_pos != order_lookup.GetOrderIndexMap().end()) {
+    for (auto &item : lookup_pos->second) {
+      auto account_pos = account_assign.GetAccountInfoMap().find(item.first);
+      if (account_pos != account_assign.GetAccountInfoMap().end()) {
+        volume += item.second->GetYesterdayVolume();
+        volume += item.second->GetTodayVolume();
+      }
+    }
+  }
+
+  strategy_trader::message message2;
+  auto *positoin_rsp = message2.mutable_position_rsp();
+  positoin_rsp->set_instrument(position_req.instrument());
+  positoin_rsp->set_index(position_req.index());
+  positoin_rsp->set_volume(volume);
+
+  utils::ItpMsg send_msg;
+  message2.SerializeToString(&send_msg.pb_msg);
+  send_msg.session_name = "strategy_trader";
+  send_msg.msg_name = "OrderPositionRsp";
   RecerSender::GetInstance().ROLE(Sender).ROLE(ProxySender).SendMsg(send_msg);
 }
