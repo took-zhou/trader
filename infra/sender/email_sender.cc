@@ -68,7 +68,7 @@ int EmailSender::Send(const std::string &subject, const std::string &body) {
       recv_list += item.first;
     }
     curl_easy_setopt(curl, CURLOPT_MAIL_RCPT, recipients);
-    sprintf(payload_text, "To: %s\r\nFrom: chaodai DevOps team\r\nSubject: %s\r\n\r\n%s\r\n", recv_list.c_str(), subject.c_str(),
+    sprintf(payload_text, "To: %s\r\nFrom: Tsaodai DevOps team\r\nSubject: %s\r\n\r\n%s\r\n", recv_list.c_str(), subject.c_str(),
             body.c_str());
     curl_easy_setopt(curl, CURLOPT_READFUNCTION, PayloadSource);
     curl_easy_setopt(curl, CURLOPT_READDATA, &upload_ctx);
