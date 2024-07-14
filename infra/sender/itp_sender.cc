@@ -1,8 +1,10 @@
 #include "trader/infra/sender/itp_sender.h"
+#include <memory>
 #include "common/self/file_util.h"
 #include "trader/infra/sender/btp_sender.h"
 #include "trader/infra/sender/ctp_sender.h"
 #include "trader/infra/sender/ftp_sender.h"
+#include "trader/infra/sender/gtp_sender.h"
 #include "trader/infra/sender/otp_sender.h"
 #include "trader/infra/sender/xtp_sender.h"
 
@@ -19,6 +21,8 @@ ItpSender::ItpSender() {
     send_api_ = std::make_unique<OtpSender>();
   } else if (api_type == "ftp") {
     send_api_ = std::make_unique<FtpSender>();
+  } else if (api_type == "gtp") {
+    send_api_ = std::make_unique<GtpSender>();
   }
 }
 

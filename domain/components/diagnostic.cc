@@ -13,10 +13,10 @@
 #include "trader/domain/components/fd_manage.h"
 
 Diagnostic::Diagnostic() {
-  AddTestConfig(kApiCallFailed, 10, 10);
-  AddTestConfig(kPositionMisMatched, 10, 10);
-  AddTestConfig(kLoginFailed, 10, 10);
-  AddTestConfig(kNoEnoughMoney, 10, 10);
+  AddTestConfig(kApiCallFailed, 10, 10, DiagEventStatus::kPass);
+  AddTestConfig(kPositionMisMatched, 10, 10, DiagEventStatus::kPass);
+  AddTestConfig(kLoginFailed, 10, 10, DiagEventStatus::kPass);
+  AddTestConfig(kNoEnoughMoney, 10, 10, DiagEventStatus::kPass);
 
   InitDatabase();
   PrepareSqlSentence();

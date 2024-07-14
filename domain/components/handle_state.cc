@@ -6,11 +6,11 @@
 HandleState::HandleState() {}
 
 void HandleState::HandleEvent(void) {
-  auto &market_ser = TraderService::GetInstance();
+  auto &trader_ser = TraderService::GetInstance();
   static SubTimeState prev_sub_time_state = kInInitSts;
-  SubTimeState now_sub_time_state = market_ser.ROLE(TraderTimeState).GetSubTimeState();
+  SubTimeState now_sub_time_state = trader_ser.ROLE(TraderTimeState).GetSubTimeState();
 
-  if (prev_sub_time_state != now_sub_time_state && market_ser.GetLoginState() == kLoginState) {
+  if (prev_sub_time_state != now_sub_time_state && trader_ser.GetLoginState() == kLoginState) {
     HandleStateChange();
     prev_sub_time_state = now_sub_time_state;
   }

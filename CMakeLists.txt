@@ -14,6 +14,7 @@ target_link_libraries(tradelib
     xtptraderapi
     btptraderapi
     ftptraderapi
+    gtptraderapi
     oes_api
     pthread
     commonlib
@@ -23,6 +24,7 @@ target_link_libraries(tradelib
     sqlite3
     z
     curl
+    boost_system
  )
 
 file(GLOB_RECURSE test_source

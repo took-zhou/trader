@@ -1,12 +1,12 @@
 /*
- * ctp_event.h
+ * gtp_event.h
  *
  *  Created on: 2020年10月23日
  *      Author: Administrator
  */
 
-#ifndef WORKSPACE_TRADER_INTERFACE_BTPEVENT_H_
-#define WORKSPACE_TRADER_INTERFACE_BTPEVENT_H_
+#ifndef WORKSPACE_TRADER_INTERFACE_GTPEVENT_H_
+#define WORKSPACE_TRADER_INTERFACE_GTPEVENT_H_
 #include <functional>
 #include <map>
 #include <string>
@@ -14,8 +14,8 @@
 
 #include "common/self/utils.h"
 
-struct BtpEvent {
-  BtpEvent();
+struct GtpEvent {
+  GtpEvent();
   void Handle(utils::ItpMsg &msg);
   void RegMsgFun();
 
@@ -33,4 +33,4 @@ struct BtpEvent {
   bool SendEmail(const utils::OrderContent &content);
 };
 
-#endif /* WORKSPACE_TRADER_INTERFACE_CTPEVENT_H_ */
+#endif /* WORKSPACE_TRADER_INTERFACE_GTPEVENT_H_ */
