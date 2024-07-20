@@ -102,10 +102,9 @@ bool GtpSender::Init(void) {
   bool out = true;
 
   if (!is_init_) {
-    INFO_LOG("begin BtpTraderApi init");
+    INFO_LOG("begin GtpTraderApi init");
     auto &json_cfg = utils::JsonConfig::GetInstance();
-    auto temp_folder = json_cfg.GetConfig("trader", "ControlParaFilePath").get<std::string>();
-    trader_api = gtp::api::TraderApi::CreateTraderApi(temp_folder.c_str());
+    trader_api = gtp::api::TraderApi::CreateTraderApi(json_cfg.GetFileName().c_str());
     if (trader_api == nullptr) {
       out = false;
       INFO_LOG("traderApi init fail.");

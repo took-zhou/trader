@@ -14,7 +14,7 @@ struct OrderAllocate {
 
  private:
   std::vector<std::shared_ptr<utils::OrderContent>> order_list_;
-  const double minimum_account_available_ = 10000.0;
+  const double minimum_account_available_ = 100.0;
   bool BuildCycleOrderContent(utils::OrderContent &content);
   bool BuildShareOrderContent(utils::OrderContent &content);
   bool CycleOpenOrder(utils::OrderContent &content);

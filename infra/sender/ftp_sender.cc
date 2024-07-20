@@ -100,8 +100,7 @@ bool FtpSender::Init(void) {
   if (!is_init_) {
     INFO_LOG("begin BtpTraderApi init");
     auto &json_cfg = utils::JsonConfig::GetInstance();
-    auto temp_folder = json_cfg.GetConfig("trader", "ControlParaFilePath").get<std::string>();
-    trader_api = ftp::api::TraderApi::CreateTraderApi(temp_folder.c_str());
+    trader_api = ftp::api::TraderApi::CreateTraderApi(json_cfg.GetFileName().c_str());
 
     trader_spi = new FtpTraderSpi();
     trader_api->RegisterSpi(trader_spi);
