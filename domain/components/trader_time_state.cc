@@ -16,8 +16,14 @@ uint8_t TraderTimeState::IsDuringDayLogoutTime(void) {
   uint8_t out;
   out = 0U;
 
-  if ((day_logout_mins_ < now_mins_) && (now_mins_ < night_login_mins_ || night_login_mins_ == -1)) {
-    out = 1U;
+  if (day_login_mins_ <= day_logout_mins_) {
+    if (now_mins_ < day_login_mins_ || now_mins_ > day_logout_mins_) {
+      out = 1U;
+    }
+  } else {
+    if (now_mins_ < day_login_mins_ && now_mins_ > day_logout_mins_) {
+      out = 1U;
+    }
   }
 
   return out;
@@ -27,8 +33,16 @@ uint8_t TraderTimeState::IsDuringNightLogoutTime(void) {
   uint8_t out;
   out = 0U;
 
-  if ((night_logout_mins_ < now_mins_ && night_logout_mins_ != -1) && (now_mins_ < day_login_mins_)) {
-    out = 1U;
+  if (night_login_mins_ != -1 && night_logout_mins_ != -1) {
+    if (night_login_mins_ <= night_logout_mins_) {
+      if (now_mins_ < night_login_mins_ || now_mins_ > night_logout_mins_) {
+        out = 1U;
+      }
+    } else {
+      if (now_mins_ < night_login_mins_ && now_mins_ > night_logout_mins_) {
+        out = 1U;
+      }
+    }
   }
 
   return out;
@@ -38,8 +52,14 @@ uint8_t TraderTimeState::IsDuringDayLoginTime(void) {
   uint8_t out;
   out = 0U;
 
-  if ((day_login_mins_ <= now_mins_) && (now_mins_ <= day_logout_mins_)) {
-    out = 1U;
+  if (day_login_mins_ <= day_logout_mins_) {
+    if (now_mins_ >= day_login_mins_ && now_mins_ <= day_logout_mins_) {
+      out = 1U;
+    }
+  } else {
+    if (now_mins_ >= day_login_mins_ || now_mins_ <= day_logout_mins_) {
+      out = 1U;
+    }
   }
 
   return out;
@@ -49,8 +69,16 @@ uint8_t TraderTimeState::IsDuringNightLoginTime(void) {
   uint8_t out;
   out = 0U;
 
-  if ((night_login_mins_ <= now_mins_ && night_login_mins_ != -1) || (now_mins_ <= night_logout_mins_ && night_logout_mins_ != -1)) {
-    out = 1U;
+  if (night_login_mins_ != -1 && night_logout_mins_ != -1) {
+    if (night_login_mins_ <= night_logout_mins_) {
+      if (now_mins_ >= night_login_mins_ && now_mins_ <= night_logout_mins_) {
+        out = 1U;
+      }
+    } else {
+      if (now_mins_ >= night_login_mins_ || now_mins_ <= night_logout_mins_) {
+        out = 1U;
+      }
+    }
   }
 
   return out;
@@ -73,6 +101,9 @@ void TraderTimeState::Step() {
       case kInDayLogout:
         if (IsDuringNightLoginTime()) {
           sub_time_state_ = kInNightLogin;
+          time_state_ = kLoginTime;
+        } else if (IsDuringDayLoginTime()) {
+          sub_time_state_ = kInDayLogin;
           time_state_ = kLoginTime;
         }
         break;
@@ -104,6 +135,9 @@ void TraderTimeState::Step() {
         if (IsDuringDayLoginTime()) {
           sub_time_state_ = kInDayLogin;
           time_state_ = kLoginTime;
+        } else if (IsDuringNightLoginTime()) {
+          sub_time_state_ = kInNightLogin;
+          time_state_ = kLoginTime;
         }
         break;
 
@@ -119,6 +153,16 @@ void TraderTimeState::Update(void) {
   time(&now);
   timenow_ = localtime(&now);  // 获取当前时间
   now_mins_ = timenow_->tm_hour * 60 + timenow_->tm_min;
+
+  Step();
+}
+
+void TraderTimeState::Simulate(const char *time_str) {
+  static struct tm tm_temp;
+  if (strptime(time_str, "%Y-%m-%d %H:%M:%S", &tm_temp) != NULL) {
+    timenow_ = &tm_temp;
+    now_mins_ = timenow_->tm_hour * 60 + timenow_->tm_min;
+  }
 
   Step();
 }
