@@ -1,18 +1,18 @@
 #include "trader/domain/components/handle_state.h"
 #include "common/self/protobuf/strategy-market.pb.h"
-#include "trader/domain/components/trader_time_state.h"
+
 #include "trader/domain/trader_service.h"
 
 HandleState::HandleState() {}
 
 void HandleState::HandleEvent(void) {
   auto &trader_ser = TraderService::GetInstance();
-  static SubTimeState prev_sub_time_state = kInInitSts;
+
   SubTimeState now_sub_time_state = trader_ser.ROLE(TraderTimeState).GetSubTimeState();
 
-  if (prev_sub_time_state != now_sub_time_state && trader_ser.GetLoginState() == kLoginState) {
+  if (prev_sub_time_state_ != now_sub_time_state && trader_ser.GetLoginState() == kLoginState) {
     HandleStateChange();
-    prev_sub_time_state = now_sub_time_state;
+    prev_sub_time_state_ = now_sub_time_state;
   }
 }
 
@@ -32,10 +32,10 @@ void HandleState::HandleStateChange(void) {
 }
 
 void HandleState::GetTradeData(char *buff) {
-  auto &trader_ser = TraderService::GetInstance();
-  auto timenow = trader_ser.ROLE(TraderTimeState).GetTimeNow();
+  auto &market_ser = TraderService::GetInstance();
+  auto timenow = market_ser.ROLE(TraderTimeState).GetTimeNow();
   if (timenow != nullptr) {
-    if (19 <= timenow->tm_hour && timenow->tm_hour <= 23) {
+    if (19 <= timenow->tm_hour && timenow->tm_hour <= 23) {  // 期货夜盘登录时间段
       if (timenow->tm_wday == 5) {
         time_t tsecond = mktime(timenow) + 259200;
         strftime(buff, 10, "%Y%m%d", localtime(&tsecond));
@@ -43,8 +43,15 @@ void HandleState::GetTradeData(char *buff) {
         time_t tsecond = mktime(timenow) + 86400;
         strftime(buff, 10, "%Y%m%d", localtime(&tsecond));
       }
-    } else if (1 <= timenow->tm_hour && timenow->tm_hour <= 3 && timenow->tm_wday == 6) {
-      time_t tsecond = mktime(timenow) + 172800;
+    } else if (0 <= timenow->tm_hour && timenow->tm_hour <= 3) {  // 期货夜盘登出时间段
+      if (timenow->tm_wday == 6) {
+        time_t tsecond = mktime(timenow) + 172800;
+        strftime(buff, 10, "%Y%m%d", localtime(&tsecond));
+      } else {
+        strftime(buff, 10, "%Y%m%d", timenow);
+      }
+    } else if (4 <= timenow->tm_hour && timenow->tm_hour <= 5) {  // 加密货币登出时间段
+      time_t tsecond = mktime(timenow) - 86400;
       strftime(buff, 10, "%Y%m%d", localtime(&tsecond));
     } else {
       strftime(buff, 10, "%Y%m%d", timenow);

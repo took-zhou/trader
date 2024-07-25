@@ -161,12 +161,16 @@ bool GtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) {
 }
 
 bool GtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
-  GtpTransactionCostField field;
-  strcpy(field.exchange_id, ins_exch.exch.c_str());
-  strcpy(field.instrument_id, ins_exch.ins.c_str());
+  for (auto &item : gtp_trader_info_map) {
+    GtpTransactionCostField field;
+    strcpy(field.user_id, item.second.user_id.c_str());
+    strcpy(field.exchange_id, ins_exch.exch.c_str());
+    strcpy(field.instrument_id, ins_exch.ins.c_str());
+    int result = trader_api->QryTransactionCost(&field, 0);
+    INFO_LOG("ReqTransactionCost send result is [%d]", result);
+    break;
+  }
 
-  int result = trader_api->QryTransactionCost(&field, 0);
-  INFO_LOG("ReqTransactionCost send result is [%d]", result);
   return true;
 }
 

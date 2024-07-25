@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <string>
+#include "trader/domain/components/trader_time_state.h"
 
 struct HandleState {
  public:
@@ -15,8 +16,9 @@ struct HandleState {
   std::string &GetTraderDate();
 
  private:
-  std::string trder_date_ = "";
   void GetTradeData(char *);
+  std::string trder_date_ = "";
+  SubTimeState prev_sub_time_state_ = kInInitSts;
 };
 
 #endif
