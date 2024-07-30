@@ -16,7 +16,6 @@ struct HandleState {
   std::string &GetTraderDate();
 
  private:
-  void GetTradeData(char *);
   std::string trder_date_ = "";
   SubTimeState prev_sub_time_state_ = kInInitSts;
 };

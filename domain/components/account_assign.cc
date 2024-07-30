@@ -169,7 +169,7 @@ void AccountAssign::HandleTraderClose() {
   for (auto &item : account_info_map_) {
     item.second->ClearOpenBlackList();
     if (item.second->GetSessionId() != 0) {
-      snprintf(sql, sql_length_, "insert into account values ('%s', '%s', %f);", trader_ser.ROLE(HandleState).GetTraderDate().c_str(),
+      snprintf(sql, sql_length_, "insert into account values ('%s', '%s', %.15g);", trader_ser.ROLE(HandleState).GetTraderDate().c_str(),
                item.first.c_str(), item.second->GetBalance());
       if (sqlite3_exec(FdManage::GetInstance().GetTraderConn(), sql, NULL, NULL, &error_msg) != SQLITE_OK) {
         ERROR_LOG("Sql error %s.", error_msg);

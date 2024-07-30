@@ -17,10 +17,12 @@ void HandleState::HandleEvent(void) {
 }
 
 void HandleState::HandleStateChange(void) {
-  char date_buff[10];
-  GetTradeData(date_buff);
-  trder_date_ = date_buff;
   auto &trader_ser = TraderService::GetInstance();
+  char time_buff[24], date_buff[10];
+  auto timenow = trader_ser.ROLE(TraderTimeState).GetTimeNow();
+  strftime(time_buff, sizeof(time_buff), "%Y-%m-%d %H:%M:%S", timenow);
+  trader_ser.ROLE(PythonApi).GetTickNature().GetTradeDate().GetLoginDate(time_buff, date_buff);
+  trder_date_ = date_buff;
 
   if (trader_ser.ROLE(TraderTimeState).GetSubTimeState() == kInNightLogin ||
       trader_ser.ROLE(TraderTimeState).GetSubTimeState() == kInDayLogin) {
@@ -28,34 +30,6 @@ void HandleState::HandleStateChange(void) {
   } else if (trader_ser.ROLE(TraderTimeState).GetSubTimeState() == kInDayLogout) {
     trader_ser.ROLE(OrderLookup).HandleTraderClose();
     trader_ser.ROLE(AccountAssign).HandleTraderClose();
-  }
-}
-
-void HandleState::GetTradeData(char *buff) {
-  auto &market_ser = TraderService::GetInstance();
-  auto timenow = market_ser.ROLE(TraderTimeState).GetTimeNow();
-  if (timenow != nullptr) {
-    if (19 <= timenow->tm_hour && timenow->tm_hour <= 23) {  // 期货夜盘登录时间段
-      if (timenow->tm_wday == 5) {
-        time_t tsecond = mktime(timenow) + 259200;
-        strftime(buff, 10, "%Y%m%d", localtime(&tsecond));
-      } else {
-        time_t tsecond = mktime(timenow) + 86400;
-        strftime(buff, 10, "%Y%m%d", localtime(&tsecond));
-      }
-    } else if (0 <= timenow->tm_hour && timenow->tm_hour <= 3) {  // 期货夜盘登出时间段
-      if (timenow->tm_wday == 6) {
-        time_t tsecond = mktime(timenow) + 172800;
-        strftime(buff, 10, "%Y%m%d", localtime(&tsecond));
-      } else {
-        strftime(buff, 10, "%Y%m%d", timenow);
-      }
-    } else if (4 <= timenow->tm_hour && timenow->tm_hour <= 5) {  // 加密货币登出时间段
-      time_t tsecond = mktime(timenow) - 86400;
-      strftime(buff, 10, "%Y%m%d", localtime(&tsecond));
-    } else {
-      strftime(buff, 10, "%Y%m%d", timenow);
-    }
   }
 }
 

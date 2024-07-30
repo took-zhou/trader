@@ -14,11 +14,12 @@
 #include "trader/domain/components/order_allocate.h"
 #include "trader/domain/components/order_lookup.h"
 #include "trader/domain/components/order_manage.h"
+#include "trader/domain/components/python_api.h"
 #include "trader/domain/components/trader_time_state.h"
 
 enum TraderLoginState { kErrorState = 0, kLoginState = 1, kLogoutState = 2, kManualExit = 3, kLossConnection = 4 };
 
-struct TraderService : OrderManage, TraderTimeState, AccountAssign, OrderLookup, OrderAllocate, HandleState, Diagnostic {
+struct TraderService : OrderManage, TraderTimeState, AccountAssign, OrderLookup, OrderAllocate, HandleState, Diagnostic, PythonApi {
   TraderService();
   TraderService(const TraderService &) = delete;
   TraderService &operator=(const TraderService &) = delete;
@@ -34,6 +35,7 @@ struct TraderService : OrderManage, TraderTimeState, AccountAssign, OrderLookup,
   IMPL_ROLE(OrderAllocate);
   IMPL_ROLE(HandleState);
   IMPL_ROLE(Diagnostic);
+  IMPL_ROLE(PythonApi);
 
   bool UpdateLoginState(TraderLoginState state);
   TraderLoginState GetLoginState();

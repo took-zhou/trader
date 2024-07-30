@@ -197,7 +197,7 @@ bool XtpEvent::SendEmail(const utils::OrderContent &content) {
   char save_content[180];
   sprintf(subject_content, "%s transaction notice", content.instrument_id.c_str());
 
-  sprintf(save_content, "account: %s\ninstrument: %s\norder price: %f\ndirection: %s\ncomboffset: %s\norder volume: %d",
+  sprintf(save_content, "account: %s\ninstrument: %s\norder price: %.15g\ndirection: %s\ncomboffset: %s\norder volume: %d",
           content.user_id.c_str(), content.instrument_id.c_str(), content.limit_price, content.direction == 1 ? "BUY" : "SELL",
           content.comboffset == 1 ? "OPEN" : "CLOSE", content.total_volume);
 
