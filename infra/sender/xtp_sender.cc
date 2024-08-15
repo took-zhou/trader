@@ -14,6 +14,8 @@ XtpTraderSpi *XtpSender::trader_spi;
 
 XtpSender::XtpSender() { ; }
 
+XtpSender::~XtpSender(void) { Release(); }
+
 bool XtpSender::ReqUserLogin() {
   INFO_LOG("login time, is going to login.");
   bool ret = true;

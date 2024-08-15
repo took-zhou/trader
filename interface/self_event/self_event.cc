@@ -24,16 +24,9 @@ void SelfEvent::Handle(utils::ItpMsg &msg) {
 }
 
 void SelfEvent::RegMsgFun() {
-  int cnt = 0;
   msg_func_map_.clear();
   msg_func_map_["AccountStatusReq"] = [this](utils::ItpMsg &msg) { AccountStatusReqHandle(msg); };
   msg_func_map_["SendEmail"] = [this](utils::ItpMsg &msg) { SendEmailHandle(msg); };
-
-  for (auto &iter : msg_func_map_) {
-    INFO_LOG("msg_func_map_[%d] key is [%s]", cnt, iter.first.c_str());
-    cnt++;
-  }
-  return;
 }
 
 void SelfEvent::AccountStatusReqHandle(utils::ItpMsg &msg) {

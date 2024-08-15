@@ -13,9 +13,11 @@
 struct ProxySender {
  public:
   ProxySender();
+  ~ProxySender();
   bool SendMsg(utils::ItpMsg &msg);
 
  private:
+  std::string pub_ipaddport_;
   void *publisher_{nullptr};
   std::mutex m_lock_;
 };

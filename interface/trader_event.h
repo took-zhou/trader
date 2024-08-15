@@ -19,15 +19,17 @@
 #include "trader/interface/strategy_event/strategy_event.h"
 #include "trader/interface/xtp_event/xtp_event.h"
 
+#include <atomic>
 #include <functional>
 #include <map>
 #include <string>
+#include <thread>
 #include "common/self/dci/role.h"
-#include "common/self/utils.h"
 
 struct TraderEvent : BtpEvent, CtpEvent, OtpEvent, XtpEvent, FtpEvent, GtpEvent, StrategyEvent, MarketEvent, CtpviewEvent, SelfEvent {
  public:
   TraderEvent();
+  ~TraderEvent();
   TraderEvent(const TraderEvent &) = delete;
   TraderEvent &operator=(const TraderEvent &) = delete;
   static TraderEvent &GetInstance() {
@@ -49,7 +51,14 @@ struct TraderEvent : BtpEvent, CtpEvent, OtpEvent, XtpEvent, FtpEvent, GtpEvent,
   IMPL_ROLE(SelfEvent);
 
  private:
+  void OrderRecTask();
+  void QueryRecTask();
+  void ItpRecTask();
   std::map<std::string, std::function<void(utils::ItpMsg msg)>> session_func_map_;
+  std::thread order_rec_thread_;
+  std::thread query_rec_thread_;
+  std::thread itp_rec_thread_;
+  std::atomic<bool> running_{false};
 };
 
 #endif /* WORKSPACE_TRADER_INTERFACE_TRADEREVENT_H_ */

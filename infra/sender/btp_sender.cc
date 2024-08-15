@@ -13,6 +13,8 @@ BtpTraderSpi *BtpSender::trader_spi;
 
 BtpSender::BtpSender() { ; }
 
+BtpSender::~BtpSender(void) { Release(); }
+
 bool BtpSender::ReqUserLogin() {
   INFO_LOG("login time, is going to login.");
   bool ret = true;

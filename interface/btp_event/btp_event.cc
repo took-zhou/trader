@@ -21,7 +21,6 @@
 BtpEvent::BtpEvent() { RegMsgFun(); }
 
 void BtpEvent::RegMsgFun() {
-  int cnt = 0;
   msg_func_map_.clear();
   msg_func_map_["OnRtnOrder"] = [this](utils::ItpMsg &msg) { OnRtnOrderHandle(msg); };
   msg_func_map_["OnRtnTrade"] = [this](utils::ItpMsg &msg) { OnRtnTradeHandle(msg); };
@@ -30,11 +29,6 @@ void BtpEvent::RegMsgFun() {
   msg_func_map_["OnRspTradingAccount"] = [this](utils::ItpMsg &msg) { OnRspTradingAccountHandle(msg); };
   msg_func_map_["OnRspMarginRate"] = [this](utils::ItpMsg &msg) { OnRspMarginRateHandle(msg); };
   msg_func_map_["OnRspCommissionRate"] = [this](utils::ItpMsg &msg) { OnRspCommissionRateHandle(msg); };
-
-  for (auto &iter : msg_func_map_) {
-    INFO_LOG("msg_func_map_[%d] key is [%s]", cnt, iter.first.c_str());
-    cnt++;
-  }
 }
 
 void BtpEvent::Handle(utils::ItpMsg &msg) {

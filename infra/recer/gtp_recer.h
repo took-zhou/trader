@@ -16,6 +16,11 @@ class GtpTraderSpi : public gtp::api::TraderSpi {
   virtual void OnRspTradingAccount(const GtpAccountInfo *account_info);
   virtual void OnRspMarginRate(const GtpMarginInfo *margin_info);
   virtual void OnRspCommissionRate(const GtpCommissionInfo *commission_info);
+  virtual void OnFrontDisconnected(int reason);
+  bool GetFrontDisconnected(void);
+
+ private:
+  bool front_disconnected_ = false;
 };
 
 #endif /* WORKSPACE_TRADER_INFRA_GTPRECER_H_ */

@@ -23,6 +23,7 @@ struct XtpTraderInfo {
 struct XtpSender : SendApi {
  public:
   XtpSender(void);
+  ~XtpSender(void);
   bool ReqUserLogin();
   bool ReqUserLogout();
   bool InsertOrder(utils::OrderContent &content);

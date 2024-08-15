@@ -23,6 +23,7 @@ struct BtpTraderInfo {
 struct BtpSender : SendApi {
  public:
   BtpSender(void);
+  ~BtpSender(void);
   bool ReqUserLogin();
   bool ReqUserLogout();
   bool InsertOrder(utils::OrderContent &content);

@@ -23,6 +23,7 @@ struct GtpTraderInfo {
 struct GtpSender : SendApi {
  public:
   GtpSender(void);
+  ~GtpSender(void);
   bool ReqUserLogin();
   bool ReqUserLogout();
   bool InsertOrder(utils::OrderContent &content);

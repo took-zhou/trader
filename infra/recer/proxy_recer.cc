@@ -13,16 +13,22 @@
 ProxyRecer::ProxyRecer() {
   auto &zmq_base = BaseZmq::GetInstance();
   receiver_ = zmq_socket(zmq_base.GetContext(), ZMQ_SUB);
-  string sub_ipaddport = "tcp://" + zmq_base.GetLocalIp() + ":8100";
-  int result = zmq_connect(receiver_, sub_ipaddport.c_str());
+  zmq_setsockopt(receiver_, ZMQ_RCVTIMEO, &rec_timeout_, sizeof(rec_timeout_));
+  sub_ipaddport_ = "tcp://" + zmq_base.GetLocalIp() + ":8100";
+  int result = zmq_connect(receiver_, sub_ipaddport_.c_str());
   std::this_thread::sleep_for(std::chrono::seconds(1));
   if (result != 0) {
-    ERROR_LOG("receiver_ bind to %s failed", sub_ipaddport.c_str());
+    ERROR_LOG("receiver bind to %s failed", sub_ipaddport_.c_str());
   } else {
-    INFO_LOG("receiver_ bind to %s ok", sub_ipaddport.c_str());
+    INFO_LOG("receiver bind to %s ok", sub_ipaddport_.c_str());
   }
 
   SubscribeTopic();
+}
+
+ProxyRecer::~ProxyRecer() {
+  zmq_close(receiver_);
+  INFO_LOG("receiver unbind to %s ok", sub_ipaddport_.c_str());
 }
 
 bool ProxyRecer::IsTopicInSubTopics(const std::string &title) {

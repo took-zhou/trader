@@ -31,6 +31,7 @@ struct CtpApiSpiInfo {
 struct CtpSender : SendApi {
  public:
   CtpSender(void);
+  ~CtpSender(void);
   bool ReqUserLogin();
   bool ReqUserLogout();
   bool InsertOrder(utils::OrderContent &content);

@@ -45,6 +45,8 @@ CtpSender::CtpSender(void) {
   strcpy(default_order_field.IPAddress, ip_str.c_str());
 }
 
+CtpSender::~CtpSender(void) { Release(); }
+
 bool CtpSender::ReqUserLogin() {
   bool ret = true;
   if (!Init()) {

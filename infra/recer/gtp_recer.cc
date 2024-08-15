@@ -11,7 +11,7 @@
 #include "common/self/utils.h"
 #include "trader/infra/recer_sender.h"
 
-void GtpTraderSpi::OnRspUserLogin(const GtpLoginLogoutStruct *login_info) {}
+void GtpTraderSpi::OnRspUserLogin(const GtpLoginLogoutStruct *login_info) { front_disconnected_ = false; }
 
 void GtpTraderSpi::OnRspUserLogout(const GtpLoginLogoutStruct *logout_info) {}
 
@@ -151,3 +151,7 @@ void GtpTraderSpi::OnRspCommissionRate(const GtpCommissionInfo *commission_info)
     ERROR_LOG("commission_info is nullptr");
   }
 }
+
+void GtpTraderSpi::OnFrontDisconnected(int reason) { front_disconnected_ = true; }
+
+bool GtpTraderSpi::GetFrontDisconnected(void) { return front_disconnected_; }

@@ -19,6 +19,8 @@ static int32 ApiQueryCommissionRate(OesApiSessionInfoT *session, SMsgHeadT *head
 
 OtpSender::OtpSender() { ; }
 
+OtpSender::~OtpSender(void) { Release(); }
+
 bool OtpSender::ReqUserLogin() {
   INFO_LOG("login time, is going to login.");
   bool ret = true;

@@ -13,6 +13,8 @@ FtpTraderSpi *FtpSender::trader_spi;
 
 FtpSender::FtpSender() { ; }
 
+FtpSender::~FtpSender(void) { Release(); }
+
 bool FtpSender::ReqUserLogin() {
   INFO_LOG("login time, is going to login.");
   bool ret = true;

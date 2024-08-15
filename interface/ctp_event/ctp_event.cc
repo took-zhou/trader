@@ -21,7 +21,6 @@
 CtpEvent::CtpEvent() { RegMsgFun(); }
 
 void CtpEvent::RegMsgFun() {
-  int cnt = 0;
   msg_func_map_.clear();
   msg_func_map_["OnRtnOrder"] = [this](utils::ItpMsg &msg) { OnRtnOrderHandle(msg); };
   msg_func_map_["OnRtnTrade"] = [this](utils::ItpMsg &msg) { OnRtnTradeHandle(msg); };
@@ -32,11 +31,6 @@ void CtpEvent::RegMsgFun() {
   msg_func_map_["OnRspQryInstrumentMarginRate"] = [this](utils::ItpMsg &msg) { OnRspQryInstrumentMarginRateHandle(msg); };
   msg_func_map_["OnRspQryInstrumentCommissionRate"] = [this](utils::ItpMsg &msg) { OnRspQryInstrumentCommissionRateHandle(msg); };
   msg_func_map_["OnRspQryOptionInstrCommRate"] = [this](utils::ItpMsg &msg) { OnRspQryOptionInstrCommRateHandle(msg); };
-
-  for (auto &iter : msg_func_map_) {
-    INFO_LOG("msg_func_map_[%d] key is [%s]", cnt, iter.first.c_str());
-    cnt++;
-  }
 }
 
 void CtpEvent::Handle(utils::ItpMsg &msg) {

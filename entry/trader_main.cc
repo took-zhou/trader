@@ -5,6 +5,7 @@
  *      Author: Administrator
  */
 
+#include "trader/entry/trader_main.h"
 #include <signal.h>
 #include <chrono>
 #include <string>
@@ -16,18 +17,15 @@
 #include "common/self/utils.h"
 #include "trader/domain/components/fd_manage.h"
 #include "trader/domain/trader_service.h"
+#include "trader/infra/recer_sender.h"
 #include "trader/interface/trader_event.h"
 
 void SignalHandler(int signal) {
-  auto &trader_ser = TraderService::GetInstance();
-  trader_ser.UpdateLoginState(TraderLoginState::kManualExit);
-  FdManage::GetInstance().OpenThingsUp();
-  INFO_LOG("the process manually exits safely.");
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
-  exit(0);
+  auto &trader_main = TraderMain::GetInstance();
+  trader_main.Exit();
 }
 
-int main(int argc, char *agrv[]) {
+void TraderMain::Entry(int argc, char *argv[]) {
   pybind11::scoped_interpreter python;
   pybind11::gil_scoped_release release;
 
@@ -45,14 +43,37 @@ int main(int argc, char *agrv[]) {
   utils::CreatFolder(trader_data_path);
   profiler::FlameGraphWriter::Instance().SetFilePath(trader_data_path);
 
-  TraderService::GetInstance();
+  FdManage::GetInstance();
+  RecerSender::GetInstance();
+
+  auto &trader_ser = TraderService::GetInstance();
   INFO_LOG("trader server init ok");
+  trader_ser.Run();
 
   std::this_thread::sleep_for(std::chrono::seconds(5));
 
   auto &trader_event = TraderEvent::GetInstance();
   INFO_LOG("trader event init ok");
-
   trader_event.Run();
+
+  HoldOn();
+}
+
+void TraderMain::HoldOn(void) {
+  while (is_hold_on_) {
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+  }
+}
+
+void TraderMain::Exit(void) {
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  is_hold_on_ = false;
+}
+
+const std::string &TraderMain::GetTraderName() { return trader_name_; }
+
+int main(int argc, char *argv[]) {
+  auto &trader_main = TraderMain::GetInstance();
+  trader_main.Entry(argc, argv);
   return 0;
 }

@@ -13,6 +13,8 @@ GtpTraderSpi *GtpSender::trader_spi;
 
 GtpSender::GtpSender() { ; }
 
+GtpSender::~GtpSender(void) { Release(); }
+
 bool GtpSender::ReqUserLogin() {
   INFO_LOG("login time, is going to login.");
   bool ret = true;
@@ -174,4 +176,4 @@ bool GtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
   return true;
 }
 
-bool GtpSender::LossConnection() { return false; }
+bool GtpSender::LossConnection() { return trader_spi->GetFrontDisconnected(); }

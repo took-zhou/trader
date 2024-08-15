@@ -21,6 +21,7 @@ enum DiagnosticEventId {
 struct Diagnostic : Dem {
  public:
   Diagnostic();
+  ~Diagnostic();
 
   void MonitorStatus();
   void ClearStatus(DiagnosticEventId event_id);

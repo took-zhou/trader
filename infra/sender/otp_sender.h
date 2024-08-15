@@ -25,6 +25,7 @@ struct OtpTraderInfo {
 struct OtpSender : SendApi {
  public:
   OtpSender(void);
+  ~OtpSender(void);
   bool ReqUserLogin();
   bool ReqUserLogout();
   bool InsertOrder(utils::OrderContent &content);

@@ -26,6 +26,16 @@ FdManage::FdManage() {
   }
 }
 
+FdManage::~FdManage() {
+  char *error_msg = nullptr;
+  if (sqlite3_exec(trader_conn_, "COMMIT", 0, 0, &error_msg) != SQLITE_OK) {
+    ERROR_LOG("Sql error %s.", error_msg);
+    sqlite3_free(error_msg);
+  }
+  sqlite3_close(trader_conn_);
+  INFO_LOG("exec commit, close trader conn ok.");
+}
+
 void FdManage::OpenThingsUp(void) {
   char *error_msg = nullptr;
   if (sqlite3_exec(trader_conn_, "COMMIT", 0, 0, &error_msg) != SQLITE_OK) {

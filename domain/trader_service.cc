@@ -12,58 +12,68 @@
 #include "trader/domain/components/fd_manage.h"
 #include "trader/infra/recer_sender.h"
 
-TraderService::TraderService() {
+TraderService::TraderService() { InitDatabase(); };
+
+TraderService::~TraderService() {
+  UpdateLoginState(TraderLoginState::kManualExit);
+  INFO_LOG("set login state to manual exit.");
+  running_ = false;
+  if (fast_back_thread_.joinable()) {
+    fast_back_thread_.join();
+    INFO_LOG("trader fast back thread exit");
+  }
+  if (real_time_thread_.joinable()) {
+    real_time_thread_.join();
+    INFO_LOG("market real time thread exit");
+  }
+}
+
+void TraderService::Run() {
   auto &json_cfg = utils::JsonConfig::GetInstance();
   auto api_type = json_cfg.GetConfig("common", "ApiType");
 
-  InitDatabase();
+  running_ = true;
   if (api_type == "ftp") {
-    FastBackTask();
+    fast_back_thread_ = std::thread(&TraderService::FastBackTask, this);
+    INFO_LOG("trader fast back thread start");
   } else {
-    RealTimeTask();
+    real_time_thread_ = std::thread(&TraderService::RealTimeTask, this);
+    INFO_LOG("trader real time thread start");
   }
-};
+}
 
 void TraderService::FastBackTask() {
-  auto trader_period_task = [&]() {
-    uint32_t period_count = 0;
-    while (1) {
-      // trader_period_task begin
-      FastBackLoginLogoutChange();
-      if (period_count % 1 == 0) {
-        ROLE(AccountAssign).ReqAccountStatus();
-        FdManage::GetInstance().OpenThingsUp();
-      }
-      // trader_period_task end
-      std::this_thread::sleep_for(std::chrono::seconds(1));
-      period_count++;
+  uint32_t period_count = 0;
+  while (running_) {
+    // trader_period_task begin
+    FastBackLoginLogoutChange();
+    if (period_count % 1 == 0) {
+      ROLE(AccountAssign).ReqAccountStatus();
+      FdManage::GetInstance().OpenThingsUp();
     }
-  };
-  std::thread(trader_period_task).detach();
-  INFO_LOG("trader period task prepare ok");
+    // trader_period_task end
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    period_count++;
+  }
 }
 
 void TraderService::RealTimeTask() {
-  auto trader_period_task = [&]() {
-    uint32_t period_count = 0;
-    while (1) {
-      // trader_period_task begin
-      ROLE(TraderTimeState).Update();
-      ROLE(HandleState).HandleEvent();
-      if (period_count % 10 == 0) {
-        ROLE(Diagnostic).MonitorStatus();
-        ROLE(AccountAssign).ReqAccountStatus();
-        FdManage::GetInstance().OpenThingsUp();
-      }
-      RealTimeLoginLogoutChange();
-      // trader_period_task end
-
-      std::this_thread::sleep_for(std::chrono::seconds(1));
-      period_count++;
+  uint32_t period_count = 0;
+  while (running_) {
+    // trader_period_task begin
+    ROLE(TraderTimeState).Update();
+    ROLE(HandleState).HandleEvent();
+    if (period_count % 10 == 0) {
+      ROLE(Diagnostic).MonitorStatus();
+      ROLE(AccountAssign).ReqAccountStatus();
+      FdManage::GetInstance().OpenThingsUp();
     }
-  };
-  std::thread(trader_period_task).detach();
-  INFO_LOG("trader period task prepare ok");
+    RealTimeLoginLogoutChange();
+    // trader_period_task end
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    period_count++;
+  }
 }
 
 bool TraderService::RealTimeLoginLogoutChange() {

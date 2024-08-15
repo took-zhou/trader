@@ -7,6 +7,7 @@
 #include "trader/infra/base_zmq.h"
 #include <string>
 #include "common/extern/libzmq/include/zmq.h"
+#include "common/extern/log/log.h"
 #include "common/self/utils.h"
 
 BaseZmq::BaseZmq() {
@@ -14,8 +15,13 @@ BaseZmq::BaseZmq() {
   utils::GetLocalIp(local_ip_);
 }
 
+BaseZmq::~BaseZmq() {
+  zmq_ctx_destroy(context_);
+  INFO_LOG("zmq ctx destory ok.");
+}
+
 std::string &BaseZmq::GetLocalIp() { return local_ip_; }
 
-std::string &BaseZmq::GetInprocAddress() { return inproc_address_; }
+std::string &BaseZmq::GetInnerAddress() { return inner_address_; }
 
 void *BaseZmq::GetContext() { return context_; }

@@ -24,18 +24,12 @@
 OtpEvent::OtpEvent() { RegMsgFun(); }
 
 void OtpEvent::RegMsgFun() {
-  int cnt = 0;
   msg_func_map_.clear();
   msg_func_map_["OnBusinessReject"] = [this](utils::ItpMsg &msg) { OnBusinessRejectHandle(msg); };
   msg_func_map_["OnOrderReport"] = [this](utils::ItpMsg &msg) { OnOrderReportHandle(msg); };
   msg_func_map_["OnTradeReport"] = [this](utils::ItpMsg &msg) { OnTradeReportHandle(msg); };
   msg_func_map_["OnQueryCashAsset"] = [this](utils::ItpMsg &msg) { OnQueryCashAssetHandle(msg); };
   msg_func_map_["OnQueryCommissionRate"] = [this](utils::ItpMsg &msg) { OnQueryCommissionRateHandle(msg); };
-
-  for (auto &iter : msg_func_map_) {
-    INFO_LOG("msg_func_map_[%d] key is [%s]", cnt, iter.first.c_str());
-    cnt++;
-  }
 }
 
 void OtpEvent::Handle(utils::ItpMsg &msg) {

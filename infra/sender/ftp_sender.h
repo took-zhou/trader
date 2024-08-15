@@ -23,6 +23,7 @@ struct FtpTraderInfo {
 struct FtpSender : SendApi {
  public:
   FtpSender(void);
+  ~FtpSender(void);
   bool ReqUserLogin();
   bool ReqUserLogout();
   bool InsertOrder(utils::OrderContent &content);

@@ -14,15 +14,20 @@
 ProxySender::ProxySender() {
   publisher_ = zmq_socket(BaseZmq::GetInstance().GetContext(), ZMQ_PUB);
 
-  string pub_ipaddport = "tcp://" + BaseZmq::GetInstance().GetLocalIp() + ":5556";
-  int result = zmq_connect(publisher_, pub_ipaddport.c_str());
+  pub_ipaddport_ = "tcp://" + BaseZmq::GetInstance().GetLocalIp() + ":5556";
+  int result = zmq_connect(publisher_, pub_ipaddport_.c_str());
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
   if (result != 0) {
-    ERROR_LOG("publisher connect to %s failed", pub_ipaddport.c_str());
+    ERROR_LOG("publisher connect to %s failed", pub_ipaddport_.c_str());
   } else {
-    INFO_LOG("publisher connect to %s ok", pub_ipaddport.c_str());
+    INFO_LOG("publisher connect to %s ok", pub_ipaddport_.c_str());
   }
+}
+
+ProxySender::~ProxySender() {
+  zmq_close(publisher_);
+  INFO_LOG("publisher disconnect to %s ok", pub_ipaddport_.c_str());
 }
 
 bool ProxySender::SendMsg(utils::ItpMsg &msg) {

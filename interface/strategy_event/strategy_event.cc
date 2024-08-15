@@ -28,7 +28,6 @@ void StrategyEvent::Handle(utils::ItpMsg &msg) {
 }
 
 void StrategyEvent::RegMsgFun() {
-  int cnt = 0;
   msg_func_map_.clear();
   msg_func_map_["OrderInsertReq"] = [this](utils::ItpMsg &msg) { OrderInsertReqHandle(msg); };
   msg_func_map_["OrderCancelReq"] = [this](utils::ItpMsg &msg) { OrderCancelReqHandle(msg); };
@@ -36,12 +35,6 @@ void StrategyEvent::RegMsgFun() {
   msg_func_map_["ActiveSafetyRsp"] = [this](utils::ItpMsg &msg) { StrategyAliveRspHandle(msg); };
   msg_func_map_["CheckTraderAliveReq"] = [this](utils::ItpMsg &msg) { CheckTraderAliveReqHandle(msg); };
   msg_func_map_["OrderPositionReq"] = [this](utils::ItpMsg &msg) { OrderPositionReqHandle(msg); };
-
-  for (auto &iter : msg_func_map_) {
-    INFO_LOG("msg_func_map_[%d] key is [%s]", cnt, iter.first.c_str());
-    cnt++;
-  }
-  return;
 }
 
 void StrategyEvent::OrderCancelReqHandle(utils::ItpMsg &msg) {

@@ -13,9 +13,11 @@
 struct DirectSender {
  public:
   DirectSender();
+  ~DirectSender();
   bool SendMsg(utils::ItpMsg &msg);
 
  private:
+  std::string pub_ipaddport_;
   void *publisher_{nullptr};
 };
 #endif /* WORKSPACE_TRADER_INFRA_DIRECTSENDER_H_ */

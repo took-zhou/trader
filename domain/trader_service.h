@@ -7,6 +7,7 @@
 #ifndef WORKSPACE_TRADER_DOMAIN_TRADERSERVICE_H_
 #define WORKSPACE_TRADER_DOMAIN_TRADERSERVICE_H_
 
+#include <thread>
 #include "common/self/dci/role.h"
 #include "trader/domain/components/account_assign.h"
 #include "trader/domain/components/diagnostic.h"
@@ -21,6 +22,7 @@ enum TraderLoginState { kErrorState = 0, kLoginState = 1, kLogoutState = 2, kMan
 
 struct TraderService : OrderManage, TraderTimeState, AccountAssign, OrderLookup, OrderAllocate, HandleState, Diagnostic, PythonApi {
   TraderService();
+  ~TraderService();
   TraderService(const TraderService &) = delete;
   TraderService &operator=(const TraderService &) = delete;
   static TraderService &GetInstance() {
@@ -39,6 +41,7 @@ struct TraderService : OrderManage, TraderTimeState, AccountAssign, OrderLookup,
 
   bool UpdateLoginState(TraderLoginState state);
   TraderLoginState GetLoginState();
+  void Run();
 
  private:
   void FastBackTask();
@@ -53,6 +56,9 @@ struct TraderService : OrderManage, TraderTimeState, AccountAssign, OrderLookup,
   TraderLoginState login_state_ = kLogoutState;
   uint32_t try_login_heartbeat_ = 0;
   uint32_t try_login_count_ = 0;
+  std::thread fast_back_thread_;
+  std::thread real_time_thread_;
+  std::atomic<bool> running_{false};
 };
 
 #endif /* WORKSPACE_TRADER_DOMAIN_TRADERSERVICE_H_ */

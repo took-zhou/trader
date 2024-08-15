@@ -15,9 +15,11 @@
 struct InnerSender {
  public:
   InnerSender();
+  ~InnerSender();
   bool SendMsg(utils::ItpMsg &msg);
 
  private:
+  std::string inner_address_;
   void *pusher_{nullptr};
   std::mutex m_lock_;
 };
