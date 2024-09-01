@@ -379,7 +379,7 @@ bool CtpSender::BuildOrder(utils::OrderContent &content, CThostFtdcInputOrderFie
   strcpy(order.InstrumentID, content.instrument_id.c_str());
   strcpy(order.ExchangeID, content.exchange_id.c_str());
   order.LimitPrice = content.limit_price;
-  order.VolumeTotalOriginal = content.total_volume;
+  order.VolumeTotalOriginal = content.once_volume;
 
   if (content.comboffset == strategy_trader::OPEN) {
     order.CombOffsetFlag[0] = THOST_FTDC_OF_Open;

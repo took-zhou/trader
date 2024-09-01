@@ -49,6 +49,8 @@ void TraderService::FastBackTask() {
     FastBackLoginLogoutChange();
     if (period_count % 1 == 0) {
       ROLE(AccountAssign).ReqAccountStatus();
+    }
+    if (period_count % 2 == 1) {
       FdManage::GetInstance().OpenThingsUp();
     }
     // trader_period_task end
@@ -152,14 +154,14 @@ void TraderService::InitDatabase() {
   char *error_msg = nullptr;
   const char *sql = "create table if not exists service_info(compile_time TEXT, login_state INT);";
   if (sqlite3_exec(FdManage::GetInstance().GetTraderConn(), sql, NULL, NULL, &error_msg) != SQLITE_OK) {
-    ERROR_LOG("Sql error %s.", error_msg);
+    ERROR_LOG("sql error%s.", error_msg);
     sqlite3_free(error_msg);
     sqlite3_close(FdManage::GetInstance().GetTraderConn());
   }
 
   sql = "insert into service_info(compile_time, login_state) select '', 3 where not exists (select * from service_info);";
   if (sqlite3_exec(FdManage::GetInstance().GetTraderConn(), sql, NULL, NULL, &error_msg) != SQLITE_OK) {
-    ERROR_LOG("Sql error %s.", error_msg);
+    ERROR_LOG("sql error%s.", error_msg);
     sqlite3_free(error_msg);
     sqlite3_close(FdManage::GetInstance().GetTraderConn());
   }
@@ -172,7 +174,7 @@ bool TraderService::UpdateLoginState(TraderLoginState state) {
   login_state_ = state;
   sprintf(sql, "update service_info set compile_time='%s', login_state=%d;", utils::GetCompileTime().c_str(), login_state_);
   if (sqlite3_exec(FdManage::GetInstance().GetTraderConn(), sql, NULL, NULL, &error_msg) != SQLITE_OK) {
-    ERROR_LOG("Sql error %s.", error_msg);
+    ERROR_LOG("sql error%s.", error_msg);
     sqlite3_free(error_msg);
     sqlite3_close(FdManage::GetInstance().GetTraderConn());
   }

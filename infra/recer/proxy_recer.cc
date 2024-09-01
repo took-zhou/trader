@@ -47,6 +47,7 @@ void ProxyRecer::SubscribeTopic() {
   topic_list_.push_back("strategy_trader.TransactionCostReq");
   topic_list_.push_back("strategy_trader.CheckTraderAliveReq");
   topic_list_.push_back("strategy_trader.OrderPositionReq");
+  topic_list_.push_back("strategy_trader.GroupSizeReq");
   topic_list_.push_back("market_trader.QryInstrumentReq");
   topic_list_.push_back("market_trader.MarketStateReq");
   topic_list_.push_back("ctpview_trader.LoginControl");
@@ -55,6 +56,7 @@ void ProxyRecer::SubscribeTopic() {
   topic_list_.push_back("ctpview_trader.UpdatePara");
   topic_list_.push_back("ctpview_trader.ClearDiagnosticEvent");
   topic_list_.push_back("ctpview_trader.SendTestEmail");
+  topic_list_.push_back("ctpview_trader.UpdateAccountGroup");
   topic_list_.push_back("trader_trader.AccountStatusReq");
   topic_list_.push_back("trader_trader.SendEmail");
 

@@ -11,6 +11,7 @@
 #include "common/self/dci/role.h"
 #include "trader/domain/components/account_assign.h"
 #include "trader/domain/components/diagnostic.h"
+#include "trader/domain/components/group_assign.h"
 #include "trader/domain/components/handle_state.h"
 #include "trader/domain/components/order_allocate.h"
 #include "trader/domain/components/order_lookup.h"
@@ -20,7 +21,15 @@
 
 enum TraderLoginState { kErrorState = 0, kLoginState = 1, kLogoutState = 2, kManualExit = 3, kLossConnection = 4 };
 
-struct TraderService : OrderManage, TraderTimeState, AccountAssign, OrderLookup, OrderAllocate, HandleState, Diagnostic, PythonApi {
+struct TraderService : OrderManage,
+                       TraderTimeState,
+                       AccountAssign,
+                       GroupAssign,
+                       OrderLookup,
+                       OrderAllocate,
+                       HandleState,
+                       Diagnostic,
+                       PythonApi {
   TraderService();
   ~TraderService();
   TraderService(const TraderService &) = delete;
@@ -33,6 +42,7 @@ struct TraderService : OrderManage, TraderTimeState, AccountAssign, OrderLookup,
   IMPL_ROLE(OrderManage);
   IMPL_ROLE(TraderTimeState);
   IMPL_ROLE(AccountAssign);
+  IMPL_ROLE(GroupAssign);
   IMPL_ROLE(OrderLookup);
   IMPL_ROLE(OrderAllocate);
   IMPL_ROLE(HandleState);

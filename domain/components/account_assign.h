@@ -1,5 +1,5 @@
-#ifndef TRADER_ACCOUNT_STATUS_H
-#define TRADER_ACCOUNT_STATUS_H
+#ifndef TRADER_ACCOUNT_ASSIGN_H
+#define TRADER_ACCOUNT_ASSIGN_H
 #include <memory>
 #include <set>
 #include <string>
@@ -8,26 +8,25 @@
 
 struct AccountInfo {
  public:
-  AccountInfo(double balance, double available, uint64_t session_id, uint32_t order_ref)
-      : balance_(balance), available_(available), session_id_(session_id), order_ref_(order_ref) {}
+  AccountInfo(uint32_t order_ref) : order_ref_(order_ref) {}
   void SetBalance(double balance) { balance_ = balance; }
   void SetAvailable(double available) { available_ = available; }
   void SetSessionId(uint64_t session_id) { session_id_ = session_id; }
-  void InsertOpenBlacklist(const std::string &ins) { open_blacklist_.insert(ins); }
-  const std::set<std::string> &GetOpenBlacklist() { return open_blacklist_; };
-  void ClearOpenBlackList(void) { open_blacklist_.clear(); }
+  void InsertOpenBlackList(const std::string &ins) { open_black_list_.insert(ins); }
+  const std::set<std::string> &GetOpenBlackList() { return open_black_list_; };
+  void ClearOpenBlackList(void) { open_black_list_.clear(); }
   uint64_t GetSessionId(void) { return session_id_; }
   double GetBalance(void) { return balance_; }
   double GetAvailable(void) { return available_; }
-  bool NotOnBlacklist(const std::string &ins) { return open_blacklist_.find(ins) == open_blacklist_.end(); }
+  bool NotOnBlacklist(const std::string &ins) { return open_black_list_.find(ins) == open_black_list_.end(); }
   uint32_t IncOrderRef(void) { return ++order_ref_; };
 
  private:
-  double balance_;
-  double available_;
-  uint64_t session_id_;
+  double balance_ = 0;
+  double available_ = 0;
+  uint64_t session_id_ = 0;
   uint32_t order_ref_;
-  std::set<std::string> open_blacklist_;
+  std::set<std::string> open_black_list_;
 };
 
 struct AccountAssign {

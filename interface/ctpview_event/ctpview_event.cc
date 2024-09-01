@@ -24,6 +24,7 @@ void CtpviewEvent::RegMsgFun() {
   msg_func_map_["UpdatePara"] = [this](utils::ItpMsg &msg) { UpdateParaHandle(msg); };
   msg_func_map_["ClearDiagnosticEvent"] = [this](utils::ItpMsg &msg) { ClearDiagnosticEventHandle(msg); };
   msg_func_map_["SendTestEmail"] = [this](utils::ItpMsg &msg) { SendTestEmailHandle(msg); };
+  msg_func_map_["UpdateAccountGroup"] = [this](utils::ItpMsg &msg) { UpdateAccountGroupHandle(msg); };
 }
 
 void CtpviewEvent::Handle(utils::ItpMsg &msg) {
@@ -124,4 +125,17 @@ void CtpviewEvent::SendTestEmailHandle(utils::ItpMsg &msg) {
     // innerSenders专为itp设计，所以只能走ProxySender的接口
     recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(itp_msg);
   }
+}
+
+void CtpviewEvent::UpdateAccountGroupHandle(utils::ItpMsg &msg) {
+  ctpview_trader::message message;
+  message.ParseFromString(msg.pb_msg);
+  auto &account_group = message.update_account_group();
+
+  auto &trader_ser = TraderService::GetInstance();
+  std::set<std::string> accountlist;
+  for (auto &item : account_group.account()) {
+    accountlist.insert(item);
+  }
+  trader_ser.ROLE(GroupAssign).UpdateGroupInfo(account_group.group_id(), accountlist);
 }

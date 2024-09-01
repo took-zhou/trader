@@ -27,14 +27,14 @@ void AccountAssign::InitDatabase() {
   const char *sql =
       "create table if not exists account_info(user_id TEXT, session_id INT, balance REAL, available REAL, open_blacklist TEXT);";
   if (sqlite3_exec(FdManage::GetInstance().GetTraderConn(), sql, NULL, NULL, &error_msg) != SQLITE_OK) {
-    ERROR_LOG("Sql error %s.", error_msg);
+    ERROR_LOG("sql error%s.", error_msg);
     sqlite3_free(error_msg);
     sqlite3_close(FdManage::GetInstance().GetTraderConn());
   }
 
   sql = "create table if not exists account(date TEXT, user_id TEXT, balance REAL);";
   if (sqlite3_exec(FdManage::GetInstance().GetTraderConn(), sql, NULL, NULL, &error_msg) != SQLITE_OK) {
-    ERROR_LOG("Sql error %s.", error_msg);
+    ERROR_LOG("sql error%s.", error_msg);
     sqlite3_free(error_msg);
     sqlite3_close(FdManage::GetInstance().GetTraderConn());
   }
@@ -63,7 +63,7 @@ void AccountAssign::PrepareSqlSentence() {
 void AccountAssign::UpdateAccountStatus(double value1, double value2, uint64_t value3, const std::string &value4) {
   if (account_info_map_.find(value4) != account_info_map_.end()) {
     std::string black_list;
-    for (auto &item : account_info_map_[value4]->GetOpenBlacklist()) {
+    for (auto &item : account_info_map_[value4]->GetOpenBlackList()) {
       black_list += item;
       black_list += ".";
     }
@@ -89,7 +89,7 @@ void AccountAssign::UpdateOpenBlackList(const std::string &value, const std::str
   temp_key += ".";
   temp_key += index;
   if (account_info_map_.find(value) != account_info_map_.end()) {
-    account_info_map_[value]->InsertOpenBlacklist(temp_key);
+    account_info_map_[value]->InsertOpenBlackList(temp_key);
   }
 }
 
@@ -141,7 +141,7 @@ void AccountAssign::HandleTraderOpen() {
   }
   for (auto &item : add_account_list) {
     auto new_order_ref = static_cast<uint32_t>((--ref_base_ % 1000) * 1000000);
-    account_info_map_[item] = std::make_unique<AccountInfo>(0.0, 0.0, 0, new_order_ref);
+    account_info_map_[item] = std::make_unique<AccountInfo>(new_order_ref);
     sqlite3_reset(insert_account_);
     sqlite3_bind_text(insert_account_, 1, item.c_str(), item.size(), 0);
     sqlite3_bind_int64(insert_account_, 2, 0);
@@ -161,7 +161,7 @@ void AccountAssign::HandleTraderClose() {
   char *error_msg = nullptr;
   snprintf(sql, sql_length_, "delete from account where date = '%s';", trader_ser.ROLE(HandleState).GetTraderDate().c_str());
   if (sqlite3_exec(FdManage::GetInstance().GetTraderConn(), sql, NULL, NULL, &error_msg) != SQLITE_OK) {
-    ERROR_LOG("Sql error %s.", error_msg);
+    ERROR_LOG("sql error%s.", error_msg);
     sqlite3_free(error_msg);
     sqlite3_close(FdManage::GetInstance().GetTraderConn());
   }
@@ -172,7 +172,7 @@ void AccountAssign::HandleTraderClose() {
       snprintf(sql, sql_length_, "insert into account values ('%s', '%s', %.15g);", trader_ser.ROLE(HandleState).GetTraderDate().c_str(),
                item.first.c_str(), item.second->GetBalance());
       if (sqlite3_exec(FdManage::GetInstance().GetTraderConn(), sql, NULL, NULL, &error_msg) != SQLITE_OK) {
-        ERROR_LOG("Sql error %s.", error_msg);
+        ERROR_LOG("sql error%s.", error_msg);
         sqlite3_free(error_msg);
         sqlite3_close(FdManage::GetInstance().GetTraderConn());
       }

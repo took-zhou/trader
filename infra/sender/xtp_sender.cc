@@ -93,7 +93,7 @@ bool XtpSender::InsertOrder(utils::OrderContent &content) {
       orderinfo.market = XTP_MKT_SZ_A;
     }
     orderinfo.price = content.limit_price;
-    orderinfo.quantity = content.total_volume;
+    orderinfo.quantity = content.once_volume;
 
     if (content.comboffset == strategy_trader::OPEN) {
       orderinfo.side = XTP_SIDE_BUY;

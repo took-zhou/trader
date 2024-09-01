@@ -132,7 +132,7 @@ void FtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
     msg.session_name = "strategy_trader";
     msg.msg_name = "OrderInsertRsp";
 
-    if (content->total_volume == content->success_volume) {
+    if (content->once_volume == content->success_volume) {
       auto &json_cfg = utils::JsonConfig::GetInstance();
       auto send_email = json_cfg.GetConfig("trader", "SendOrderEmail").get<std::string>();
       if (send_email == "yes") {
@@ -161,9 +161,9 @@ void FtpEvent::OnRtnOrderInsertHandle(utils::ItpMsg &msg) {
     if (content->comboffset == strategy_trader::CombOffsetType::OPEN) {
       account_assign.UpdateOpenBlackList(content->user_id, content->instrument_id, content->index);
     } else if (content->comboffset == strategy_trader::CombOffsetType::CLOSE_YESTERDAY) {
-      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, -order_insert->volume, 0);
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, -content->once_volume, 0);
     } else if (content->comboffset == strategy_trader::CombOffsetType::CLOSE_TODAY) {
-      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, 0, -order_insert->volume);
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, 0, -content->once_volume);
     }
     order_manage.DelOrder(std::to_string(order_insert->order_ref));
 
@@ -178,8 +178,8 @@ void FtpEvent::OnRtnOrderInsertHandle(utils::ItpMsg &msg) {
       insert_rsp->set_reason(strategy_trader::FailedReason::No_Opened_Order);
     }
     auto *rsp_info = insert_rsp->mutable_info();
-    rsp_info->set_orderprice(order_insert->price);
-    rsp_info->set_ordervolume(order_insert->volume);
+    rsp_info->set_orderprice(content->limit_price);
+    rsp_info->set_ordervolume(content->once_volume);
 
     message.SerializeToString(&msg.pb_msg);
     msg.session_name = "strategy_trader";
@@ -293,7 +293,7 @@ bool FtpEvent::SendEmail(const utils::OrderContent &content) {
 
   sprintf(save_content, "account: %s\ninstrument: %s\norder price: %.15g\ndirection: %s\ncomboffset: %s\norder volume: %d",
           content.user_id.c_str(), content.instrument_id.c_str(), content.limit_price, content.direction == 1 ? "BUY" : "SELL",
-          content.comboffset == 1 ? "OPEN" : "CLOSE", content.total_volume);
+          content.comboffset == 1 ? "OPEN" : "CLOSE", content.once_volume);
 
   auto &recer_sender = RecerSender::GetInstance();
   ipc::message send_message;

@@ -20,7 +20,7 @@ FdManage::FdManage() {
 
   char *error_msg = nullptr;
   if (sqlite3_exec(trader_conn_, "BEGIN", 0, 0, &error_msg) != SQLITE_OK) {
-    ERROR_LOG("Sql error %s.", error_msg);
+    ERROR_LOG("sql error%s.", error_msg);
     sqlite3_free(error_msg);
     sqlite3_close(trader_conn_);
   }
@@ -29,7 +29,7 @@ FdManage::FdManage() {
 FdManage::~FdManage() {
   char *error_msg = nullptr;
   if (sqlite3_exec(trader_conn_, "COMMIT", 0, 0, &error_msg) != SQLITE_OK) {
-    ERROR_LOG("Sql error %s.", error_msg);
+    ERROR_LOG("sql error%s.", error_msg);
     sqlite3_free(error_msg);
   }
   sqlite3_close(trader_conn_);
@@ -39,12 +39,12 @@ FdManage::~FdManage() {
 void FdManage::OpenThingsUp(void) {
   char *error_msg = nullptr;
   if (sqlite3_exec(trader_conn_, "COMMIT", 0, 0, &error_msg) != SQLITE_OK) {
-    ERROR_LOG("Sql error %s.", error_msg);
+    ERROR_LOG("sql error%s.", error_msg);
     sqlite3_free(error_msg);
     sqlite3_close(trader_conn_);
   }
   if (sqlite3_exec(trader_conn_, "BEGIN", 0, 0, &error_msg) != SQLITE_OK) {
-    ERROR_LOG("Sql error %s.", error_msg);
+    ERROR_LOG("sql error%s.", error_msg);
     sqlite3_free(error_msg);
     sqlite3_close(trader_conn_);
   }

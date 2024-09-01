@@ -65,7 +65,7 @@ bool FtpSender::InsertOrder(utils::OrderContent &content) {
     FtpOrderInfoStruct orderinfo;
     orderinfo.order_ref = stoi(content.order_ref);
     orderinfo.price = content.limit_price;
-    orderinfo.volume = content.total_volume;
+    orderinfo.volume = content.once_volume;
     orderinfo.side = content.direction;
     orderinfo.comboffset = content.comboffset;
     strcpy(orderinfo.exchange_id, content.exchange_id.c_str());
@@ -87,7 +87,7 @@ bool FtpSender::CancelOrder(utils::OrderContent &content) {
     FtpOrderInfoStruct orderinfo;
     orderinfo.order_ref = stoi(content.order_ref);
     orderinfo.price = content.limit_price;
-    orderinfo.volume = content.total_volume - content.success_volume - content.fail_volume;
+    orderinfo.volume = content.once_volume - content.success_volume - content.fail_volume;
     strcpy(orderinfo.exchange_id, content.exchange_id.c_str());
     strcpy(orderinfo.instrument_id, content.instrument_id.c_str());
     strcpy(orderinfo.user_id, content.user_id.c_str());

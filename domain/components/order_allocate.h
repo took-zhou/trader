@@ -13,13 +13,14 @@ struct OrderAllocate {
   std::vector<std::shared_ptr<utils::OrderContent>> &GetOderList();
 
  private:
+  bool BuildOrderContent(utils::OrderContent &content);
+  bool OpenOrder(utils::OrderContent &content);
+  bool CycleOpenOrder(const std::string &group_id, utils::OrderContent &content);
+  bool ShareOpenOrder(const std::string &group_id, utils::OrderContent &content);
+  bool CloseOrder(utils::OrderContent &content);
+  bool SequenceCloseOrder(const std::string &group_id, utils::OrderContent &content);
   std::vector<std::shared_ptr<utils::OrderContent>> order_list_;
   const double minimum_account_available_ = 100.0;
-  bool BuildCycleOrderContent(utils::OrderContent &content);
-  bool BuildShareOrderContent(utils::OrderContent &content);
-  bool CycleOpenOrder(utils::OrderContent &content);
-  bool ShareOpenOrder(utils::OrderContent &content);
-  bool CloseOrder(utils::OrderContent &content);
 };
 
 #endif

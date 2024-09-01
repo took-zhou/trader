@@ -130,7 +130,7 @@ void XtpEvent::OnTradeEventHandle(utils::ItpMsg &msg) {
     msg.session_name = "strategy_trader";
     msg.msg_name = "OrderInsertRsp";
 
-    if (content->total_volume == content->success_volume) {
+    if (content->once_volume == content->success_volume) {
       auto &json_cfg = utils::JsonConfig::GetInstance();
       auto send_email = json_cfg.GetConfig("trader", "SendOrderEmail").get<std::string>();
       if (send_email == "yes") {
@@ -193,7 +193,7 @@ bool XtpEvent::SendEmail(const utils::OrderContent &content) {
 
   sprintf(save_content, "account: %s\ninstrument: %s\norder price: %.15g\ndirection: %s\ncomboffset: %s\norder volume: %d",
           content.user_id.c_str(), content.instrument_id.c_str(), content.limit_price, content.direction == 1 ? "BUY" : "SELL",
-          content.comboffset == 1 ? "OPEN" : "CLOSE", content.total_volume);
+          content.comboffset == 1 ? "OPEN" : "CLOSE", content.once_volume);
 
   auto &recer_sender = RecerSender::GetInstance();
   ipc::message send_message;

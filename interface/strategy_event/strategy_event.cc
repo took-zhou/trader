@@ -35,6 +35,7 @@ void StrategyEvent::RegMsgFun() {
   msg_func_map_["ActiveSafetyRsp"] = [this](utils::ItpMsg &msg) { StrategyAliveRspHandle(msg); };
   msg_func_map_["CheckTraderAliveReq"] = [this](utils::ItpMsg &msg) { CheckTraderAliveReqHandle(msg); };
   msg_func_map_["OrderPositionReq"] = [this](utils::ItpMsg &msg) { OrderPositionReqHandle(msg); };
+  msg_func_map_["GroupSizeReq"] = [this](utils::ItpMsg &msg) { GroupSizeReqHandle(msg); };
 }
 
 void StrategyEvent::OrderCancelReqHandle(utils::ItpMsg &msg) {
@@ -60,7 +61,7 @@ void StrategyEvent::OrderCancelReqHandle(utils::ItpMsg &msg) {
   if (pos != trader_ser.ROLE(OrderLookup).GetOrderIndexMap().end()) {
     for (auto &item : pos->second) {
       auto content = trader_ser.ROLE(OrderManage).GetOrder(item.second->GetOrderRef());
-      if (content != nullptr && content->total_volume > (content->success_volume + content->fail_volume)) {
+      if (content != nullptr && content->once_volume > (content->success_volume + content->fail_volume)) {
         content->active_cancle_indication = true;
         auto &recer_sender = RecerSender::GetInstance();
         recer_sender.ROLE(Sender).ROLE(ItpSender).CancelOrder(*content);
@@ -90,8 +91,9 @@ void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {
   content.index = order_insert_req.index();
   content.exchange_id = order_insert_req.order().exchangeid();
   content.instrument_id = order_insert_req.order().instrument();
-  content.total_volume = order_insert_req.order().volume_total_original();
-  content.limit_price = order_insert_req.order().limitprice();
+  content.once_volume = order_insert_req.order().once_volume();
+  content.hold_volume = order_insert_req.order().hold_volume();
+  content.limit_price = order_insert_req.order().limit_price();
   content.direction = order_insert_req.order().direction();
   content.comboffset = order_insert_req.order().comb_offset_flag();
   content.order_type = order_insert_req.order().order_type();
@@ -105,7 +107,7 @@ void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {
     insert_rsp->set_reason(strategy_trader::FailedReason::Account_Assign_Error);
     auto *rsp_info = insert_rsp->mutable_info();
     rsp_info->set_orderprice(content.limit_price);
-    rsp_info->set_ordervolume(content.total_volume);
+    rsp_info->set_ordervolume(content.once_volume);
 
     message.SerializeToString(&msg.pb_msg);
     msg.session_name = "strategy_trader";
@@ -192,4 +194,26 @@ void StrategyEvent::OrderPositionReqHandle(utils::ItpMsg &msg) {
   send_msg.session_name = "strategy_trader";
   send_msg.msg_name = "OrderPositionRsp";
   RecerSender::GetInstance().ROLE(Sender).ROLE(ProxySender).SendMsg(send_msg);
+}
+
+void StrategyEvent::GroupSizeReqHandle(utils::ItpMsg &msg) {
+  strategy_trader::message message;
+  message.ParseFromString(msg.pb_msg);
+  auto &bitmap_length_req = message.group_size_req();
+
+  auto &trader_ser = TraderService::GetInstance();
+  auto &group_assign = trader_ser.ROLE(GroupAssign);
+  if (bitmap_length_req.size_req()) {
+    auto group_size = group_assign.GetAccoutGroupMap().size();
+
+    strategy_trader::message message2;
+    auto *group_size_rsp = message2.mutable_group_size_rsp();
+    group_size_rsp->set_size_rsp(group_size);
+
+    utils::ItpMsg send_msg;
+    message2.SerializeToString(&send_msg.pb_msg);
+    send_msg.session_name = "strategy_trader";
+    send_msg.msg_name = "GroupBitmapLengthRsp";
+    RecerSender::GetInstance().ROLE(Sender).ROLE(ProxySender).SendMsg(send_msg);
+  }
 }

@@ -60,7 +60,7 @@ bool OtpSender::InsertOrder(utils::OrderContent &content) {
     }
     ord_req.ordType = OES_ORD_TYPE_LMT;
     ord_req.bsType = content.direction;
-    ord_req.ordQty = content.total_volume;
+    ord_req.ordQty = content.once_volume;
     ord_req.ordPrice = content.limit_price * 0.0001;
     strcpy(ord_req.securityId, content.instrument_id.c_str());
     if (OesAsyncApi_SendOrderReq(pos->second.ord_channel, &ord_req) < 0) {

@@ -4,7 +4,6 @@
 #include <iostream>
 #include <memory>
 #include "common/extern/log/log.h"
-
 #include "trader/domain/components/fd_manage.h"
 
 OrderLookup::OrderLookup() {
@@ -50,7 +49,7 @@ void OrderLookup::RestoreFromSqlite3() {
 
   const char *sql = "select * from order_lookup;";
   if (sqlite3_get_table(FdManage::GetInstance().GetTraderConn(), sql, &result, &nrow, &ncolumn, &error_msg) != SQLITE_OK) {
-    ERROR_LOG("Sql error %s.", error_msg);
+    ERROR_LOG("sql error%s.", error_msg);
     sqlite3_free(error_msg);
     sqlite3_close(FdManage::GetInstance().GetTraderConn());
   }
@@ -68,7 +67,7 @@ void OrderLookup::InitDatabase() {
       "create table if not exists order_lookup(order_index TEXT, user_id TEXT, order_ref TEXT, yesterday_volume INT, "
       "today_volume INT);";
   if (sqlite3_exec(FdManage::GetInstance().GetTraderConn(), sql, NULL, NULL, &error_msg) != SQLITE_OK) {
-    ERROR_LOG("Sql error %s.", error_msg);
+    ERROR_LOG("sql error%s.", error_msg);
     sqlite3_free(error_msg);
     sqlite3_close(FdManage::GetInstance().GetTraderConn());
   }

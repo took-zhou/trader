@@ -24,6 +24,7 @@ struct StrategyEvent {
   void StrategyAliveRspHandle(utils::ItpMsg &msg);
   void CheckTraderAliveReqHandle(utils::ItpMsg &msg);
   void OrderPositionReqHandle(utils::ItpMsg &msg);
+  void GroupSizeReqHandle(utils::ItpMsg &msg);
 
  private:
   std::map<std::string, std::function<void(utils::ItpMsg &msg)>> msg_func_map_;
