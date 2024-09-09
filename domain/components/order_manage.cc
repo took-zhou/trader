@@ -14,12 +14,12 @@
 
 OrderManage::OrderManage() { ; }
 
-utils::OrderContent *OrderManage::GetOrder(const std::string &order_key) {
+const std::shared_ptr<utils::OrderContent> &OrderManage::GetOrder(const std::string &order_key) {
   auto iter = order_map_.find(order_key);
   if (iter != order_map_.end()) {
-    return iter->second.get();
+    return iter->second;
   } else {
-    return nullptr;
+    return empty_;
   }
 }
 

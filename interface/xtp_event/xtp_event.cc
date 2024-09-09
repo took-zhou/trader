@@ -107,11 +107,14 @@ void XtpEvent::OnTradeEventHandle(utils::ItpMsg &msg) {
   auto content = order_manage.GetOrder(std::to_string(trade_report->order_client_id));
   if (content != nullptr) {
     if (content->comboffset == strategy_trader::CombOffsetType::OPEN) {
-      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, 0, trade_report->quantity);
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->group_id, content->user_id, 0,
+                                      trade_report->quantity);
     } else if (content->comboffset == strategy_trader::CombOffsetType::CLOSE_TODAY) {
-      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, 0, -trade_report->quantity);
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->group_id, content->user_id, 0,
+                                      -trade_report->quantity);
     } else if (content->comboffset == strategy_trader::CombOffsetType::CLOSE_YESTERDAY) {
-      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, -trade_report->quantity, 0);
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->group_id, content->user_id, -trade_report->quantity,
+                                      0);
     }
 
     content->success_volume += trade_report->quantity;

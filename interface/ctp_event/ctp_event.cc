@@ -111,11 +111,11 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
   auto content = order_manage.GetOrder(trade->OrderRef);
   if (content != nullptr) {
     if (content->comboffset == strategy_trader::CombOffsetType::OPEN) {
-      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, 0, trade->Volume);
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->group_id, content->user_id, 0, trade->Volume);
     } else if (content->comboffset == strategy_trader::CombOffsetType::CLOSE_TODAY) {
-      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, 0, -trade->Volume);
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->group_id, content->user_id, 0, -trade->Volume);
     } else if (content->comboffset == strategy_trader::CombOffsetType::CLOSE_YESTERDAY) {
-      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, -trade->Volume, 0);
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->group_id, content->user_id, -trade->Volume, 0);
     }
 
     content->success_volume += trade->Volume;
@@ -165,11 +165,12 @@ void CtpEvent::OnRspOrderInsertHandle(utils::ItpMsg &msg) {
     if (content->comboffset == strategy_trader::CombOffsetType::OPEN) {
       account_assign.UpdateOpenBlackList(content->user_id, content->instrument_id, content->index);
     } else if (content->comboffset == strategy_trader::CombOffsetType::CLOSE_YESTERDAY) {
-      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, -content->once_volume, 0);
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->group_id, content->index, content->user_id, -content->once_volume,
+                                      0);
     } else if (content->comboffset == strategy_trader::CombOffsetType::CLOSE_TODAY) {
-      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->user_id, 0, -content->once_volume);
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->group_id, content->index, content->user_id, 0,
+                                      -content->once_volume);
     }
-    order_manage.DelOrder(order_insert_rsp->OrderRef);
 
     strategy_trader::message message;
     auto *insert_rsp = message.mutable_order_insert_rsp();
@@ -192,6 +193,7 @@ void CtpEvent::OnRspOrderInsertHandle(utils::ItpMsg &msg) {
     msg.msg_name = "OrderInsertRsp";
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
+    order_manage.DelOrder(order_insert_rsp->OrderRef);
     INFO_LOG("the order be canceled, orderRef: %s.", order_insert_rsp->OrderRef);
   } else {
     ERROR_LOG("not find order ref: %s", order_insert_rsp->OrderRef);

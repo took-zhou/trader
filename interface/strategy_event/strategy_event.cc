@@ -164,6 +164,10 @@ void StrategyEvent::OrderPositionReqHandle(utils::ItpMsg &msg) {
   auto &trader_ser = TraderService::GetInstance();
   auto &account_assign = trader_ser.ROLE(AccountAssign);
   auto &order_lookup = trader_ser.ROLE(OrderLookup);
+  auto &group_assign = trader_ser.ROLE(GroupAssign);
+  auto &order_index_map = order_lookup.GetOrderIndexMap();
+  auto &account_info_map = account_assign.GetAccountInfoMap();
+  auto &group_assign_map = group_assign.GetAccoutGroupMap();
   auto &position_req = message.position_req();
 
   std::string temp_key;
@@ -172,14 +176,19 @@ void StrategyEvent::OrderPositionReqHandle(utils::ItpMsg &msg) {
   temp_key += position_req.index();
 
   uint32_t volume = 0;
-  auto lookup_pos = order_lookup.GetOrderIndexMap().find(temp_key);
-  if (lookup_pos != order_lookup.GetOrderIndexMap().end()) {
-    for (auto &item : lookup_pos->second) {
-      auto account_pos = account_assign.GetAccountInfoMap().find(item.first);
-      if (account_pos != account_assign.GetAccountInfoMap().end()) {
-        volume += item.second->GetYesterdayVolume();
-        volume += item.second->GetTodayVolume();
+  auto pos = order_index_map.find(temp_key);
+  if (pos != order_index_map.end()) {
+    for (auto &item : pos->second) {
+      auto temp_user_split = utils::SplitString(item.first, ".");
+      if (temp_user_split.size() != 2) {
+        continue;
       }
+      if (group_assign_map.find(temp_user_split[0]) == group_assign_map.end() ||
+          account_info_map.find(temp_user_split[1]) == account_info_map.end()) {
+        continue;
+      }
+      volume += item.second->GetYesterdayVolume();
+      volume += item.second->GetTodayVolume();
     }
   }
 
@@ -199,11 +208,11 @@ void StrategyEvent::OrderPositionReqHandle(utils::ItpMsg &msg) {
 void StrategyEvent::GroupSizeReqHandle(utils::ItpMsg &msg) {
   strategy_trader::message message;
   message.ParseFromString(msg.pb_msg);
-  auto &bitmap_length_req = message.group_size_req();
+  auto &group_size_req = message.group_size_req();
 
   auto &trader_ser = TraderService::GetInstance();
   auto &group_assign = trader_ser.ROLE(GroupAssign);
-  if (bitmap_length_req.size_req()) {
+  if (group_size_req.size_req()) {
     auto group_size = group_assign.GetAccoutGroupMap().size();
 
     strategy_trader::message message2;
@@ -213,7 +222,7 @@ void StrategyEvent::GroupSizeReqHandle(utils::ItpMsg &msg) {
     utils::ItpMsg send_msg;
     message2.SerializeToString(&send_msg.pb_msg);
     send_msg.session_name = "strategy_trader";
-    send_msg.msg_name = "GroupBitmapLengthRsp";
+    send_msg.msg_name = "GroupSizeRsp";
     RecerSender::GetInstance().ROLE(Sender).ROLE(ProxySender).SendMsg(send_msg);
   }
 }

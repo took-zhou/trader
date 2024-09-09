@@ -49,8 +49,6 @@ void TraderService::FastBackTask() {
     FastBackLoginLogoutChange();
     if (period_count % 1 == 0) {
       ROLE(AccountAssign).ReqAccountStatus();
-    }
-    if (period_count % 2 == 1) {
       FdManage::GetInstance().OpenThingsUp();
     }
     // trader_period_task end
@@ -65,9 +63,11 @@ void TraderService::RealTimeTask() {
     // trader_period_task begin
     ROLE(TraderTimeState).Update();
     ROLE(HandleState).HandleEvent();
-    if (period_count % 10 == 0) {
+    if (period_count % 10 == 9) {
       ROLE(Diagnostic).MonitorStatus();
       ROLE(AccountAssign).ReqAccountStatus();
+    }
+    if (period_count % 2 == 1) {
       FdManage::GetInstance().OpenThingsUp();
     }
     RealTimeLoginLogoutChange();

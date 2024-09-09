@@ -98,56 +98,64 @@ bool OrderLookup::DelOrderIndex(const std::string &ins, const std::string &index
   return true;
 }
 
-bool OrderLookup::UpdateOrderIndex(const std::string &ins, const std::string &index, const std::string &user_id,
-                                   const std::string &order_ref) {
-  std::string temp_key;
+bool OrderLookup::UpdateOrderIndex(const std::string &ins, const std::string &index, const std::string &group_id,
+                                   const std::string &user_id, const std::string &order_ref) {
+  std::string temp_key, temp_user;
   temp_key += ins;
   temp_key += ".";
   temp_key += index;
 
+  temp_user += group_id;
+  temp_user += ".";
+  temp_user += user_id;
+
   if (order_index_map_.find(temp_key) != order_index_map_.end() &&
-      order_index_map_[temp_key].find(user_id) != order_index_map_[temp_key].end()) {
+      order_index_map_[temp_key].find(temp_user) != order_index_map_[temp_key].end()) {
     sqlite3_reset(update_order_ref_);
     sqlite3_bind_text(update_order_ref_, 1, order_ref.c_str(), order_ref.size(), 0);
     sqlite3_bind_text(update_order_ref_, 2, temp_key.c_str(), temp_key.size(), 0);
-    sqlite3_bind_text(update_order_ref_, 3, user_id.c_str(), user_id.size(), 0);
+    sqlite3_bind_text(update_order_ref_, 3, temp_user.c_str(), temp_user.size(), 0);
     if (sqlite3_step(update_order_ref_) != SQLITE_DONE) {
       ERROR_LOG("do sql sentence error.");
       sqlite3_close(FdManage::GetInstance().GetTraderConn());
     }
-    order_index_map_[temp_key][user_id]->SetOrderRef(order_ref);
+    order_index_map_[temp_key][temp_user]->SetOrderRef(order_ref);
   } else {
     sqlite3_reset(insert_lookup_);
     sqlite3_bind_text(insert_lookup_, 1, temp_key.c_str(), temp_key.size(), 0);
-    sqlite3_bind_text(insert_lookup_, 2, user_id.c_str(), user_id.size(), 0);
+    sqlite3_bind_text(insert_lookup_, 2, temp_user.c_str(), temp_user.size(), 0);
     sqlite3_bind_text(insert_lookup_, 3, order_ref.c_str(), order_ref.size(), 0);
     if (sqlite3_step(insert_lookup_) != SQLITE_DONE) {
       ERROR_LOG("do sql sentence error.");
       sqlite3_close(FdManage::GetInstance().GetTraderConn());
     }
     OrderPara order_para = {order_ref, 0, 0};
-    order_index_map_[temp_key][user_id] = std::make_unique<OrderPara>(order_para);
+    order_index_map_[temp_key][temp_user] = std::make_unique<OrderPara>(order_para);
   }
 
   return true;
 }
 
-void OrderLookup::UpdateOpenInterest(const std::string &ins, const std::string &index, const std::string &user_id, int32_t yesterday_volume,
-                                     int32_t today_volume) {
-  std::string temp_key;
+void OrderLookup::UpdateOpenInterest(const std::string &ins, const std::string &index, const std::string &group_id,
+                                     const std::string &user_id, int32_t yesterday_volume, int32_t today_volume) {
+  std::string temp_key, temp_user;
   temp_key += ins;
   temp_key += ".";
   temp_key += index;
 
+  temp_user += group_id;
+  temp_user += ".";
+  temp_user += user_id;
+
   if (order_index_map_.find(temp_key) != order_index_map_.end() &&
-      order_index_map_[temp_key].find(user_id) != order_index_map_[temp_key].end()) {
-    order_index_map_[temp_key][user_id]->AddYesterdayVolume(yesterday_volume);
-    order_index_map_[temp_key][user_id]->AddTodayVolume(today_volume);
+      order_index_map_[temp_key].find(temp_user) != order_index_map_[temp_key].end()) {
+    order_index_map_[temp_key][temp_user]->AddYesterdayVolume(yesterday_volume);
+    order_index_map_[temp_key][temp_user]->AddTodayVolume(today_volume);
     sqlite3_reset(update_position_);
-    sqlite3_bind_int(update_position_, 1, order_index_map_[temp_key][user_id]->GetYesterdayVolume());
-    sqlite3_bind_int(update_position_, 2, order_index_map_[temp_key][user_id]->GetTodayVolume());
+    sqlite3_bind_int(update_position_, 1, order_index_map_[temp_key][temp_user]->GetYesterdayVolume());
+    sqlite3_bind_int(update_position_, 2, order_index_map_[temp_key][temp_user]->GetTodayVolume());
     sqlite3_bind_text(update_position_, 3, temp_key.c_str(), temp_key.size(), 0);
-    sqlite3_bind_text(update_position_, 4, user_id.c_str(), user_id.size(), 0);
+    sqlite3_bind_text(update_position_, 4, temp_user.c_str(), temp_user.size(), 0);
     if (sqlite3_step(update_position_) != SQLITE_DONE) {
       ERROR_LOG("do sql sentence error.");
       sqlite3_close(FdManage::GetInstance().GetTraderConn());

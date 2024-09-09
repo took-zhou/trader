@@ -32,9 +32,10 @@ struct OrderLookup {
   OrderLookup();
   ~OrderLookup();
 
-  bool UpdateOrderIndex(const std::string &ins, const std::string &index, const std::string &user_id, const std::string &order_ref);
-  void UpdateOpenInterest(const std::string &ins, const std::string &index, const std::string &user_id, int32_t yesterday_volume,
-                          int32_t today_volume);
+  bool UpdateOrderIndex(const std::string &ins, const std::string &index, const std::string &group_id, const std::string &user_id,
+                        const std::string &order_ref);
+  void UpdateOpenInterest(const std::string &ins, const std::string &index, const std::string &group_id, const std::string &user_id,
+                          int32_t yesterday_volume, int32_t today_volume);
   bool DelOrderIndex(const std::string &ins, const std::string &index);
   void HandleTraderClose();
   std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<OrderPara>>> &GetOrderIndexMap();

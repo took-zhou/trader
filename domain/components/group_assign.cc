@@ -59,10 +59,17 @@ void GroupAssign::RestoreFromSqlite3() {
 }
 
 void GroupAssign::UpdateGroupInfo(const std::string &value, const std::set<std::string> &account_list) {
-  account_group_map_[value] = account_list;
+  if (account_list.size() == 0) {
+    auto pos = account_group_map_.find(value);
+    if (pos != account_group_map_.end()) {
+      account_group_map_.erase(pos);
+    }
+  } else {
+    account_group_map_[value] = account_list;
+  }
 
   sqlite3_reset(delete_account_);
-  sqlite3_bind_text(delete_account_, 2, value.c_str(), value.size(), 0);
+  sqlite3_bind_text(delete_account_, 1, value.c_str(), value.size(), 0);
   if (sqlite3_step(delete_account_) != SQLITE_DONE) {
     ERROR_LOG("do sql sentence error.");
     sqlite3_close(FdManage::GetInstance().GetTraderConn());

@@ -19,7 +19,7 @@ void OrderAllocate::UpdateOrderList(utils::OrderContent &content) {
 
   for (auto &item : order_list_) {
     trader_ser.ROLE(OrderManage).BuildOrder(item->order_ref, item);
-    trader_ser.ROLE(OrderLookup).UpdateOrderIndex(item->instrument_id, item->index, item->user_id, item->order_ref);
+    trader_ser.ROLE(OrderLookup).UpdateOrderIndex(item->instrument_id, item->index, item->group_id, item->user_id, item->order_ref);
     INFO_LOG("%s %s %s %d %d", item->instrument_id.c_str(), item->index.c_str(), item->order_ref.c_str(), item->comboffset,
              item->once_volume);
   }
@@ -60,9 +60,14 @@ bool OrderAllocate::OpenOrder(utils::OrderContent &content) {
   for (auto &item : group_assign.GetAccoutGroupMap()) {
     uint32_t exist_volume = 0;
     for (auto &account : item.second) {
+      std::string temp_user;
+      temp_user += item.first;
+      temp_user += ".";
+      temp_user += account;
+
       if (order_index_map.find(temp_key) != order_index_map.end() &&
-          order_index_map[temp_key].find(account) != order_index_map[temp_key].end()) {
-        auto &order_index = order_index_map[temp_key][account];
+          order_index_map[temp_key].find(temp_user) != order_index_map[temp_key].end()) {
+        auto &order_index = order_index_map[temp_key][temp_user];
         exist_volume += order_index->GetTodayVolume();
         exist_volume += order_index->GetYesterdayVolume();
       }
@@ -84,8 +89,6 @@ bool OrderAllocate::OpenOrder(utils::OrderContent &content) {
     } else if (assign_mode == "share") {
       ShareOpenOrder(item.first, content);
     }
-
-    INFO_LOG("%d %d %s %d %d", content.hold_volume, exist_volume, item.first.c_str(), once_volume, content.once_volume);
 
     if (once_volume <= 0) {
       break;
@@ -119,6 +122,7 @@ bool OrderAllocate::CycleOpenOrder(const std::string &group_id, utils::OrderCont
       content.session_id = account_info->GetSessionId();
       content.order_ref = to_string(account_info->IncOrderRef());
       content.user_id = item;
+      content.group_id = group_id;
       order_list_.push_back(std::make_shared<utils::OrderContent>(content));
       break;
     }
@@ -157,6 +161,7 @@ bool OrderAllocate::ShareOpenOrder(const std::string &group_id, utils::OrderCont
         content.session_id = account_info->GetSessionId();
         content.order_ref = to_string(account_info->IncOrderRef());
         content.user_id = item;
+        content.group_id = group_id;
         content.once_volume = volume;
         order_list_.push_back(std::make_shared<utils::OrderContent>(content));
       }
@@ -182,33 +187,38 @@ bool OrderAllocate::CloseOrder(utils::OrderContent &content) {
   for (auto &item : group_assign.GetAccoutGroupMap()) {
     uint32_t exist_volume = 0;
     for (auto &account : item.second) {
+      std::string temp_user;
+      temp_user += item.first;
+      temp_user += ".";
+      temp_user += account;
+
       if (order_index_map.find(temp_key) != order_index_map.end() &&
-          order_index_map[temp_key].find(account) != order_index_map[temp_key].end()) {
-        auto &order_index = order_index_map[temp_key][account];
+          order_index_map[temp_key].find(temp_user) != order_index_map[temp_key].end()) {
+        auto &order_index = order_index_map[temp_key][temp_user];
         exist_volume += order_index->GetTodayVolume();
         exist_volume += order_index->GetYesterdayVolume();
       }
+    }
 
-      if (exist_volume == 0) {
-        continue;
-      }
+    if (exist_volume == 0) {
+      continue;
+    }
 
-      if (once_volume > exist_volume) {
-        content.once_volume = exist_volume;
-      } else {
-        content.once_volume = once_volume;
-      }
-      once_volume -= content.once_volume;
+    if (once_volume > exist_volume) {
+      content.once_volume = exist_volume;
+    } else {
+      content.once_volume = once_volume;
+    }
+    once_volume -= content.once_volume;
 
-      SequenceCloseOrder(item.first, content);
+    SequenceCloseOrder(item.first, content);
 
-      if (once_volume <= 0) {
-        break;
-      }
+    if (once_volume <= 0) {
+      return ret;
     }
   }
 
-  if (once_volume > 0) {
+  if (once_volume > 0 && order_list_.size() > 0) {
     strategy_trader::message message;
     auto *insert_rsp = message.mutable_order_insert_rsp();
     insert_rsp->set_instrument(content.instrument_id);
@@ -247,11 +257,17 @@ bool OrderAllocate::SequenceCloseOrder(const std::string &group_id, utils::Order
   uint32_t once_volume = content.once_volume;
   uint32_t send_volume = 0;
   for (auto &account : group_info_map[group_id]) {
-    auto &order_index = order_index_map[temp_key][account];
+    std::string temp_user;
+    temp_user += group_id;
+    temp_user += ".";
+    temp_user += account;
+
+    auto &order_index = order_index_map[temp_key][temp_user];
     if (order_index->GetYesterdayVolume() > 0 && account_info_map.find(account) != account_info_map.end()) {
       content.session_id = account_info_map[account]->GetSessionId();
       content.order_ref = to_string(account_info_map[account]->IncOrderRef());
       content.user_id = account;
+      content.group_id = group_id;
       content.comboffset = strategy_trader::CombOffsetType::CLOSE_YESTERDAY;
       if (order_index->GetYesterdayVolume() + send_volume < once_volume) {
         content.once_volume = order_index->GetYesterdayVolume();
@@ -270,6 +286,7 @@ bool OrderAllocate::SequenceCloseOrder(const std::string &group_id, utils::Order
       content.session_id = account_info_map[account]->GetSessionId();
       content.order_ref = to_string(account_info_map[account]->IncOrderRef());
       content.user_id = account;
+      content.group_id = group_id;
       content.comboffset = strategy_trader::CombOffsetType::CLOSE_TODAY;
       if (order_index->GetTodayVolume() + send_volume < once_volume) {
         content.once_volume = order_index->GetTodayVolume();
