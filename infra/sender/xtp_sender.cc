@@ -45,7 +45,7 @@ bool XtpSender::ReqUserLogin() {
       ret = false;
     } else {
       auto &global_sem = GlobalSem::GetInstance();
-      if (global_sem.WaitSemBySemName(SemName::kLoginLogout, 1) != 0) {
+      if (global_sem.WaitSemBySemName(SemName::kLoginLogout, 10) != 0) {
         INFO_LOG("%s login ok", user_id.c_str());
         trader_spi->OnRspUserLogin();
       }
@@ -70,7 +70,7 @@ bool XtpSender::ReqUserLogout() {
       INFO_LOG("ReqUserLogout send result is [%d]", result);
 
       auto &global_sem = GlobalSem::GetInstance();
-      if (global_sem.WaitSemBySemName(SemName::kLoginLogout, 3) != 0) {
+      if (global_sem.WaitSemBySemName(SemName::kLoginLogout, 10) != 0) {
         trader_spi->OnRspUserLogout();
       }
     }
