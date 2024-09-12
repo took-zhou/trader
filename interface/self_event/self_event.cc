@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "common/extern/log/log.h"
+#include "common/self/global_sem.h"
 #include "common/self/protobuf/ipc.pb.h"
 #include "common/self/utils.h"
 #include "trader/infra/recer_sender.h"
@@ -31,6 +32,7 @@ void SelfEvent::RegMsgFun() {
 
 void SelfEvent::AccountStatusReqHandle(utils::ItpMsg &msg) {
   auto &recer_sender = RecerSender::GetInstance();
+  auto &global_sem = GlobalSem::GetInstance();
 
   ipc::message recv_message;
   recv_message.ParseFromString(msg.pb_msg);
@@ -38,6 +40,7 @@ void SelfEvent::AccountStatusReqHandle(utils::ItpMsg &msg) {
   if (recv_message.account_status_req().indication() == ipc::AccountStatusReq::start) {
     recer_sender.ROLE(Sender).ROLE(ItpSender).ReqAvailableFunds();
   }
+  global_sem.PostSemBySemName(SemName::kLoginLogout);
 }
 
 void SelfEvent::SendEmailHandle(utils::ItpMsg &msg) {

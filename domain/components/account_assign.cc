@@ -5,6 +5,7 @@
 #include <thread>
 #include "common/extern/log/log.h"
 #include "common/self/file_util.h"
+#include "common/self/global_sem.h"
 #include "common/self/protobuf/ipc.pb.h"
 #include "trader/domain/components/fd_manage.h"
 #include "trader/domain/trader_service.h"
@@ -98,6 +99,7 @@ void AccountAssign::RemoveAccountStatus() { account_info_map_.clear(); }
 void AccountAssign::ReqAccountStatus(void) {
   auto &trader_ser = TraderService::GetInstance();
   auto &recer_sender = RecerSender::GetInstance();
+  auto &global_sem = GlobalSem::GetInstance();
   if (trader_ser.GetLoginState() == kLoginState) {
     ipc::message send_message;
     auto *accound_status_req = send_message.mutable_account_status_req();
@@ -109,6 +111,8 @@ void AccountAssign::ReqAccountStatus(void) {
     itp_msg.msg_name = "AccountStatusReq";
     // 因为查询接口存在1s1次的限制，所以只能走ProxySender的接口
     recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(itp_msg);
+    // 防止请求资金时，释放itp_sender对象
+    global_sem.WaitSemBySemName(SemName::kLoginLogout);
   }
 }
 
