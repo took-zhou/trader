@@ -112,7 +112,7 @@ void AccountAssign::ReqAccountStatus(void) {
     // 因为查询接口存在1s1次的限制，所以只能走ProxySender的接口
     recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(itp_msg);
     // 防止请求资金时，释放itp_sender对象
-    global_sem.WaitSemBySemName(SemName::kLoginLogout);
+    global_sem.WaitSemBySemName(SemName::kLoginLogout, 10);
   }
 }
 

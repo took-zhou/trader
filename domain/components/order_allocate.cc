@@ -262,6 +262,10 @@ bool OrderAllocate::SequenceCloseOrder(const std::string &group_id, utils::Order
     temp_user += ".";
     temp_user += account;
 
+    if (order_index_map[temp_key].find(temp_user) == order_index_map[temp_key].end()) {
+      continue;
+    }
+
     auto &order_index = order_index_map[temp_key][temp_user];
     if (order_index->GetYesterdayVolume() > 0 && account_info_map.find(account) != account_info_map.end()) {
       content.session_id = account_info_map[account]->GetSessionId();
