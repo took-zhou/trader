@@ -12,6 +12,7 @@ struct GroupAssign {
   ~GroupAssign();
 
   void UpdateGroupInfo(const std::string &value, const std::set<std::string> &account_list);
+  void HandleTraderOpen();
   std::unordered_map<std::string, std::set<std::string>> &GetAccoutGroupMap(void) { return account_group_map_; };
 
  private:

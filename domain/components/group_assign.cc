@@ -4,6 +4,7 @@
 #include <memory>
 #include <thread>
 #include "common/extern/log/log.h"
+#include "common/self/file_util.h"
 #include "common/self/protobuf/ipc.pb.h"
 #include "trader/domain/components/fd_manage.h"
 
@@ -83,5 +84,19 @@ void GroupAssign::UpdateGroupInfo(const std::string &value, const std::set<std::
       ERROR_LOG("do sql sentence error.");
       sqlite3_close(FdManage::GetInstance().GetTraderConn());
     }
+  }
+}
+
+void GroupAssign::HandleTraderOpen() {
+  auto &json_cfg = utils::JsonConfig::GetInstance();
+  auto users = json_cfg.GetConfig("trader", "User");
+  std::set<std::string> user_id_set;
+  for (auto &user : users) {
+    const auto user_id = json_cfg.GetDeepConfig("users", static_cast<std::string>(user), "UserID").get<std::string>();
+    user_id_set.insert(user_id);
+  }
+
+  if (account_group_map_.size() == 0) {
+    UpdateGroupInfo("name01", user_id_set);
   }
 }

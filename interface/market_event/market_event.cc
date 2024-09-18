@@ -69,6 +69,7 @@ void MarketEvent::MarketStateReqHandle(utils::ItpMsg &msg) {
     recer_sender.ROLE(Sender).ROLE(ItpSender).ReqAvailableFunds();
     trader_ser.UpdateLoginState(kLoginState);
     trader_ser.ROLE(AccountAssign).HandleTraderOpen();
+    trader_ser.ROLE(GroupAssign).HandleTraderOpen();
   }
 
   if (trader_ser.GetLoginState() == kLoginState &&

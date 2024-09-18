@@ -27,6 +27,7 @@ void HandleState::HandleStateChange(void) {
   if (trader_ser.ROLE(TraderTimeState).GetSubTimeState() == kInNightLogin ||
       trader_ser.ROLE(TraderTimeState).GetSubTimeState() == kInDayLogin) {
     trader_ser.ROLE(AccountAssign).HandleTraderOpen();
+    trader_ser.ROLE(GroupAssign).HandleTraderOpen();
   } else if (trader_ser.ROLE(TraderTimeState).GetSubTimeState() == kInDayLogout) {
     trader_ser.ROLE(OrderLookup).HandleTraderClose();
     trader_ser.ROLE(AccountAssign).HandleTraderClose();
