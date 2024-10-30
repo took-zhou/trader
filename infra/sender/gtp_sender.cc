@@ -117,6 +117,8 @@ bool GtpSender::Init(void) {
       INFO_LOG("traderApi init ok.");
     }
     is_init_ = true;
+  } else {
+    gtp_trader_info_map.erase(gtp_trader_info_map.begin(), gtp_trader_info_map.end());
   }
 
   return out;

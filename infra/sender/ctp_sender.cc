@@ -246,9 +246,11 @@ bool CtpSender::Init() {
       ctp_api_spi_info_map[static_cast<std::string>(user)] = api_spi_info;
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
+    is_init_ = true;
+  } else {
+    ctp_trader_info_map.erase(ctp_trader_info_map.begin(), ctp_trader_info_map.end());
   }
 
-  is_init_ = true;
   return out;
 }
 

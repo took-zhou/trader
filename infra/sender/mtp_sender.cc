@@ -1,21 +1,21 @@
-#include "trader/infra/sender/btp_sender.h"
+#include "trader/infra/sender/mtp_sender.h"
 #include <cstring>
 #include <string>
 #include <thread>
 #include "common/extern/log/log.h"
 #include "common/self/file_util.h"
 #include "common/self/utils.h"
-#include "trader/infra/recer/btp_recer.h"
+#include "trader/infra/recer/mtp_recer.h"
 
-std::map<int, BtpTraderInfo> BtpSender::btp_trader_info_map;
-btp::api::TraderApi *BtpSender::trader_api;
-BtpTraderSpi *BtpSender::trader_spi;
+std::map<int, MtpTraderInfo> MtpSender::mtp_trader_info_map;
+mtp::api::TraderApi *MtpSender::trader_api;
+MtpTraderSpi *MtpSender::trader_spi;
 
-BtpSender::BtpSender() { ; }
+MtpSender::MtpSender() { ; }
 
-BtpSender::~BtpSender(void) { Release(); }
+MtpSender::~MtpSender(void) { Release(); }
 
-bool BtpSender::ReqUserLogin() {
+bool MtpSender::ReqUserLogin() {
   INFO_LOG("login time, is going to login.");
   bool ret = true;
   if (!Init()) {
@@ -27,29 +27,29 @@ bool BtpSender::ReqUserLogin() {
     for (auto &user : users) {
       const auto user_id = json_cfg.GetDeepConfig("users", user, "UserID").get<std::string>();
 
-      BtpLoginLogoutStruct login;
+      MtpLoginLogoutStruct login;
       strcpy(login.user_id, user_id.c_str());
       uint64_t session = trader_api->Login(login);
       INFO_LOG("%s login ok", user_id.c_str());
 
-      BtpTraderInfo trader_info;
+      MtpTraderInfo trader_info;
       trader_info.user_id = user_id;
       trader_info.user_name = user;
-      btp_trader_info_map[session] = trader_info;
+      mtp_trader_info_map[session] = trader_info;
     }
   }
 
   return ret;
 }
 
-bool BtpSender::ReqUserLogout() {
+bool MtpSender::ReqUserLogout() {
   INFO_LOG("logout time, is going to logout.");
 
   auto &json_cfg = utils::JsonConfig::GetInstance();
-  for (auto &item : btp_trader_info_map) {
+  for (auto &item : mtp_trader_info_map) {
     const auto user_id = json_cfg.GetDeepConfig("users", item.second.user_name, "UserID").get<std::string>();
 
-    BtpLoginLogoutStruct logout;
+    MtpLoginLogoutStruct logout;
     strcpy(logout.user_id, user_id.c_str());
 
     if (trader_api != nullptr) {
@@ -62,11 +62,11 @@ bool BtpSender::ReqUserLogout() {
   return true;
 }
 
-bool BtpSender::InsertOrder(utils::OrderContent &content) {
+bool MtpSender::InsertOrder(utils::OrderContent &content) {
   bool ret = true;
-  auto pos = btp_trader_info_map.find(content.session_id);
-  if (pos != btp_trader_info_map.end()) {
-    BtpOrderInfoStruct orderinfo;
+  auto pos = mtp_trader_info_map.find(content.session_id);
+  if (pos != mtp_trader_info_map.end()) {
+    MtpOrderInfoStruct orderinfo;
     orderinfo.order_ref = stoi(content.order_ref);
     orderinfo.price = content.limit_price;
     orderinfo.volume = content.once_volume;
@@ -84,11 +84,11 @@ bool BtpSender::InsertOrder(utils::OrderContent &content) {
   return ret;
 }
 
-bool BtpSender::CancelOrder(utils::OrderContent &content) {
+bool MtpSender::CancelOrder(utils::OrderContent &content) {
   bool ret = true;
-  auto pos = btp_trader_info_map.find(content.session_id);
-  if (pos != btp_trader_info_map.end()) {
-    BtpOrderInfoStruct orderinfo;
+  auto pos = mtp_trader_info_map.find(content.session_id);
+  if (pos != mtp_trader_info_map.end()) {
+    MtpOrderInfoStruct orderinfo;
     orderinfo.order_ref = stoi(content.order_ref);
     orderinfo.price = content.limit_price;
     orderinfo.volume = content.once_volume - content.success_volume - content.fail_volume;
@@ -100,31 +100,31 @@ bool BtpSender::CancelOrder(utils::OrderContent &content) {
   return ret;
 }
 
-bool BtpSender::Init(void) {
+bool MtpSender::Init(void) {
   bool out = true;
 
   if (!is_init_) {
-    INFO_LOG("begin BtpTraderApi init");
+    INFO_LOG("begin MtpTraderApi init");
     auto &json_cfg = utils::JsonConfig::GetInstance();
-    trader_api = btp::api::TraderApi::CreateTraderApi(json_cfg.GetFileName().c_str());
+    trader_api = mtp::api::TraderApi::CreateTraderApi(json_cfg.GetFileName().c_str());
     if (trader_api == nullptr) {
       out = false;
       INFO_LOG("traderApi init fail.");
     } else {
       out = true;
-      trader_spi = new BtpTraderSpi();
+      trader_spi = new MtpTraderSpi();
       trader_api->RegisterSpi(trader_spi);
       INFO_LOG("traderApi init ok.");
     }
     is_init_ = true;
   } else {
-    btp_trader_info_map.erase(btp_trader_info_map.begin(), btp_trader_info_map.end());
+    mtp_trader_info_map.erase(mtp_trader_info_map.begin(), mtp_trader_info_map.end());
   }
 
   return out;
 }
 
-bool BtpSender::Release() {
+bool MtpSender::Release() {
   INFO_LOG("Is going to release traderApi.");
 
   if (trader_api != nullptr) {
@@ -138,16 +138,16 @@ bool BtpSender::Release() {
     trader_spi = NULL;
   }
 
-  btp_trader_info_map.erase(btp_trader_info_map.begin(), btp_trader_info_map.end());
+  mtp_trader_info_map.erase(mtp_trader_info_map.begin(), mtp_trader_info_map.end());
   is_init_ = false;
 
   return true;
 }
 
-bool BtpSender::ReqAvailableFunds() {
+bool MtpSender::ReqAvailableFunds() {
   if (trader_api != nullptr) {
-    for (auto &item : btp_trader_info_map) {
-      BtpAccountField request_msg{{0}};
+    for (auto &item : mtp_trader_info_map) {
+      MtpAccountField request_msg{{0}};
       strcpy(request_msg.user_id, item.second.user_id.c_str());
       int result = trader_api->QryTradingAccount(&request_msg, 0);
       if (result != 0) {
@@ -159,19 +159,23 @@ bool BtpSender::ReqAvailableFunds() {
   return true;
 }
 
-bool BtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) {
+bool MtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) {
   INFO_LOG("ReqInstrumentInfo not support.");
   return true;
 }
 
-bool BtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
-  BtpTransactionCostField field;
-  strcpy(field.exchange_id, ins_exch.exch.c_str());
-  strcpy(field.instrument_id, ins_exch.ins.c_str());
+bool MtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
+  for (auto &item : mtp_trader_info_map) {
+    MtpTransactionCostField field;
+    strcpy(field.user_id, item.second.user_id.c_str());
+    strcpy(field.exchange_id, ins_exch.exch.c_str());
+    strcpy(field.instrument_id, ins_exch.ins.c_str());
+    int result = trader_api->QryTransactionCost(&field, 0);
+    INFO_LOG("ReqTransactionCost send result is [%d]", result);
+    break;
+  }
 
-  int result = trader_api->QryTransactionCost(&field, 0);
-  INFO_LOG("ReqTransactionCost send result is [%d]", result);
   return true;
 }
 
-bool BtpSender::LossConnection() { return false; }
+bool MtpSender::LossConnection() { return trader_spi->GetFrontDisconnected(); }

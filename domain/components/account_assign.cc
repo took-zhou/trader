@@ -61,22 +61,22 @@ void AccountAssign::PrepareSqlSentence() {
   }
 }
 
-void AccountAssign::UpdateAccountStatus(double value1, double value2, uint64_t value3, const std::string &value4) {
-  if (account_info_map_.find(value4) != account_info_map_.end()) {
+void AccountAssign::UpdateAccountStatus(double balance, double available, uint64_t session_id, const std::string &user_id) {
+  if (account_info_map_.find(user_id) != account_info_map_.end()) {
     std::string black_list;
-    for (auto &item : account_info_map_[value4]->GetOpenBlackList()) {
+    for (auto &item : account_info_map_[user_id]->GetOpenBlackList()) {
       black_list += item;
       black_list += ".";
     }
-    account_info_map_[value4]->SetBalance(value1);
-    account_info_map_[value4]->SetAvailable(value2);
-    account_info_map_[value4]->SetSessionId(value3);
+    account_info_map_[user_id]->SetBalance(balance);
+    account_info_map_[user_id]->SetAvailable(available);
+    account_info_map_[user_id]->SetSessionId(session_id);
     sqlite3_reset(update_account_);
-    sqlite3_bind_int64(update_account_, 1, value3);
-    sqlite3_bind_double(update_account_, 2, value1);
-    sqlite3_bind_double(update_account_, 3, value2);
+    sqlite3_bind_int64(update_account_, 1, session_id);
+    sqlite3_bind_double(update_account_, 2, balance);
+    sqlite3_bind_double(update_account_, 3, available);
     sqlite3_bind_text(update_account_, 4, black_list.c_str(), black_list.size(), 0);
-    sqlite3_bind_text(update_account_, 5, value4.c_str(), value4.size(), 0);
+    sqlite3_bind_text(update_account_, 5, user_id.c_str(), user_id.size(), 0);
     if (sqlite3_step(update_account_) != SQLITE_DONE) {
       ERROR_LOG("do sql sentence error.");
       sqlite3_close(FdManage::GetInstance().GetTraderConn());
@@ -84,13 +84,13 @@ void AccountAssign::UpdateAccountStatus(double value1, double value2, uint64_t v
   }
 }
 
-void AccountAssign::UpdateOpenBlackList(const std::string &value, const std::string &ins, const std::string &index) {
+void AccountAssign::UpdateOpenBlackList(const std::string &user_id, const std::string &ins, const std::string &index) {
   std::string temp_key;
   temp_key += ins;
   temp_key += ".";
   temp_key += index;
-  if (account_info_map_.find(value) != account_info_map_.end()) {
-    account_info_map_[value]->InsertOpenBlackList(temp_key);
+  if (account_info_map_.find(user_id) != account_info_map_.end()) {
+    account_info_map_[user_id]->InsertOpenBlackList(temp_key);
   }
 }
 
@@ -112,7 +112,7 @@ void AccountAssign::ReqAccountStatus(void) {
     // 因为查询接口存在1s1次的限制，所以只能走ProxySender的接口
     recer_sender.ROLE(Sender).ROLE(ProxySender).SendMsg(itp_msg);
     // 防止请求资金时，释放itp_sender对象
-    global_sem.WaitSemBySemName(SemName::kLoginLogout, 10);
+    global_sem.WaitSemBySemName(SemName::kLoginLogout);
   }
 }
 

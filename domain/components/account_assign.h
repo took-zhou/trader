@@ -34,8 +34,8 @@ struct AccountAssign {
   AccountAssign();
   ~AccountAssign();
 
-  void UpdateAccountStatus(double value1, double value2, uint64_t value3, const std::string &value4);
-  void UpdateOpenBlackList(const std::string &value, const std::string &ins, const std::string &index);
+  void UpdateAccountStatus(double balance, double available, uint64_t session_id, const std::string &user_id);
+  void UpdateOpenBlackList(const std::string &user_id, const std::string &ins, const std::string &index);
   void ReqAccountStatus(void);
   void RemoveAccountStatus(void);
   void HandleTraderOpen();

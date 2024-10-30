@@ -15,6 +15,7 @@ target_link_libraries(tradelib
     btptraderapi
     ftptraderapi
     gtptraderapi
+    mtptraderapi
     oes_api
     pthread
     commonlib
@@ -22,6 +23,7 @@ target_link_libraries(tradelib
     protobuf
     python3.8
     sqlite3
+    quickfix
     z
     curl
     boost_system
