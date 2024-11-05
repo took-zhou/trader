@@ -9,6 +9,7 @@
 #include <chrono>
 #include <thread>
 #include "common/extern/log/log.h"
+#include "common/self/file_util.h"
 #include "common/self/global_sem.h"
 #include "trader/infra/recer_sender.h"
 
@@ -46,6 +47,8 @@ void TraderEvent::RegSessionFunc() {
 }
 
 bool TraderEvent::Run() {
+  auto &json_cfg = utils::JsonConfig::GetInstance();
+  auto api_type = json_cfg.GetConfig("common", "ApiType");
   running_ = true;
 
   order_rec_thread_ = std::thread(&TraderEvent::OrderRecTask, this);
@@ -56,6 +59,10 @@ bool TraderEvent::Run() {
 
   itp_rec_thread_ = std::thread(&TraderEvent::ItpRecTask, this);
   INFO_LOG("itp rec thread start");
+
+  if (api_type == "ftp") {
+    delay_ms_ = 1;
+  }
 
   return true;
 }
@@ -86,7 +93,7 @@ void TraderEvent::QueryRecTask() {
 
     if (session_func_map_.find(msg.session_name) != session_func_map_.end()) {
       session_func_map_[msg.session_name](msg);
-      std::this_thread::sleep_for(std::chrono::seconds(1));
+      std::this_thread::sleep_for(std::chrono::milliseconds(delay_ms_));
     } else {
       ERROR_LOG("can not find[%s] in session_func_map_", msg.session_name.c_str());
     }

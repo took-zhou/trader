@@ -71,6 +71,7 @@ struct TraderEvent : BtpEvent,
   std::thread query_rec_thread_;
   std::thread itp_rec_thread_;
   std::atomic<bool> running_{false};
+  uint32_t delay_ms_ = 1000;
 };
 
 #endif /* WORKSPACE_TRADER_INTERFACE_TRADEREVENT_H_ */
