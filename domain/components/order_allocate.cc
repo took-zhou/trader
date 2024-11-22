@@ -277,7 +277,6 @@ bool OrderAllocate::SequenceCloseOrder(const std::string &group_id, utils::Order
         content.once_volume = order_index->GetYesterdayVolume();
         send_volume += order_index->GetYesterdayVolume();
         order_list_.push_back(std::make_shared<utils::OrderContent>(content));
-        continue;
       } else {
         content.once_volume = once_volume - send_volume;
         send_volume = once_volume;
@@ -296,7 +295,6 @@ bool OrderAllocate::SequenceCloseOrder(const std::string &group_id, utils::Order
         content.once_volume = order_index->GetTodayVolume();
         send_volume += order_index->GetTodayVolume();
         order_list_.push_back(std::make_shared<utils::OrderContent>(content));
-        continue;
       } else {
         content.once_volume = once_volume - send_volume;
         send_volume = once_volume;
