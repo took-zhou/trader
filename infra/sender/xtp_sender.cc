@@ -12,9 +12,9 @@ std::map<int, XtpTraderInfo> XtpSender::xtp_trader_info_map;
 XTP::API::TraderApi *XtpSender::trader_api;
 XtpTraderSpi *XtpSender::trader_spi;
 
-XtpSender::XtpSender() { ; }
+XtpSender::XtpSender() {}
 
-XtpSender::~XtpSender(void) { Release(); }
+XtpSender::~XtpSender(void) {}
 
 bool XtpSender::ReqUserLogin() {
   INFO_LOG("login time, is going to login.");

@@ -13,6 +13,7 @@
 #include "common/extern/log/log.h"
 #include "common/extern/pybind11/include/pybind11/embed.h"
 #include "common/self/file_util.h"
+#include "common/self/global_sem.h"
 #include "common/self/profiler.h"
 #include "common/self/utils.h"
 #include "trader/domain/components/fd_manage.h"
@@ -44,19 +45,12 @@ void TraderMain::Entry(int argc, char *argv[]) {
   profiler::FlameGraphWriter::Instance().SetFilePath(trader_data_path);
 
   FdManage::GetInstance();
+  GlobalSem::GetInstance();
   RecerSender::GetInstance();
 
-  auto &trader_ser = TraderService::GetInstance();
-  INFO_LOG("trader server init ok");
-  trader_ser.Run();
-
-  std::this_thread::sleep_for(std::chrono::seconds(5));
-
-  auto &trader_event = TraderEvent::GetInstance();
-  INFO_LOG("trader event init ok");
-  trader_event.Run();
-
+  StartService();
   HoldOn();
+  StopService();
 }
 
 void TraderMain::HoldOn(void) {
@@ -71,6 +65,24 @@ void TraderMain::Exit(void) {
 }
 
 const std::string &TraderMain::GetTraderName() { return trader_name_; }
+
+void TraderMain::StartService(void) {
+  auto &trader_ser = TraderService::GetInstance();
+  auto &trader_event = TraderEvent::GetInstance();
+
+  trader_ser.Run();
+  std::this_thread::sleep_for(std::chrono::seconds(3));
+  trader_event.Run();
+}
+
+void TraderMain::StopService(void) {
+  auto &trader_ser = TraderService::GetInstance();
+  auto &trader_event = TraderEvent::GetInstance();
+
+  trader_ser.Stop();
+  std::this_thread::sleep_for(std::chrono::seconds(3));
+  trader_event.Stop();
+}
 
 int main(int argc, char *argv[]) {
   auto &trader_main = TraderMain::GetInstance();

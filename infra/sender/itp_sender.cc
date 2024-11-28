@@ -37,3 +37,4 @@ bool ItpSender::ReqAvailableFunds() { return send_api_->ReqAvailableFunds(); }
 bool ItpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) { return send_api_->ReqInstrumentInfo(ins_exch); }
 bool ItpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) { return send_api_->ReqTransactionCost(ins_exch); }
 bool ItpSender::LossConnection() { return send_api_->LossConnection(); }
+bool ItpSender::Release() { return send_api_->Release(); }

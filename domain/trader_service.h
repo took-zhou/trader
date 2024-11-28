@@ -51,7 +51,8 @@ struct TraderService : OrderManage,
 
   bool UpdateLoginState(TraderLoginState state);
   TraderLoginState GetLoginState();
-  void Run();
+  bool Run();
+  bool Stop();
 
  private:
   void FastBackTask();

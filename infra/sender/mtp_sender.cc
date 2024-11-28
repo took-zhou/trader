@@ -11,9 +11,9 @@ std::map<int, MtpTraderInfo> MtpSender::mtp_trader_info_map;
 mtp::api::TraderApi *MtpSender::trader_api;
 MtpTraderSpi *MtpSender::trader_spi;
 
-MtpSender::MtpSender() { ; }
+MtpSender::MtpSender() {}
 
-MtpSender::~MtpSender(void) { Release(); }
+MtpSender::~MtpSender(void) {}
 
 bool MtpSender::ReqUserLogin() {
   INFO_LOG("login time, is going to login.");

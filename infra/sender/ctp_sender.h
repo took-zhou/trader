@@ -40,6 +40,7 @@ struct CtpSender : SendApi {
   bool ReqInstrumentInfo(const utils::InstrumtntID &ins_exch);
   bool ReqTransactionCost(const utils::InstrumtntID &ins_exch);
   bool LossConnection();
+  bool Release();
 
   static std::map<uint64_t, CtpTraderInfo> ctp_trader_info_map;
 
@@ -49,7 +50,6 @@ struct CtpSender : SendApi {
   bool Authenticate(void);
   bool Login(void);
   bool Confirm(void);
-  bool Release(void);
 
   static std::map<std::string, CtpApiSpiInfo> ctp_api_spi_info_map;
   static CThostFtdcInputOrderField default_order_field;

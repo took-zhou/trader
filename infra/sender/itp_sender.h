@@ -22,6 +22,7 @@ struct ItpSender {
   bool ReqInstrumentInfo(const utils::InstrumtntID &ins_exch);
   bool ReqTransactionCost(const utils::InstrumtntID &ins_exch);
   bool LossConnection();
+  bool Release();
 
  private:
   std::unique_ptr<SendApi> send_api_;

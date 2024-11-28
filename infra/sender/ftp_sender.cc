@@ -11,9 +11,9 @@ std::map<int, FtpTraderInfo> FtpSender::ftp_trader_info_map;
 ftp::api::TraderApi *FtpSender::trader_api;
 FtpTraderSpi *FtpSender::trader_spi;
 
-FtpSender::FtpSender() { ; }
+FtpSender::FtpSender() {}
 
-FtpSender::~FtpSender(void) { Release(); }
+FtpSender::~FtpSender(void) {}
 
 bool FtpSender::ReqUserLogin() {
   INFO_LOG("login time, is going to login.");

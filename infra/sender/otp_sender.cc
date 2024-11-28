@@ -17,9 +17,9 @@ static int32 HandleReportMsg(OesApiSessionInfoT *rpt_channel, SMsgHeadT *head, v
 static int32 ApiQueryCashAsset(OesApiSessionInfoT *session, SMsgHeadT *head, void *item, OesQryCursorT *qry_cursor, void *callback);
 static int32 ApiQueryCommissionRate(OesApiSessionInfoT *session, SMsgHeadT *head, void *item, OesQryCursorT *qry_cursor, void *callback);
 
-OtpSender::OtpSender() { ; }
+OtpSender::OtpSender() {}
 
-OtpSender::~OtpSender(void) { Release(); }
+OtpSender::~OtpSender(void) {}
 
 bool OtpSender::ReqUserLogin() {
   INFO_LOG("login time, is going to login.");

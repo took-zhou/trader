@@ -34,14 +34,13 @@ struct OtpSender : SendApi {
   bool ReqInstrumentInfo(const utils::InstrumtntID &ins_exch);
   bool ReqTransactionCost(const utils::InstrumtntID &ins_exch);
   bool LossConnection();
+  bool Release();
 
   static std::map<int, OtpTraderInfo> otp_trader_info_map;
 
  private:
   bool Init(void);
-  bool Release(void);
   OesAsyncApiContextT *async_context_;
-
   bool is_init_ = false;
 };
 

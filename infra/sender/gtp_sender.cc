@@ -4,6 +4,7 @@
 #include <thread>
 #include "common/extern/log/log.h"
 #include "common/self/file_util.h"
+#include "common/self/global_sem.h"
 #include "common/self/utils.h"
 #include "trader/infra/recer/gtp_recer.h"
 
@@ -11,9 +12,9 @@ std::map<int, GtpTraderInfo> GtpSender::gtp_trader_info_map;
 gtp::api::TraderApi *GtpSender::trader_api;
 GtpTraderSpi *GtpSender::trader_spi;
 
-GtpSender::GtpSender() { ; }
+GtpSender::GtpSender() {}
 
-GtpSender::~GtpSender(void) { Release(); }
+GtpSender::~GtpSender(void) {}
 
 bool GtpSender::ReqUserLogin() {
   INFO_LOG("login time, is going to login.");
@@ -30,6 +31,8 @@ bool GtpSender::ReqUserLogin() {
       GtpLoginLogoutStruct login;
       strcpy(login.user_id, user_id.c_str());
       uint64_t session = trader_api->Login(login);
+      auto &global_sem = GlobalSem::GetInstance();
+      global_sem.WaitSemBySemName(SemName::kLoginLogout);
       INFO_LOG("%s login ok", user_id.c_str());
 
       GtpTraderInfo trader_info;
@@ -54,6 +57,8 @@ bool GtpSender::ReqUserLogout() {
 
     if (trader_api != nullptr) {
       trader_api->Logout(logout);
+      auto &global_sem = GlobalSem::GetInstance();
+      global_sem.WaitSemBySemName(SemName::kLoginLogout);
       INFO_LOG("%s logout ok", user_id.c_str());
     }
   }

@@ -15,21 +15,7 @@
 
 TraderEvent::TraderEvent() { RegSessionFunc(); }
 
-TraderEvent::~TraderEvent() {
-  running_ = false;
-  if (order_rec_thread_.joinable()) {
-    order_rec_thread_.join();
-    INFO_LOG("order rec thread exit");
-  }
-  if (query_rec_thread_.joinable()) {
-    query_rec_thread_.join();
-    INFO_LOG("query rec thread exit");
-  }
-  if (itp_rec_thread_.joinable()) {
-    itp_rec_thread_.join();
-    INFO_LOG("itp rec thread exit");
-  }
-}
+TraderEvent::~TraderEvent() {}
 
 void TraderEvent::RegSessionFunc() {
   session_func_map_.clear();
@@ -64,6 +50,23 @@ bool TraderEvent::Run() {
     delay_ms_ = 1;
   }
 
+  return true;
+}
+
+bool TraderEvent::Stop() {
+  running_ = false;
+  if (order_rec_thread_.joinable()) {
+    order_rec_thread_.join();
+    INFO_LOG("order rec thread exit");
+  }
+  if (query_rec_thread_.joinable()) {
+    query_rec_thread_.join();
+    INFO_LOG("query rec thread exit");
+  }
+  if (itp_rec_thread_.joinable()) {
+    itp_rec_thread_.join();
+    INFO_LOG("itp rec thread exit");
+  }
   return true;
 }
 

@@ -32,12 +32,12 @@ struct GtpSender : SendApi {
   bool ReqInstrumentInfo(const utils::InstrumtntID &ins_exch);
   bool ReqTransactionCost(const utils::InstrumtntID &ins_exch);
   bool LossConnection();
+  bool Release();
 
   static std::map<int, GtpTraderInfo> gtp_trader_info_map;
 
  private:
   bool Init(void);
-  bool Release(void);
   static gtp::api::TraderApi *trader_api;
   static GtpTraderSpi *trader_spi;
 

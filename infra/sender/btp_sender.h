@@ -32,12 +32,12 @@ struct BtpSender : SendApi {
   bool ReqInstrumentInfo(const utils::InstrumtntID &ins_exch);
   bool ReqTransactionCost(const utils::InstrumtntID &ins_exch);
   bool LossConnection();
+  bool Release();
 
   static std::map<int, BtpTraderInfo> btp_trader_info_map;
 
  private:
   bool Init(void);
-  bool Release(void);
   static btp::api::TraderApi *trader_api;
   static BtpTraderSpi *trader_spi;
 

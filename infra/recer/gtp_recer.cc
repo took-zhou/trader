@@ -11,9 +11,16 @@
 #include "common/self/utils.h"
 #include "trader/infra/recer_sender.h"
 
-void GtpTraderSpi::OnRspUserLogin(const GtpLoginLogoutStruct *login_info) { front_disconnected_ = false; }
+void GtpTraderSpi::OnRspUserLogin(const GtpLoginLogoutStruct *login_info) {
+  front_disconnected_ = false;
+  auto &global_sem = GlobalSem::GetInstance();
+  global_sem.PostSemBySemName(SemName::kLoginLogout);
+}
 
-void GtpTraderSpi::OnRspUserLogout(const GtpLoginLogoutStruct *logout_info) {}
+void GtpTraderSpi::OnRspUserLogout(const GtpLoginLogoutStruct *logout_info) {
+  auto &global_sem = GlobalSem::GetInstance();
+  global_sem.PostSemBySemName(SemName::kLoginLogout);
+}
 
 void GtpTraderSpi::OnRtnTrade(const GtpOrderInfoStruct *trade_info) {
   if (trade_info != nullptr) {

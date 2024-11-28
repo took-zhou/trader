@@ -11,9 +11,9 @@ std::map<int, BtpTraderInfo> BtpSender::btp_trader_info_map;
 btp::api::TraderApi *BtpSender::trader_api;
 BtpTraderSpi *BtpSender::trader_spi;
 
-BtpSender::BtpSender() { ; }
+BtpSender::BtpSender() {}
 
-BtpSender::~BtpSender(void) { Release(); }
+BtpSender::~BtpSender(void) {}
 
 bool BtpSender::ReqUserLogin() {
   INFO_LOG("login time, is going to login.");

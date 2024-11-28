@@ -12,6 +12,7 @@ struct SendApi {
   virtual bool ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) = 0;
   virtual bool ReqTransactionCost(const utils::InstrumtntID &ins_exch) = 0;
   virtual bool LossConnection() = 0;
+  virtual bool Release() = 0;
   virtual ~SendApi(){};
 };
 

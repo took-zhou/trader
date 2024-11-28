@@ -32,12 +32,12 @@ struct XtpSender : SendApi {
   bool ReqInstrumentInfo(const utils::InstrumtntID &ins_exch);
   bool ReqTransactionCost(const utils::InstrumtntID &ins_exch);
   bool LossConnection();
+  bool Release(void);
 
   static std::map<int, XtpTraderInfo> xtp_trader_info_map;
 
  private:
   bool Init(void);
-  bool Release(void);
   static XTP::API::TraderApi *trader_api;
   static XtpTraderSpi *trader_spi;
 

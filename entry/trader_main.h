@@ -17,6 +17,8 @@ struct TraderMain {
   const std::string &GetTraderName();
 
  private:
+  void StartService(void);
+  void StopService(void);
   std::string trader_name_ = "trader";
   bool is_hold_on_ = true;
 };

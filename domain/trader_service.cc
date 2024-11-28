@@ -14,21 +14,9 @@
 
 TraderService::TraderService() { InitDatabase(); };
 
-TraderService::~TraderService() {
-  UpdateLoginState(TraderLoginState::kManualExit);
-  INFO_LOG("set login state to manual exit.");
-  running_ = false;
-  if (fast_back_thread_.joinable()) {
-    fast_back_thread_.join();
-    INFO_LOG("trader fast back thread exit");
-  }
-  if (real_time_thread_.joinable()) {
-    real_time_thread_.join();
-    INFO_LOG("market real time thread exit");
-  }
-}
+TraderService::~TraderService() {}
 
-void TraderService::Run() {
+bool TraderService::Run() {
   auto &json_cfg = utils::JsonConfig::GetInstance();
   auto api_type = json_cfg.GetConfig("common", "ApiType");
 
@@ -40,6 +28,26 @@ void TraderService::Run() {
     real_time_thread_ = std::thread(&TraderService::RealTimeTask, this);
     INFO_LOG("trader real time thread start");
   }
+
+  return true;
+}
+
+bool TraderService::Stop() {
+  UpdateLoginState(TraderLoginState::kManualExit);
+  INFO_LOG("set login state to manual exit.");
+  running_ = false;
+  if (fast_back_thread_.joinable()) {
+    fast_back_thread_.join();
+    INFO_LOG("trader fast back thread exit");
+  }
+  if (real_time_thread_.joinable()) {
+    real_time_thread_.join();
+    INFO_LOG("trader real time thread exit");
+  }
+  auto &recer_sender = RecerSender::GetInstance();
+  recer_sender.ROLE(Sender).ROLE(ItpSender).Release();
+
+  return true;
 }
 
 void TraderService::FastBackTask() {
@@ -148,7 +156,13 @@ bool TraderService::HandleLossConnection() {
   return true;
 }
 
-bool TraderService::FastBackLoginLogoutChange() { return 0; }
+bool TraderService::FastBackLoginLogoutChange() {
+  if (login_state_ == kLogoutState) {
+    UpdateLoginState(kLoginState);
+  }
+
+  return 0;
+}
 
 void TraderService::InitDatabase() {
   char *error_msg = nullptr;

@@ -49,6 +49,7 @@ struct TraderEvent : BtpEvent,
   }
 
   bool Run();
+  bool Stop();
   void RegSessionFunc();
   IMPL_ROLE(BtpEvent);
   IMPL_ROLE(CtpEvent);
