@@ -143,7 +143,7 @@ bool TraderService::HandleLogoutState() {
 bool TraderService::HandleLossConnection() {
   auto &recer_sender = RecerSender::GetInstance();
   if (ROLE(TraderTimeState).GetTimeState() == kLoginTime) {
-    if (try_login_count_++ <= 60) {
+    if (try_login_heartbeat_++ % 3 == 2 && try_login_count_++ <= 600) {
       if (recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogin()) {
         recer_sender.ROLE(Sender).ROLE(ItpSender).ReqAvailableFunds();
         UpdateLoginState(kLoginState);
