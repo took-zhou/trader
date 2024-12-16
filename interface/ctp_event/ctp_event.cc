@@ -165,10 +165,10 @@ void CtpEvent::OnRspOrderInsertHandle(utils::ItpMsg &msg) {
     if (content->comboffset == strategy_trader::CombOffsetType::OPEN) {
       account_assign.UpdateOpenBlackList(content->user_id, content->instrument_id, content->index);
     } else if (content->comboffset == strategy_trader::CombOffsetType::CLOSE_YESTERDAY) {
-      order_lookup.UpdateOpenInterest(content->instrument_id, content->group_id, content->index, content->user_id, -content->once_volume,
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->group_id, content->user_id, -content->once_volume,
                                       0);
     } else if (content->comboffset == strategy_trader::CombOffsetType::CLOSE_TODAY) {
-      order_lookup.UpdateOpenInterest(content->instrument_id, content->group_id, content->index, content->user_id, 0,
+      order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->group_id, content->user_id, 0,
                                       -content->once_volume);
     }
 
