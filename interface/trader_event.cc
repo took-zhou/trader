@@ -81,7 +81,7 @@ void TraderEvent::OrderRecTask() {
     if (session_func_map_.find(msg.session_name) != session_func_map_.end()) {
       session_func_map_[msg.session_name](msg);
     } else {
-      ERROR_LOG("can not find[%s] in session_func_map_", msg.session_name.c_str());
+      ERROR_LOG("can not find[%s] in session func map", msg.session_name.c_str());
     }
   }
 }
@@ -98,7 +98,7 @@ void TraderEvent::QueryRecTask() {
       session_func_map_[msg.session_name](msg);
       std::this_thread::sleep_for(std::chrono::milliseconds(delay_ms_));
     } else {
-      ERROR_LOG("can not find[%s] in session_func_map_", msg.session_name.c_str());
+      ERROR_LOG("can not find[%s] in session func map", msg.session_name.c_str());
     }
   }
 }
@@ -114,7 +114,7 @@ void TraderEvent::ItpRecTask() {
     if (session_func_map_.find(msg.session_name) != session_func_map_.end()) {
       session_func_map_[msg.session_name](msg);
     } else {
-      ERROR_LOG("can not find[%s] in session_func_map_", msg.session_name.c_str());
+      ERROR_LOG("can not find[%s] in session func map", msg.session_name.c_str());
     }
 
     GlobalSem::GetInstance().PostSemBySemName(SemName::kApiRecv);

@@ -39,7 +39,7 @@ void CtpEvent::Handle(utils::ItpMsg &msg) {
     iter->second(msg);
     return;
   }
-  ERROR_LOG("can not find func for msg_name [%s]!", msg.msg_name.c_str());
+  ERROR_LOG("can not find func for msg name [%s]!", msg.msg_name.c_str());
   return;
 }
 
@@ -88,9 +88,9 @@ void CtpEvent::OnRtnOrderHandle(utils::ItpMsg &msg) {
       msg.session_name = "strategy_trader";
       msg.msg_name = "OrderInsertRsp";
 
-      INFO_LOG("the order be canceled, order ref: %s.", order->OrderRef);
       order_manage.DelOrder(order->OrderRef);
       recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
+      INFO_LOG("the order be canceled, order ref: %s, volume: %d.", order->OrderRef, order->VolumeTotal);
     }
   }
 }
@@ -135,6 +135,10 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
     msg.session_name = "strategy_trader";
     msg.msg_name = "OrderInsertRsp";
 
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
+    INFO_LOG("the order be traded, order ref: %s, volume: %d.", trade->OrderRef, trade->Volume);
+
     if (content->once_volume == content->success_volume) {
       auto &json_cfg = utils::JsonConfig::GetInstance();
       auto send_email = json_cfg.GetConfig("trader", "SendOrderEmail").get<std::string>();
@@ -144,8 +148,6 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
       INFO_LOG("the order was finished, order ref: %s.", trade->OrderRef);
       order_manage.DelOrder(trade->OrderRef);
     }
-    auto &recer_sender = RecerSender::GetInstance();
-    recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
   }
 }
 
@@ -194,7 +196,7 @@ void CtpEvent::OnRspOrderInsertHandle(utils::ItpMsg &msg) {
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
     order_manage.DelOrder(order_insert_rsp->OrderRef);
-    INFO_LOG("the order be canceled, orderRef: %s.", order_insert_rsp->OrderRef);
+    INFO_LOG("the order be canceled, order ref: %s, volume: %d.", order_insert_rsp->OrderRef, content->once_volume);
   } else {
     ERROR_LOG("not find order ref: %s", order_insert_rsp->OrderRef);
   }

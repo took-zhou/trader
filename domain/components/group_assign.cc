@@ -54,7 +54,7 @@ void GroupAssign::RestoreFromSqlite3() {
     sqlite3_close(FdManage::GetInstance().GetTraderConn());
   }
   for (int i = 1; i <= nrow; i++) {
-    account_group_map_[result[i * ncolumn]].insert(result[i * ncolumn + 1]);
+    account_group_map_[result[i * ncolumn]].AddAccount(result[i * ncolumn + 1]);
   }
   sqlite3_free_table(result);
 }
@@ -66,7 +66,10 @@ void GroupAssign::UpdateGroupInfo(const std::string &value, const std::set<std::
       account_group_map_.erase(pos);
     }
   } else {
-    account_group_map_[value] = account_list;
+    account_group_map_[value].ClearAccountList();
+    for (auto &item : account_list) {
+      account_group_map_[value].AddAccount(item);
+    }
   }
 
   sqlite3_reset(delete_account_);

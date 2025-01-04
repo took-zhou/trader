@@ -34,7 +34,7 @@ void XtpEvent::Handle(utils::ItpMsg &msg) {
     iter->second(msg);
     return;
   }
-  ERROR_LOG("can not find func for msgName [%s]!", msg.msg_name.c_str());
+  ERROR_LOG("can not find func for msg name [%s]!", msg.msg_name.c_str());
   return;
 }
 
@@ -84,9 +84,9 @@ void XtpEvent::OnOrderEventHandle(utils::ItpMsg &msg) {
       msg.session_name = "strategy_trader";
       msg.msg_name = "OrderInsertRsp";
 
-      INFO_LOG("the order be canceled, orderRef: %d.", order_info->order_client_id);
       order_manage.DelOrder(std::to_string(order_info->order_client_id));
       recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
+      INFO_LOG("the order be canceled, order ref: %d, volume: %ld.", order_info->order_client_id, order_info->quantity);
     }
   }
 }
@@ -133,6 +133,10 @@ void XtpEvent::OnTradeEventHandle(utils::ItpMsg &msg) {
     msg.session_name = "strategy_trader";
     msg.msg_name = "OrderInsertRsp";
 
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
+    INFO_LOG("the order be traded, order ref: %d, volume: %ld.", trade_report->order_client_id, trade_report->quantity);
+
     if (content->once_volume == content->success_volume) {
       auto &json_cfg = utils::JsonConfig::GetInstance();
       auto send_email = json_cfg.GetConfig("trader", "SendOrderEmail").get<std::string>();
@@ -142,9 +146,6 @@ void XtpEvent::OnTradeEventHandle(utils::ItpMsg &msg) {
       INFO_LOG("the order was finished, ref[%d].", trade_report->order_client_id);
       order_manage.DelOrder(std::to_string(trade_report->order_client_id));
     }
-
-    auto &recer_sender = RecerSender::GetInstance();
-    recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
   }
 }
 
@@ -169,9 +170,6 @@ void XtpEvent::OnCancelOrderErrorHandle(utils::ItpMsg &msg) {
     message.SerializeToString(&msg.pb_msg);
     msg.session_name = "strategy_trader";
     msg.msg_name = "OrderCancelRsp";
-
-    INFO_LOG("the order be canceled, orderRef: %s.", std::to_string(cancel_info->order_xtp_id).c_str());
-    order_manage.DelOrder(std::to_string(cancel_info->order_xtp_id));
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
   } else {

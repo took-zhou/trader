@@ -23,7 +23,7 @@ void StrategyEvent::Handle(utils::ItpMsg &msg) {
     iter->second(msg);
     return;
   }
-  ERROR_LOG("can not find func for msg_name [%s]!", msg.msg_name.c_str());
+  ERROR_LOG("can not find func for msg name [%s]!", msg.msg_name.c_str());
   return;
 }
 
@@ -98,7 +98,7 @@ void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {
   content.comboffset = order_insert_req.order().comb_offset_flag();
   content.order_type = order_insert_req.order().order_type();
   order_allocate.UpdateOrderList(content);
-  if (order_allocate.GetOderList().size() == 0) {
+  if (content.once_volume > 0) {
     strategy_trader::message message;
     auto *insert_rsp = message.mutable_order_insert_rsp();
     insert_rsp->set_instrument(content.instrument_id);
@@ -114,13 +114,13 @@ void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {
     msg.msg_name = "OrderInsertRsp";
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
-  } else {
-    for (auto &order : order_allocate.GetOderList()) {
-      auto &recer_sender = RecerSender::GetInstance();
-      bool result = recer_sender.ROLE(Sender).ROLE(ItpSender).InsertOrder(*order.get());
-      if (!result) {
-        trader_ser.ROLE(OrderManage).DelOrder(order->order_ref);
-      }
+    INFO_LOG("account assign error: %s, volume: %d", content.instrument_id.c_str(), content.once_volume);
+  }
+  for (auto &order : order_allocate.GetOderList()) {
+    auto &recer_sender = RecerSender::GetInstance();
+    bool result = recer_sender.ROLE(Sender).ROLE(ItpSender).InsertOrder(*order.get());
+    if (!result) {
+      trader_ser.ROLE(OrderManage).DelOrder(order->order_ref);
     }
   }
 }

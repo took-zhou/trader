@@ -27,7 +27,7 @@ void OtpTraderSpi::OnBusinessReject(const OesOrdRejectT *order_reject) {
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
-    ERROR_LOG("order_reject is nullptr");
+    ERROR_LOG("order reject is nullptr");
   }
 }
 
@@ -46,7 +46,7 @@ void OtpTraderSpi::OnOrderReport(const OesOrdCnfmT *order_report) {
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
-    ERROR_LOG("order_reject is nullptr");
+    ERROR_LOG("order reject is nullptr");
   }
 }
 
@@ -65,7 +65,7 @@ void OtpTraderSpi::OnTradeReport(const OesTrdCnfmT *trade_report) {
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
-    ERROR_LOG("order_reject is nullptr");
+    ERROR_LOG("order reject is nullptr");
   }
 }
 
@@ -76,7 +76,7 @@ void OtpTraderSpi::OnQueryCashAsset(const OesApiSessionInfoT *session, const Oes
     send_msg->set_address(reinterpret_cast<int64_t>(cash_asset));
     send_msg->set_session_id(session->__clEnvId);
     send_msg->set_user_id(cash_asset->custId);
-    INFO_LOG("custId: %s, cashAcctId: %s", cash_asset->custId, cash_asset->cashAcctId);
+    INFO_LOG("cust id: %s, cash acct id: %s", cash_asset->custId, cash_asset->cashAcctId);
     utils::ItpMsg msg;
     req_msg.SerializeToString(&msg.pb_msg);
     msg.session_name = "otp_trader";
@@ -87,7 +87,7 @@ void OtpTraderSpi::OnQueryCashAsset(const OesApiSessionInfoT *session, const Oes
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
-    ERROR_LOG("order_reject is nullptr");
+    ERROR_LOG("order reject is nullptr");
   }
 }
 
@@ -106,6 +106,6 @@ void OtpTraderSpi::OnQueryCommissionRate(const OesApiSessionInfoT *session, cons
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
-    ERROR_LOG("order_reject is nullptr");
+    ERROR_LOG("order reject is nullptr");
   }
 }

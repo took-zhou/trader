@@ -104,17 +104,17 @@ bool MtpSender::Init(void) {
   bool out = true;
 
   if (!is_init_) {
-    INFO_LOG("begin MtpTraderApi init");
+    INFO_LOG("begin mtp trader api init");
     auto &json_cfg = utils::JsonConfig::GetInstance();
     trader_api = mtp::api::TraderApi::CreateTraderApi(json_cfg.GetFileName().c_str());
     if (trader_api == nullptr) {
       out = false;
-      INFO_LOG("traderApi init fail.");
+      INFO_LOG("trader api init fail.");
     } else {
       out = true;
       trader_spi = new MtpTraderSpi();
       trader_api->RegisterSpi(trader_spi);
-      INFO_LOG("traderApi init ok.");
+      INFO_LOG("trader api init ok.");
     }
     is_init_ = true;
   } else {
@@ -125,7 +125,7 @@ bool MtpSender::Init(void) {
 }
 
 bool MtpSender::Release() {
-  INFO_LOG("Is going to release traderApi.");
+  INFO_LOG("is going to release trader api.");
 
   if (trader_api != nullptr) {
     trader_api->Release();
@@ -151,7 +151,7 @@ bool MtpSender::ReqAvailableFunds() {
       strcpy(request_msg.user_id, item.second.user_id.c_str());
       int result = trader_api->QryTradingAccount(&request_msg, 0);
       if (result != 0) {
-        INFO_LOG("QryTradingAccount send result is [%d]", result);
+        INFO_LOG("qry trading account send result is [%d]", result);
       }
     }
   }
@@ -160,7 +160,7 @@ bool MtpSender::ReqAvailableFunds() {
 }
 
 bool MtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) {
-  INFO_LOG("ReqInstrumentInfo not support.");
+  INFO_LOG("req instrument info not support.");
   return true;
 }
 
@@ -171,7 +171,7 @@ bool MtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
     strcpy(field.exchange_id, ins_exch.exch.c_str());
     strcpy(field.instrument_id, ins_exch.ins.c_str());
     int result = trader_api->QryTransactionCost(&field, 0);
-    INFO_LOG("ReqTransactionCost send result is [%d]", result);
+    INFO_LOG("req transaction cost send result is [%d]", result);
     break;
   }
 

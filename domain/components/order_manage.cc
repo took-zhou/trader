@@ -26,10 +26,10 @@ const std::shared_ptr<utils::OrderContent> &OrderManage::GetOrder(const std::str
 bool OrderManage::DelOrder(const std::string &order_key) {
   auto iter = order_map_.find(order_key);
   if (iter != order_map_.end()) {
-    INFO_LOG("total ordermap size [%d]", (int)order_map_.size());
+    INFO_LOG("total order map size [%d]", (int)order_map_.size());
     order_map_.erase(iter);
     INFO_LOG("del order[%s] ok", order_key.c_str());
-    INFO_LOG("total ordermap size [%d]", (int)order_map_.size());
+    INFO_LOG("total order map size [%d]", (int)order_map_.size());
 
   } else {
     ERROR_LOG("not find order in local ref is[%s]", order_key.c_str());

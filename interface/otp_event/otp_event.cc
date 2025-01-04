@@ -38,7 +38,7 @@ void OtpEvent::Handle(utils::ItpMsg &msg) {
     iter->second(msg);
     return;
   }
-  ERROR_LOG("can not find func for msg_name [%s]!", msg.msg_name.c_str());
+  ERROR_LOG("can not find func for msg name [%s]!", msg.msg_name.c_str());
   return;
 }
 
@@ -87,9 +87,9 @@ void OtpEvent::OnOrderReportHandle(utils::ItpMsg &msg) {
       msg.session_name = "strategy_trader";
       msg.msg_name = "OrderInsertRsp";
 
-      INFO_LOG("the order be canceled, order ref: %lld.", order->clOrdId);
       order_manage.DelOrder(std::to_string(order->clOrdId));
       recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
+      INFO_LOG("the order be canceled, order ref: %lld, volume: %d.", order->clOrdId, order->ordQty);
     }
   } else {
     ERROR_LOG("not find order ref: %lld", order->clOrdId);
@@ -136,6 +136,10 @@ void OtpEvent::OnTradeReportHandle(utils::ItpMsg &msg) {
     msg.session_name = "strategy_trader";
     msg.msg_name = "OrderInsertRsp";
 
+    auto &recer_sender = RecerSender::GetInstance();
+    recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
+    INFO_LOG("the order be traded, order ref: %d, volume: %d.", trade->clSeqNo, trade->trdQty);
+
     if (content->once_volume == content->success_volume) {
       auto &json_cfg = utils::JsonConfig::GetInstance();
       auto send_email = json_cfg.GetConfig("trader", "SendOrderEmail").get<std::string>();
@@ -145,8 +149,6 @@ void OtpEvent::OnTradeReportHandle(utils::ItpMsg &msg) {
       INFO_LOG("the order was finished, order ref: %d.", trade->clSeqNo);
       order_manage.DelOrder(std::to_string(trade->clSeqNo));
     }
-    auto &recer_sender = RecerSender::GetInstance();
-    recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
   }
 }
 
@@ -194,7 +196,7 @@ void OtpEvent::OnBusinessRejectHandle(utils::ItpMsg &msg) {
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
     order_manage.DelOrder(std::to_string(order_insert_rsp->origClSeqNo));
-    INFO_LOG("the order be canceled, orderRef: %d.", order_insert_rsp->origClSeqNo);
+    INFO_LOG("the order be canceled, order ref: %d, volume: %d.", order_insert_rsp->origClSeqNo, content->once_volume);
   } else {
     ERROR_LOG("not find order ref: %d", order_insert_rsp->origClSeqNo);
   }

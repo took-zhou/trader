@@ -41,7 +41,7 @@ void MarketEvent::QryInstrumentReqHandle(utils::ItpMsg &msg) {
   }
   auto &req = message.qry_instrument_req();
   if (req.identity() != std::string("all")) {
-    ERROR_LOG("qry_instrument_req identity[%s] is not [all]", req.identity().c_str());
+    ERROR_LOG("qry instrument req identity[%s] is not [all]", req.identity().c_str());
     return;
   }
 

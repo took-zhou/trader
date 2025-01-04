@@ -12,7 +12,7 @@
 #include "trader/infra/recer_sender.h"
 
 void CtpTraderSpi::OnFrontConnected() {
-  INFO_LOG("OnFrontConnected():is excuted, re_connect : %d.", re_connect_);
+  INFO_LOG("on front connected is excuted, re connect : %d.", re_connect_);
   if (re_connect_++ == 0) {
     auto &global_sem = GlobalSem::GetInstance();
     global_sem.PostSemBySemName(SemName::kLoginLogout);
@@ -21,7 +21,7 @@ void CtpTraderSpi::OnFrontConnected() {
 
 void CtpTraderSpi::OnFrontDisconnected(int reason) {
   if (reason != 0x1001) {
-    ERROR_LOG("front_disconnected_, ErrorCode:%#x", reason);
+    ERROR_LOG("front disconnected, error code:%#x", reason);
   }
   front_disconnected_ = true;
 }
@@ -46,7 +46,7 @@ void CtpTraderSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *rsp_user_login, C
     global_sem.PostSemBySemName(SemName::kLoginLogout);
     front_disconnected_ = false;
   } else {
-    ERROR_LOG("rsp_user_login is nullptr");
+    ERROR_LOG("rsp user login is nullptr");
   }
 }
 
@@ -139,7 +139,7 @@ void CtpTraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *trading
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
-    ERROR_LOG("trading_account is nullptr");
+    ERROR_LOG("trading account is nullptr");
   }
 }
 
@@ -190,7 +190,7 @@ void CtpTraderSpi::OnRspOrderInsert(CThostFtdcInputOrderField *input_order, CTho
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
-    ERROR_LOG("input_order_action is nullptr");
+    ERROR_LOG("input order action is nullptr");
   }
 }
 
@@ -215,7 +215,7 @@ void CtpTraderSpi::OnRspOrderAction(CThostFtdcInputOrderActionField *input_order
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
-    ERROR_LOG("input_order_action is nullptr");
+    ERROR_LOG("input order action is nullptr");
   }
 }
 
@@ -245,7 +245,7 @@ void CtpTraderSpi::OnRspQryInstrumentMarginRate(CThostFtdcInstrumentMarginRateFi
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
-    ERROR_LOG("instrument_margin_rate is null.");
+    ERROR_LOG("instrument margin rate is null.");
   }
 };
 
@@ -275,7 +275,7 @@ void CtpTraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissi
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
-    ERROR_LOG("instrument_commission_rate is null.");
+    ERROR_LOG("instrument commission rate is null.");
   }
 };
 
@@ -305,7 +305,7 @@ void CtpTraderSpi::OnRspQryOptionInstrCommRate(CThostFtdcOptionInstrCommRateFiel
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
-    ERROR_LOG("mm_option_instr_comm_rate is null.");
+    ERROR_LOG("mm option instr comm rate is null.");
   }
 };
 

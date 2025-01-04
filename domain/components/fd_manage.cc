@@ -12,7 +12,7 @@ FdManage::FdManage() {
   utils::CreatFile(trader_path);
 
   if (sqlite3_open(trader_path.c_str(), &trader_conn_) != SQLITE_OK) {
-    ERROR_LOG("Cannot open database: %s\n", sqlite3_errmsg(trader_conn_));
+    ERROR_LOG("cannot open database: %s\n", sqlite3_errmsg(trader_conn_));
     sqlite3_close(trader_conn_);
   }
   sqlite3_exec(trader_conn_, "PRAGMA synchronous = OFF; ", 0, 0, 0);

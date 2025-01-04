@@ -14,11 +14,11 @@
 
 void XtpTraderSpi::OnError(XTPRI *error_info) {
   bool result = ((error_info) && (error_info->error_id != 0));
-  if (result) ERROR_LOG("--->>> ErrorID= %d , ErrorMsg= %s.", error_info->error_id, error_info->error_msg);
+  if (result) ERROR_LOG("error id= %d , error msg= %s.", error_info->error_id, error_info->error_msg);
 }
 
 void XtpTraderSpi::OnDisconnected(uint64_t session_id, int reason) {
-  ERROR_LOG("front_disconnected, ErrorCode:%#x", reason);
+  ERROR_LOG("front disconnected, error code:%#x", reason);
   front_disconnected_ = true;
 }
 
@@ -43,7 +43,7 @@ void XtpTraderSpi::OnOrderEvent(XTPOrderInfo *order_info, XTPRI *error_info, uin
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
-    ERROR_LOG("order_info is nullptr");
+    ERROR_LOG("order info is nullptr");
   }
 }
 
@@ -62,7 +62,7 @@ void XtpTraderSpi::OnTradeEvent(XTPTradeReport *trade_info, uint64_t session_id)
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
-    ERROR_LOG("trade_info is nullptr");
+    ERROR_LOG("trade info is nullptr");
   }
 }
 
@@ -83,7 +83,7 @@ void XtpTraderSpi::OnCancelOrderError(XTPOrderCancelInfo *cancel_info, XTPRI *er
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
-    ERROR_LOG("cancel_info is nullptr");
+    ERROR_LOG("cancel info is nullptr");
   }
 }
 
@@ -117,7 +117,7 @@ void XtpTraderSpi::OnQueryAsset(XTPQueryAssetRsp *trading_account, XTPRI *error_
       global_sem.WaitSemBySemName(SemName::kApiRecv);
     }
   } else {
-    ERROR_LOG("trading_account is nullptr");
+    ERROR_LOG("trading account is nullptr");
   }
 }
 

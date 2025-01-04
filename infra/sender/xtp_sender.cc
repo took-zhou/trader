@@ -40,7 +40,7 @@ bool XtpSender::ReqUserLogin() {
     uint64_t session = trader_api->Login(ip_str.c_str(), port, user_id.c_str(), password.c_str(), protoc);
     if (session == 0) {
       XTPRI *error_info = trader_api->GetApiLastError();
-      ERROR_LOG("Login to server error: %d : %s", error_info->error_id, error_info->error_msg);
+      ERROR_LOG("login to server error: %d : %s", error_info->error_id, error_info->error_msg);
       Release();
       ret = false;
     } else {
@@ -67,7 +67,7 @@ bool XtpSender::ReqUserLogout() {
     const auto user_id = json_cfg.GetDeepConfig("users", item.second.user_name, "UserID").get<std::string>();
     if (trader_api != nullptr) {
       int result = trader_api->Logout(item.first);
-      INFO_LOG("ReqUserLogout send result is [%d]", result);
+      INFO_LOG("req user logout send result is [%d]", result);
 
       auto &global_sem = GlobalSem::GetInstance();
       if (global_sem.WaitSemBySemName(SemName::kLoginLogout, 10) != 0) {
@@ -133,7 +133,7 @@ bool XtpSender::Init(void) {
     auto client_id = json_cfg.GetConfig("common", "ClientId").get<std::uint8_t>();
     auto users = json_cfg.GetConfig("trader", "User");
     for (auto &user : users) {
-      INFO_LOG("begin CtpTraderApi init");
+      INFO_LOG("begin ctp trader api init");
       std::string con_path = json_cfg.GetConfig("trader", "ConPath").get<std::string>() + "/" + static_cast<std::string>(user) + "/";
       utils::CreatFolder(con_path);
 
@@ -146,7 +146,7 @@ bool XtpSender::Init(void) {
       trader_spi = new XtpTraderSpi();
       trader_api->RegisterSpi(trader_spi);
 
-      INFO_LOG("traderApi init ok.");
+      INFO_LOG("trader api init ok.");
       break;
     }
     is_init_ = true;
@@ -186,11 +186,11 @@ bool XtpSender::ReqAvailableFunds() {
 }
 
 bool XtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) {
-  INFO_LOG("ReqInstrumentInfo not support.");
+  INFO_LOG("req instrument info not support.");
   return true;
 }
 bool XtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
-  INFO_LOG("ReqTransactionCost not support.");
+  INFO_LOG("req transaction cost not support.");
   return true;
 }
 

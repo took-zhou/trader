@@ -100,13 +100,13 @@ bool FtpSender::Init(void) {
   bool out = true;
 
   if (!is_init_) {
-    INFO_LOG("begin BtpTraderApi init");
+    INFO_LOG("begin ftp trader api init.");
     auto &json_cfg = utils::JsonConfig::GetInstance();
     trader_api = ftp::api::TraderApi::CreateTraderApi(json_cfg.GetFileName().c_str());
 
     trader_spi = new FtpTraderSpi();
     trader_api->RegisterSpi(trader_spi);
-    INFO_LOG("traderApi init ok.");
+    INFO_LOG("trader api init ok.");
     is_init_ = true;
   }
 
@@ -140,7 +140,7 @@ bool FtpSender::ReqAvailableFunds() {
       strcpy(request_msg.user_id, item.second.user_id.c_str());
       int result = trader_api->QryTradingAccount(&request_msg, 0);
       if (result != 0) {
-        INFO_LOG("QryTradingAccount send result is [%d]", result);
+        INFO_LOG("qry trading account send result is [%d]", result);
       }
     }
   }
@@ -149,7 +149,7 @@ bool FtpSender::ReqAvailableFunds() {
 }
 
 bool FtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) {
-  INFO_LOG("ReqInstrumentInfo not support.");
+  INFO_LOG("req instrument info not support.");
   return true;
 }
 
@@ -159,7 +159,7 @@ bool FtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
   strcpy(field.instrument_id, ins_exch.ins.c_str());
 
   int result = trader_api->QryTransactionCost(&field, 0);
-  INFO_LOG("ReqTransactionCost send result is [%d]", result);
+  INFO_LOG("req transaction cost send result is [%d]", result);
   return true;
 }
 

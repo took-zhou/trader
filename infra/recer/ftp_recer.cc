@@ -30,7 +30,7 @@ void FtpTraderSpi::OnRtnTrade(const FtpOrderInfoStruct *trade_info) {
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
-    ERROR_LOG("trade_info is nullptr");
+    ERROR_LOG("trade info is nullptr");
   }
 }
 
@@ -49,7 +49,7 @@ void FtpTraderSpi::OnRtnOrder(const FtpOrderInfoStruct *order_info) {
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
-    ERROR_LOG("order_info is nullptr");
+    ERROR_LOG("order info is nullptr");
   }
 }
 
@@ -68,7 +68,7 @@ void FtpTraderSpi::OnRtnOrderInsert(const FtpOrderInfoStruct *order_info) {
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
-    ERROR_LOG("order_info is nullptr");
+    ERROR_LOG("order info is nullptr");
   }
 }
 
@@ -87,7 +87,7 @@ void FtpTraderSpi::OnRtnOrderAction(const FtpOrderInfoStruct *order_info) {
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
-    ERROR_LOG("order_info is nullptr");
+    ERROR_LOG("order info is nullptr");
   }
 }
 
@@ -108,7 +108,7 @@ void FtpTraderSpi::OnRspTradingAccount(const FtpAccountInfo *account_info) {
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
-    ERROR_LOG("account_info is nullptr");
+    ERROR_LOG("account info is nullptr");
   }
 }
 
@@ -128,7 +128,7 @@ void FtpTraderSpi::OnRspMarginRate(const FtpMarginInfo *margin_info) {
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
-    ERROR_LOG("margin_info is nullptr");
+    ERROR_LOG("margin info is nullptr");
   }
 }
 
@@ -148,6 +148,6 @@ void FtpTraderSpi::OnRspCommissionRate(const FtpCommissionInfo *commission_info)
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
   } else {
-    ERROR_LOG("commission_info is nullptr");
+    ERROR_LOG("commission info is nullptr");
   }
 }

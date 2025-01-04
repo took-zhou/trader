@@ -29,7 +29,7 @@ bool OtpSender::ReqUserLogin() {
     ret = false;
   } else {
     if (!OesAsyncApi_Start(async_context_)) {
-      ERROR_LOG("Failed to start the asynchronous API thread! error[%d - %s]", OesApi_GetLastError(),
+      ERROR_LOG("failed to start the asynchronous api thread! error[%d - %s]", OesApi_GetLastError(),
                 OesApi_GetErrorMsg(OesApi_GetLastError()));
       ret = FALSE;
     }
@@ -64,7 +64,7 @@ bool OtpSender::InsertOrder(utils::OrderContent &content) {
     ord_req.ordPrice = content.limit_price * 0.0001;
     strcpy(ord_req.securityId, content.instrument_id.c_str());
     if (OesAsyncApi_SendOrderReq(pos->second.ord_channel, &ord_req) < 0) {
-      ERROR_LOG("Send order error.");
+      ERROR_LOG("send order error.");
     }
   } else {
     ret = false;
@@ -88,7 +88,7 @@ bool OtpSender::CancelOrder(utils::OrderContent &content) {
     cancel_req.origClEnvId = pos->first;
     strcpy(cancel_req.securityId, content.instrument_id.c_str());
     if (OesAsyncApi_SendOrderCancelReq(pos->second.ord_channel, &cancel_req) < 0) {
-      ERROR_LOG("Cancle order error.");
+      ERROR_LOG("cancle order error.");
     }
   }
   return ret;
@@ -98,11 +98,11 @@ bool OtpSender::Init(void) {
   bool out = true;
 
   if (!is_init_) {
-    INFO_LOG("begin OtpTraderApi init");
+    INFO_LOG("begin otp trader api init");
     if (!__OesApi_CheckApiVersion()) {
-      ERROR_LOG("Api version error, version[%s], libversion[%s]", OES_APPL_VER_ID, OesApi_GetApiVersion());
+      ERROR_LOG("api version error, version[%s], libversion[%s]", OES_APPL_VER_ID, OesApi_GetApiVersion());
     } else {
-      INFO_LOG("API version: %s", OesApi_GetApiVersion());
+      INFO_LOG("api version: %s", OesApi_GetApiVersion());
     }
     if (!OesApi_InitLoggerDirect("file", "FATAL", "./api.log", 0, 0)) {
       ERROR_LOG("init oes log fail!");
@@ -117,7 +117,7 @@ bool OtpSender::Init(void) {
     context_params.isBuiltinQueryable = TRUE;
     async_context_ = OesAsyncApi_CreateContextSimple2(NULL, NULL, &context_params);
     if (!async_context_) {
-      ERROR_LOG("failed to create an asynchronous API runtime environment.");
+      ERROR_LOG("failed to create an asynchronous api runtime environment.");
       out = false;
     }
     auto &json_cfg = utils::JsonConfig::GetInstance();
@@ -143,7 +143,7 @@ bool OtpSender::Init(void) {
                                                        &remote_cfg, nullptr, HandleOrderRsp, trader_info.trader_spi, ApiAsyncConnect,
                                                        trader_info.trader_spi, ApiAsyncDisconnect, trader_info.trader_spi);
       if ((!trader_info.ord_channel)) {
-        ERROR_LOG("failed to add a delegate channel! channelTag[%s]", OESAPI_CFG_DEFAULT_KEY_ORD_ADDR);
+        ERROR_LOG("failed to add a delegate channel! channel tag[%s]", OESAPI_CFG_DEFAULT_KEY_ORD_ADDR);
         out = false;
       }
       remote_cfg.addrCnt = OesApi_ParseAddrListString(rpt_server.c_str(), remote_cfg.addrList, GENERAL_CLI_MAX_REMOTE_CNT);
@@ -151,7 +151,7 @@ bool OtpSender::Init(void) {
                                                        &remote_cfg, nullptr, HandleReportMsg, trader_info.trader_spi, ApiAsyncConnect,
                                                        trader_info.trader_spi, ApiAsyncDisconnect, trader_info.trader_spi);
       if ((!trader_info.rpt_channel)) {
-        ERROR_LOG("failed to add a return channel! channelTag[%s]", OESAPI_CFG_DEFAULT_KEY_RPT_ADDR);
+        ERROR_LOG("failed to add a return channel! channel tag[%s]", OESAPI_CFG_DEFAULT_KEY_RPT_ADDR);
         out = false;
       }
       otp_trader_info_map[remote_cfg.clEnvId] = trader_info;
@@ -159,7 +159,7 @@ bool OtpSender::Init(void) {
     OesAsyncApi_SetBuiltinQueryable(async_context_, TRUE);
     OesAsyncApi_SetPreconnectAble(async_context_, TRUE);
     OesApi_SetCustomizedDriverId("WD-WCC4M0EP1YDD");
-    INFO_LOG("traderApi init ok.");
+    INFO_LOG("trader api init ok.");
     is_init_ = true;
   }
 
@@ -167,7 +167,7 @@ bool OtpSender::Init(void) {
 }
 
 bool OtpSender::Release() {
-  INFO_LOG("Is going to release traderApi.");
+  INFO_LOG("Is going to release trader api.");
 
   if (async_context_ != nullptr) {
     OesAsyncApi_Stop(async_context_);
@@ -199,7 +199,7 @@ bool OtpSender::ReqAvailableFunds() {
 }
 
 bool OtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) {
-  INFO_LOG("ReqInstrumentInfo not support.");
+  INFO_LOG("req instrument info not support.");
   return true;
 }
 
@@ -224,14 +224,14 @@ static int32 ApiAsyncConnect(OesAsyncApiChannelT *async_channel, void *callback)
   if (async_channel->pChannelCfg->channelType == OESAPI_CHANNEL_TYPE_REPORT) {
     subscribe_info = OesAsyncApi_GetChannelSubscribeCfg(async_channel);
     if ((!subscribe_info)) {
-      ERROR_LOG("Illegal extended subscribe info! pAsyncChannel[%p], channelTag[%s]", async_channel,
+      ERROR_LOG("illegal extended subscribe info! async channel[%p], channel tag[%s]", async_channel,
                 async_channel->pChannelCfg->channelTag);
     }
   }
   ret = trader_spi->OnConnected(static_cast<eOesApiChannelTypeT>(async_channel->pChannelCfg->channelType), async_channel->pSessionInfo,
                                 subscribe_info);
   if ((ret < 0)) {
-    ERROR_LOG("Call SPI.OnConnected failure! channelType[%d], ret[%d]", async_channel->pChannelCfg->channelType, ret);
+    ERROR_LOG("call spi  on connected failure! channel type[%d], ret[%d]", async_channel->pChannelCfg->channelType, ret);
   }
   return OesAsyncApi_DefaultOnConnect(async_channel, NULL);
 }
@@ -242,7 +242,7 @@ static int32 ApiAsyncDisconnect(OesAsyncApiChannelT *async_channel, void *callba
 
   ret = trader_spi->OnDisconnected(static_cast<eOesApiChannelTypeT>(async_channel->pChannelCfg->channelType), async_channel->pSessionInfo);
   if ((ret < 0)) {
-    ERROR_LOG("Call SPI.OnDisconnected failure! channelType[%d], ret[%d]", async_channel->pChannelCfg->channelType, ret);
+    ERROR_LOG("sall spi on disconnected failure! channel type[%d], ret[%d]", async_channel->pChannelCfg->channelType, ret);
   }
 
   return 0;
