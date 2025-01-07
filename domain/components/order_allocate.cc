@@ -206,8 +206,8 @@ bool OrderAllocate::CloseOrder(utils::OrderContent &content) {
       content.once_volume = left_volume;
     }
 
-    SequenceCloseOrder(item.first, content);
     left_volume -= content.once_volume;
+    SequenceCloseOrder(item.first, content);
 
     if (left_volume <= 0) {
       break;
