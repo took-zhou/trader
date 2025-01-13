@@ -167,7 +167,7 @@ bool OtpSender::Init(void) {
 }
 
 bool OtpSender::Release() {
-  INFO_LOG("Is going to release trader api.");
+  INFO_LOG("is going to release trader api.");
 
   if (async_context_ != nullptr) {
     OesAsyncApi_Stop(async_context_);

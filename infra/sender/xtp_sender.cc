@@ -156,7 +156,7 @@ bool XtpSender::Init(void) {
 }
 
 bool XtpSender::Release() {
-  INFO_LOG("Is going to release traderApi.");
+  INFO_LOG("is going to release traderApi.");
 
   if (trader_api != nullptr) {
     trader_api->Release();

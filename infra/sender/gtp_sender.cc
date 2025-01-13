@@ -130,7 +130,7 @@ bool GtpSender::Init(void) {
 }
 
 bool GtpSender::Release() {
-  INFO_LOG("Is going to release trader api.");
+  INFO_LOG("is going to release trader api.");
 
   if (trader_api != nullptr) {
     trader_api->Release();
