@@ -3,7 +3,6 @@
 #include "common/self/file_util.h"
 #include "common/self/utils.h"
 #include "trader/domain/trader_service.h"
-#include "trader/infra/recer_sender.h"
 
 OrderAllocate::OrderAllocate() {}
 
