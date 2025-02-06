@@ -110,6 +110,11 @@ void CtpEvent::OnRtnTradeHandle(utils::ItpMsg &msg) {
 #endif
   auto content = order_manage.GetOrder(trade->OrderRef);
   if (content != nullptr) {
+    if (trade->Volume > 1000000 || trade->Volume < -1000000) {
+      WARNING_LOG("incorrect traded volume: %d, corrected to %d", trade->Volume, content->once_volume - content->success_volume);
+      trade->Volume = content->once_volume - content->success_volume;
+    }
+
     if (content->comboffset == strategy_trader::CombOffsetType::OPEN) {
       order_lookup.UpdateOpenInterest(content->instrument_id, content->index, content->group_id, content->user_id, 0, trade->Volume);
     } else if (content->comboffset == strategy_trader::CombOffsetType::CLOSE_TODAY) {
