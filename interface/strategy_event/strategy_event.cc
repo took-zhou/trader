@@ -49,7 +49,7 @@ void StrategyEvent::OrderCancelReqHandle(utils::ItpMsg &msg) {
 
   auto &trader_ser = TraderService::GetInstance();
   if (trader_ser.GetLoginState() != kLoginState) {
-    ERROR_LOG("itp not login!");
+    ERROR_LOG("itp not login.");
     return;
   }
 
@@ -57,11 +57,17 @@ void StrategyEvent::OrderCancelReqHandle(utils::ItpMsg &msg) {
   temp_key += order_cancel_req.instrument();
   temp_key += ".";
   temp_key += order_cancel_req.index();
-  auto pos = trader_ser.ROLE(OrderLookup).GetOrderIndexMap().find(temp_key);
-  if (pos != trader_ser.ROLE(OrderLookup).GetOrderIndexMap().end()) {
-    for (auto &item : pos->second) {
-      auto content = trader_ser.ROLE(OrderManage).GetOrder(item.second->GetOrderRef());
-      if (content != nullptr && content->once_volume > (content->success_volume + content->fail_volume)) {
+  auto order_index_pos = trader_ser.ROLE(OrderLookup).GetOrderIndexMap().find(temp_key);
+  if (order_index_pos == trader_ser.ROLE(OrderLookup).GetOrderIndexMap().end()) {
+    ERROR_LOG("not find order index.");
+    return;
+  }
+  for (auto &item : order_index_pos->second) {
+    auto content = trader_ser.ROLE(OrderManage).GetOrder(item.second->GetOrderRef());
+    if (content != nullptr && content->once_volume > (content->success_volume + content->fail_volume)) {
+      auto account_info_pos = trader_ser.ROLE(AccountAssign).GetAccountInfoMap().find(content->user_id);
+      if (account_info_pos != trader_ser.ROLE(AccountAssign).GetAccountInfoMap().end()) {
+        content->session_id = account_info_pos->second->GetSessionId();
         content->active_cancle_indication = true;
         auto &recer_sender = RecerSender::GetInstance();
         recer_sender.ROLE(Sender).ROLE(ItpSender).CancelOrder(*content);

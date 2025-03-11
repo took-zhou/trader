@@ -165,6 +165,9 @@ void XtpEvent::OnCancelOrderErrorHandle(utils::ItpMsg &msg) {
     order_cancel_rsp->set_index(content->index);
     order_cancel_rsp->set_result(strategy_trader::Result::failed);
     order_cancel_rsp->set_failedreason("INVALID");
+    auto *rsp_info = order_cancel_rsp->mutable_info();
+    rsp_info->set_orderprice(content->limit_price);
+    rsp_info->set_ordervolume(content->once_volume - content->success_volume);
 
     utils::ItpMsg msg;
     message.SerializeToString(&msg.pb_msg);
@@ -172,6 +175,14 @@ void XtpEvent::OnCancelOrderErrorHandle(utils::ItpMsg &msg) {
     msg.msg_name = "OrderCancelRsp";
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(Sender).ROLE(DirectSender).SendMsg(msg);
+
+    auto &json_cfg = utils::JsonConfig::GetInstance();
+    auto send_email = json_cfg.GetConfig("trader", "SendOrderEmail").get<std::string>();
+    if (send_email == "yes") {
+      SendEmail(*content);
+    }
+    INFO_LOG("the order was finished, ref[%ld].", cancel_info->order_xtp_id);
+    order_manage.DelOrder(std::to_string(cancel_info->order_xtp_id));
   } else {
     ERROR_LOG("not find order ref: %ld", cancel_info->order_xtp_id);
   }
