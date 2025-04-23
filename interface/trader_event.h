@@ -19,6 +19,7 @@
 #include "trader/interface/self_event/self_event.h"
 #include "trader/interface/strategy_event/strategy_event.h"
 #include "trader/interface/xtp_event/xtp_event.h"
+#include "trader/interface/ytp_event/ytp_event.h"
 
 #include <atomic>
 #include <functional>
@@ -34,6 +35,7 @@ struct TraderEvent : BtpEvent,
                      FtpEvent,
                      GtpEvent,
                      MtpEvent,
+                     YtpEvent,
                      StrategyEvent,
                      MarketEvent,
                      CtpviewEvent,
@@ -58,6 +60,7 @@ struct TraderEvent : BtpEvent,
   IMPL_ROLE(FtpEvent);
   IMPL_ROLE(GtpEvent);
   IMPL_ROLE(MtpEvent);
+  IMPL_ROLE(YtpEvent);
   IMPL_ROLE(StrategyEvent);
   IMPL_ROLE(MarketEvent);
   IMPL_ROLE(CtpviewEvent);

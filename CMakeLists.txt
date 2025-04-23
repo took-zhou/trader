@@ -16,7 +16,10 @@ target_link_libraries(tradelib
     ftptraderapi
     gtptraderapi
     mtptraderapi
+    ytptraderapi
     oes_api
+    twsapi
+    bid
     pthread
     commonlib
     zmq
