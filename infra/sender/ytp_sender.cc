@@ -164,12 +164,12 @@ bool YtpSender::ReqAvailableFunds() {
   return true;
 }
 
-bool YtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) {
+bool YtpSender::ReqInstrumentInfo(const utils::InstrumentID &ins_exch) {
   INFO_LOG("req instrument info not support.");
   return true;
 }
 
-bool YtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
+bool YtpSender::ReqTransactionCost(const utils::InstrumentID &ins_exch) {
   for (auto &item : ytp_trader_info_map) {
     YtpTransactionCostField field;
     strcpy(field.user_id, item.second.user_id.c_str());

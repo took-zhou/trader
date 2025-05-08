@@ -142,7 +142,7 @@ void StrategyEvent::TransactionCostReqHandle(utils::ItpMsg &msg) {
   }
 
   auto &recer_sender = RecerSender::GetInstance();
-  utils::InstrumtntID ins_exch;
+  utils::InstrumentID ins_exch;
   ins_exch.ins = message.transaction_cost_req().instrument_info().instrument_id();
   ins_exch.exch = message.transaction_cost_req().instrument_info().exchange_id();
 

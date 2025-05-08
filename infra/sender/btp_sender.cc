@@ -159,12 +159,12 @@ bool BtpSender::ReqAvailableFunds() {
   return true;
 }
 
-bool BtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) {
+bool BtpSender::ReqInstrumentInfo(const utils::InstrumentID &ins_exch) {
   INFO_LOG("req instrument info not support.");
   return true;
 }
 
-bool BtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
+bool BtpSender::ReqTransactionCost(const utils::InstrumentID &ins_exch) {
   BtpTransactionCostField field;
   strcpy(field.exchange_id, ins_exch.exch.c_str());
   strcpy(field.instrument_id, ins_exch.ins.c_str());

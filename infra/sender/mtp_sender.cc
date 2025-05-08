@@ -159,12 +159,12 @@ bool MtpSender::ReqAvailableFunds() {
   return true;
 }
 
-bool MtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) {
+bool MtpSender::ReqInstrumentInfo(const utils::InstrumentID &ins_exch) {
   INFO_LOG("req instrument info not support.");
   return true;
 }
 
-bool MtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
+bool MtpSender::ReqTransactionCost(const utils::InstrumentID &ins_exch) {
   for (auto &item : mtp_trader_info_map) {
     MtpTransactionCostField field;
     strcpy(field.user_id, item.second.user_id.c_str());

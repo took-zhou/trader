@@ -29,8 +29,8 @@ struct YtpSender : SendApi {
   bool InsertOrder(utils::OrderContent &content);
   bool CancelOrder(utils::OrderContent &content);
   bool ReqAvailableFunds();
-  bool ReqInstrumentInfo(const utils::InstrumtntID &ins_exch);
-  bool ReqTransactionCost(const utils::InstrumtntID &ins_exch);
+  bool ReqInstrumentInfo(const utils::InstrumentID &ins_exch);
+  bool ReqTransactionCost(const utils::InstrumentID &ins_exch);
   bool LossConnection();
   bool Release();
 

@@ -198,12 +198,12 @@ bool OtpSender::ReqAvailableFunds() {
   return true;
 }
 
-bool OtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) {
+bool OtpSender::ReqInstrumentInfo(const utils::InstrumentID &ins_exch) {
   INFO_LOG("req instrument info not support.");
   return true;
 }
 
-bool OtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
+bool OtpSender::ReqTransactionCost(const utils::InstrumentID &ins_exch) {
   for (auto &item : otp_trader_info_map) {
     if (OesAsyncApi_QueryCommissionRate(item.second.ord_channel, nullptr, ApiQueryCommissionRate,
                                         static_cast<void *>(item.second.trader_spi)) < 0) {

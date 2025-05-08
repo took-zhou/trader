@@ -185,11 +185,11 @@ bool XtpSender::ReqAvailableFunds() {
   return ret;
 }
 
-bool XtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) {
+bool XtpSender::ReqInstrumentInfo(const utils::InstrumentID &ins_exch) {
   INFO_LOG("req instrument info not support.");
   return true;
 }
-bool XtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
+bool XtpSender::ReqTransactionCost(const utils::InstrumentID &ins_exch) {
   INFO_LOG("req transaction cost not support.");
   return true;
 }

@@ -153,7 +153,7 @@ bool CtpSender::ReqAvailableFunds() {
   return true;
 }
 
-bool CtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) {
+bool CtpSender::ReqInstrumentInfo(const utils::InstrumentID &ins_exch) {
   for (auto &item : ctp_api_spi_info_map) {
     CThostFtdcQryInstrumentField request_msg{{0}};
     std::strcpy(request_msg.ExchangeID, ins_exch.exch.c_str());
@@ -167,7 +167,7 @@ bool CtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) {
   return true;
 }
 
-bool CtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
+bool CtpSender::ReqTransactionCost(const utils::InstrumentID &ins_exch) {
   auto &json_cfg = utils::JsonConfig::GetInstance();
   for (auto &item : ctp_api_spi_info_map) {
     item.second.trader_spi->SetTransactionCostExchange(ins_exch.exch);

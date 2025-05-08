@@ -148,12 +148,12 @@ bool FtpSender::ReqAvailableFunds() {
   return true;
 }
 
-bool FtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) {
+bool FtpSender::ReqInstrumentInfo(const utils::InstrumentID &ins_exch) {
   INFO_LOG("req instrument info not support.");
   return true;
 }
 
-bool FtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
+bool FtpSender::ReqTransactionCost(const utils::InstrumentID &ins_exch) {
   FtpTransactionCostField field;
   strcpy(field.exchange_id, ins_exch.exch.c_str());
   strcpy(field.instrument_id, ins_exch.ins.c_str());

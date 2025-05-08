@@ -164,12 +164,12 @@ bool GtpSender::ReqAvailableFunds() {
   return true;
 }
 
-bool GtpSender::ReqInstrumentInfo(const utils::InstrumtntID &ins_exch) {
+bool GtpSender::ReqInstrumentInfo(const utils::InstrumentID &ins_exch) {
   INFO_LOG("req instrument info not support.");
   return true;
 }
 
-bool GtpSender::ReqTransactionCost(const utils::InstrumtntID &ins_exch) {
+bool GtpSender::ReqTransactionCost(const utils::InstrumentID &ins_exch) {
   for (auto &item : gtp_trader_info_map) {
     GtpTransactionCostField field;
     strcpy(field.user_id, item.second.user_id.c_str());

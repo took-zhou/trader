@@ -45,7 +45,7 @@ void MarketEvent::QryInstrumentReqHandle(utils::ItpMsg &msg) {
     return;
   }
 
-  utils::InstrumtntID ins_exch;
+  utils::InstrumentID ins_exch;
   ins_exch.exch = "";
   ins_exch.ins = "";
 
