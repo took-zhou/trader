@@ -16,6 +16,7 @@ FdManage::FdManage() {
     sqlite3_close(trader_conn_);
   }
   sqlite3_exec(trader_conn_, "PRAGMA synchronous = OFF; ", 0, 0, 0);
+  sqlite3_exec(trader_conn_, "PRAGMA user_version = 1; ", 0, 0, 0);
   sqlite3_busy_timeout(trader_conn_, 3000);
 
   char *error_msg = nullptr;
