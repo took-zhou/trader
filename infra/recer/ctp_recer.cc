@@ -92,6 +92,8 @@ void CtpTraderSpi::OnRtnOrder(CThostFtdcOrderField *order) {
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
+    size_t thread = std::hash<std::thread::id>()(std::this_thread::get_id());
+    INFO_LOG("%d-%d", order->VolumeTraded, static_cast<uint32_t>(thread));
   } else {
     ERROR_LOG("order is nullptr");
   }
@@ -111,6 +113,8 @@ void CtpTraderSpi::OnRtnTrade(CThostFtdcTradeField *trade) {
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
+    size_t thread = std::hash<std::thread::id>()(std::this_thread::get_id());
+    INFO_LOG("%d-%d", trade->Volume, static_cast<uint32_t>(thread));
   } else {
     ERROR_LOG("trade is nullptr");
   }
@@ -138,6 +142,8 @@ void CtpTraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *trading
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
+    size_t thread = std::hash<std::thread::id>()(std::this_thread::get_id());
+    INFO_LOG("%f-%d", trading_account->Available, static_cast<uint32_t>(thread));
   } else {
     ERROR_LOG("trading account is nullptr");
   }
