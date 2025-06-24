@@ -80,20 +80,20 @@ void CtpTraderSpi::OnRspQrySettlementInfoConfirm(CThostFtdcSettlementInfoConfirm
 
 void CtpTraderSpi::OnRtnOrder(CThostFtdcOrderField *order) {
   if (order != nullptr) {
-    ipc::message req_msg;
-    auto send_msg = req_msg.mutable_itp_msg();
-    send_msg->set_address(reinterpret_cast<int64_t>(order));
-    utils::ItpMsg msg;
-    req_msg.SerializeToString(&msg.pb_msg);
-    msg.session_name = "ctp_trader";
-    msg.msg_name = "OnRtnOrder";
+    if (order->OrderStatus == THOST_FTDC_OST_Canceled) {
+      ipc::message req_msg;
+      auto send_msg = req_msg.mutable_itp_msg();
+      send_msg->set_address(reinterpret_cast<int64_t>(order));
+      utils::ItpMsg msg;
+      req_msg.SerializeToString(&msg.pb_msg);
+      msg.session_name = "ctp_trader";
+      msg.msg_name = "OnRtnOrder";
 
-    auto &global_sem = GlobalSem::GetInstance();
-    auto &recer_sender = RecerSender::GetInstance();
-    recer_sender.ROLE(InnerSender).SendMsg(msg);
-    global_sem.WaitSemBySemName(SemName::kApiRecv);
-    size_t thread = std::hash<std::thread::id>()(std::this_thread::get_id());
-    INFO_LOG("%d-%d", order->VolumeTraded, static_cast<uint32_t>(thread));
+      auto &global_sem = GlobalSem::GetInstance();
+      auto &recer_sender = RecerSender::GetInstance();
+      recer_sender.ROLE(InnerSender).SendMsg(msg);
+      global_sem.WaitSemBySemName(SemName::kApiRecv);
+    }
   } else {
     ERROR_LOG("order is nullptr");
   }
@@ -113,8 +113,6 @@ void CtpTraderSpi::OnRtnTrade(CThostFtdcTradeField *trade) {
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
-    size_t thread = std::hash<std::thread::id>()(std::this_thread::get_id());
-    INFO_LOG("%d-%d", trade->Volume, static_cast<uint32_t>(thread));
   } else {
     ERROR_LOG("trade is nullptr");
   }
@@ -142,8 +140,6 @@ void CtpTraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *trading
     auto &recer_sender = RecerSender::GetInstance();
     recer_sender.ROLE(InnerSender).SendMsg(msg);
     global_sem.WaitSemBySemName(SemName::kApiRecv);
-    size_t thread = std::hash<std::thread::id>()(std::this_thread::get_id());
-    INFO_LOG("%f-%d", trading_account->Available, static_cast<uint32_t>(thread));
   } else {
     ERROR_LOG("trading account is nullptr");
   }
