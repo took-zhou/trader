@@ -11,29 +11,38 @@
 #include "common/self/utils.h"
 #include "trader/infra/recer_sender.h"
 
+std::mutex CtpTraderSpi::m_lock;
+
 void CtpTraderSpi::OnFrontConnected() {
+  m_lock.lock();
   INFO_LOG("on front connected is excuted, re connect : %d.", re_connect_);
   if (re_connect_++ == 0) {
     auto &global_sem = GlobalSem::GetInstance();
     global_sem.PostSemBySemName(SemName::kLoginLogout);
   }
+  m_lock.unlock();
 }
 
 void CtpTraderSpi::OnFrontDisconnected(int reason) {
+  m_lock.lock();
   if (reason != 0x1001) {
     ERROR_LOG("front disconnected, error code:%#x", reason);
   }
   front_disconnected_ = true;
+  m_lock.unlock();
 }
 
 void CtpTraderSpi::OnRspAuthenticate(CThostFtdcRspAuthenticateField *rsp_authenticate_field, CThostFtdcRspInfoField *rsp_info,
                                      int request_id, bool is_last) {
+  m_lock.lock();
   auto &global_sem = GlobalSem::GetInstance();
   global_sem.PostSemBySemName(SemName::kLoginLogout);
+  m_lock.unlock();
 }
 
 void CtpTraderSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *rsp_user_login, CThostFtdcRspInfoField *rsp_info, int request_id,
                                   bool is_last) {
+  m_lock.lock();
   if (rsp_info != nullptr && rsp_info->ErrorID != 0) {
     ERROR_LOG("id: %d, msg: %s.", rsp_info->ErrorID, rsp_info->ErrorMsg);
   }
@@ -48,15 +57,19 @@ void CtpTraderSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *rsp_user_login, C
   } else {
     ERROR_LOG("rsp user login is nullptr");
   }
+  m_lock.unlock();
 }
 
 void CtpTraderSpi::OnRspUserLogout(CThostFtdcUserLogoutField *user_logout, CThostFtdcRspInfoField *rsp_info, int request_id, bool is_last) {
+  m_lock.lock();
   auto &global_sem = GlobalSem::GetInstance();
   global_sem.PostSemBySemName(SemName::kLoginLogout);
+  m_lock.unlock();
 }
 
 void CtpTraderSpi::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *settlement_info_confirm,
                                               CThostFtdcRspInfoField *rsp_info, int request_id, bool is_last) {
+  m_lock.lock();
   if (rsp_info != nullptr && rsp_info->ErrorID != 0) {
     ERROR_LOG("id: %d, msg: %s.", rsp_info->ErrorID, rsp_info->ErrorMsg);
   }
@@ -64,10 +77,12 @@ void CtpTraderSpi::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmFie
     auto &global_sem = GlobalSem::GetInstance();
     global_sem.PostSemBySemName(SemName::kLoginLogout);
   }
+  m_lock.unlock();
 }
 
 void CtpTraderSpi::OnRspQrySettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *settlement_info_confirm,
                                                  CThostFtdcRspInfoField *rsp_info, int request_id, bool is_last) {
+  m_lock.lock();
   if (rsp_info != nullptr && rsp_info->ErrorID != 0) {
     ERROR_LOG("id: %d, msg: %s.", rsp_info->ErrorID, rsp_info->ErrorMsg);
   }
@@ -76,9 +91,11 @@ void CtpTraderSpi::OnRspQrySettlementInfoConfirm(CThostFtdcSettlementInfoConfirm
     global_sem.PostSemBySemName(SemName::kLoginLogout);
     confirmed_date_ = settlement_info_confirm->ConfirmDate;
   }
+  m_lock.unlock();
 }
 
 void CtpTraderSpi::OnRtnOrder(CThostFtdcOrderField *order) {
+  m_lock.lock();
   if (order != nullptr) {
     if (order->OrderStatus == THOST_FTDC_OST_Canceled) {
       ipc::message req_msg;
@@ -97,9 +114,11 @@ void CtpTraderSpi::OnRtnOrder(CThostFtdcOrderField *order) {
   } else {
     ERROR_LOG("order is nullptr");
   }
+  m_lock.unlock();
 }
 
 void CtpTraderSpi::OnRtnTrade(CThostFtdcTradeField *trade) {
+  m_lock.lock();
   if (trade != nullptr) {
     ipc::message req_msg;
     auto send_msg = req_msg.mutable_itp_msg();
@@ -116,10 +135,12 @@ void CtpTraderSpi::OnRtnTrade(CThostFtdcTradeField *trade) {
   } else {
     ERROR_LOG("trade is nullptr");
   }
+  m_lock.unlock();
 }
 
 void CtpTraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *trading_account, CThostFtdcRspInfoField *rsp_info, int request_id,
                                           bool is_last) {
+  m_lock.lock();
   if (rsp_info != nullptr && rsp_info->ErrorID != 0) {
     ERROR_LOG("id: %d, msg: %s.", rsp_info->ErrorID, rsp_info->ErrorMsg);
   }
@@ -143,10 +164,12 @@ void CtpTraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *trading
   } else {
     ERROR_LOG("trading account is nullptr");
   }
+  m_lock.unlock();
 }
 
 void CtpTraderSpi::OnRspQryInstrument(CThostFtdcInstrumentField *instrument, CThostFtdcRspInfoField *rsp_info, int request_id,
                                       bool is_last) {
+  m_lock.lock();
   if (rsp_info != nullptr && rsp_info->ErrorID != 0) {
     ERROR_LOG("id: %d, msg: %s.", rsp_info->ErrorID, rsp_info->ErrorMsg);
   }
@@ -168,10 +191,12 @@ void CtpTraderSpi::OnRspQryInstrument(CThostFtdcInstrumentField *instrument, CTh
   } else {
     ERROR_LOG("instrument is nullptr");
   }
+  m_lock.unlock();
 }
 
 void CtpTraderSpi::OnRspOrderInsert(CThostFtdcInputOrderField *input_order, CThostFtdcRspInfoField *rsp_info, int request_id,
                                     bool is_last) {
+  m_lock.lock();
   if (rsp_info != nullptr && rsp_info->ErrorID != 0) {
     ERROR_LOG("id: %d, msg: %s.", rsp_info->ErrorID, rsp_info->ErrorMsg);
   }
@@ -194,10 +219,12 @@ void CtpTraderSpi::OnRspOrderInsert(CThostFtdcInputOrderField *input_order, CTho
   } else {
     ERROR_LOG("input order action is nullptr");
   }
+  m_lock.unlock();
 }
 
 void CtpTraderSpi::OnRspOrderAction(CThostFtdcInputOrderActionField *input_order_action, CThostFtdcRspInfoField *rsp_info, int request_id,
                                     bool is_last) {
+  m_lock.lock();
   if (rsp_info != nullptr && rsp_info->ErrorID != 0) {
     ERROR_LOG("id: %d, msg: %s.", rsp_info->ErrorID, rsp_info->ErrorMsg);
   }
@@ -219,10 +246,12 @@ void CtpTraderSpi::OnRspOrderAction(CThostFtdcInputOrderActionField *input_order
   } else {
     ERROR_LOG("input order action is nullptr");
   }
+  m_lock.unlock();
 }
 
 void CtpTraderSpi::OnRspQryInstrumentMarginRate(CThostFtdcInstrumentMarginRateField *instrument_margin_rate,
                                                 CThostFtdcRspInfoField *rsp_info, int request_id, bool is_last) {
+  m_lock.lock();
   if (rsp_info != nullptr && rsp_info->ErrorID != 0) {
     ERROR_LOG("id: %d, msg: %s.", rsp_info->ErrorID, rsp_info->ErrorMsg);
   }
@@ -249,10 +278,12 @@ void CtpTraderSpi::OnRspQryInstrumentMarginRate(CThostFtdcInstrumentMarginRateFi
   } else {
     ERROR_LOG("instrument margin rate is null.");
   }
+  m_lock.unlock();
 };
 
 void CtpTraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissionRateField *instrument_commission_rate,
                                                     CThostFtdcRspInfoField *rsp_info, int request_id, bool is_last) {
+  m_lock.lock();
   if (rsp_info != nullptr && rsp_info->ErrorID != 0) {
     ERROR_LOG("id: %d, msg: %s.", rsp_info->ErrorID, rsp_info->ErrorMsg);
   }
@@ -279,10 +310,12 @@ void CtpTraderSpi::OnRspQryInstrumentCommissionRate(CThostFtdcInstrumentCommissi
   } else {
     ERROR_LOG("instrument commission rate is null.");
   }
+  m_lock.unlock();
 };
 
 void CtpTraderSpi::OnRspQryOptionInstrCommRate(CThostFtdcOptionInstrCommRateField *option_instr_comm_rate, CThostFtdcRspInfoField *rsp_info,
                                                int request_id, bool is_last) {
+  m_lock.lock();
   if (rsp_info != nullptr && rsp_info->ErrorID != 0) {
     ERROR_LOG("id: %d, msg: %s.", rsp_info->ErrorID, rsp_info->ErrorMsg);
   }
@@ -309,6 +342,7 @@ void CtpTraderSpi::OnRspQryOptionInstrCommRate(CThostFtdcOptionInstrCommRateFiel
   } else {
     ERROR_LOG("mm option instr comm rate is null.");
   }
+  m_lock.unlock();
 };
 
 uint64_t CtpTraderSpi::GetSessionId() { return session_id_; }

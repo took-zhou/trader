@@ -8,7 +8,6 @@
 #ifndef WORKSPACE_TRADER_INFRA_INNERSENDER_H_
 #define WORKSPACE_TRADER_INFRA_INNERSENDER_H_
 
-#include <mutex>
 #include <string>
 #include "common/self/utils.h"
 
@@ -21,7 +20,6 @@ struct InnerSender {
  private:
   std::string inner_address_;
   void *pusher_{nullptr};
-  std::mutex m_lock_;
 };
 
 #endif /* WORKSPACE_TRADER_INFRA_INNERSENDER_H_ */

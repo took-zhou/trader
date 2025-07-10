@@ -8,6 +8,7 @@
 #ifndef WORKSPACE_TRADER_INFRA_CTPRECER_H_
 #define WORKSPACE_TRADER_INFRA_CTPRECER_H_
 
+#include <mutex>
 #include <string>
 #include "common/extern/ctp/inc/ThostFtdcTraderApi.h"
 
@@ -468,6 +469,7 @@ class CtpTraderSpi : public CThostFtdcTraderSpi {
   std::string req_transaction_cost_exchange_;
   std::string req_transaction_cost_instrument_;
   std::string confirmed_date_;
+  static std::mutex m_lock;
 };
 
 #endif /* WORKSPACE_TRADER_INFRA_CTPRECER_H_ */
