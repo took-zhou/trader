@@ -177,6 +177,16 @@ void TraderTimeState::SetTimeState(int command) {
   }
 }
 
+void TraderTimeState::SetSubTimeState(int command) {
+  if (command == ctpview_trader::LoginControl_Command_login) {
+    debug_sub_time_state_ = kInDayLogin;
+  } else if (command == ctpview_trader::LoginControl_Command_logout) {
+    debug_sub_time_state_ = kInDayLogout;
+  } else if (command == ctpview_trader::LoginControl_Command_reserve) {
+    debug_sub_time_state_ = kInInitSts;
+  }
+}
+
 TraderTimeState::TraderTimeState() {
   auto &json_cfg = utils::JsonConfig::GetInstance();
 

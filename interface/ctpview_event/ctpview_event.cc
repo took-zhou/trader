@@ -47,6 +47,7 @@ void CtpviewEvent::LoginControlHandle(utils::ItpMsg &msg) {
 
   INFO_LOG("force set time state: %d", command);
   trader_ser.ROLE(TraderTimeState).SetTimeState(command);
+  trader_ser.ROLE(TraderTimeState).SetSubTimeState(command);
 }
 
 void CtpviewEvent::BugInjectionHandle(utils::ItpMsg &msg) {
