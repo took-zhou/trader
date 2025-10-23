@@ -13,10 +13,10 @@
 #include "trader/domain/components/fd_manage.h"
 
 Diagnostic::Diagnostic() {
-  AddTestConfig(kApiCallFailed, 10, 10, DiagEventStatus::kPass);
-  AddTestConfig(kPositionMisMatched, 10, 10, DiagEventStatus::kPass);
-  AddTestConfig(kLoginFailed, 10, 10, DiagEventStatus::kPass);
-  AddTestConfig(kNoEnoughMoney, 10, 10, DiagEventStatus::kPass);
+  AddTestConfig(kApiCallFailed, 10, 10, DiagEventStatus::kTestNocompleted);
+  AddTestConfig(kPositionMisMatched, 10, 10, DiagEventStatus::kTestNocompleted);
+  AddTestConfig(kLoginFailed, 10, 10, DiagEventStatus::kTestNocompleted);
+  AddTestConfig(kNoEnoughMoney, 10, 10, DiagEventStatus::kTestNocompleted);
 
   InitDatabase();
   PrepareSqlSentence();
@@ -55,16 +55,14 @@ void Diagnostic::PrepareSqlSentence() {
 }
 
 void Diagnostic::MonitorStatus() {
-  uint64_t event_id_mask = ReadEventMask();
-  for (uint16_t index = 0; index < kEventMax; index++) {
-    if (event_id_mask == 0) {
-      break;
+  for (auto& item : GetTestConfig()) {
+    if (item.event_status == kFail && !item.fail_recorded) {
+      RecordStatus(static_cast<DiagnosticEventId>(item.event_id), DiagEventStatus::kFail);
+      item.fail_recorded = true;
+    } else if (item.event_status == kPass && !item.pass_recorded) {
+      RecordStatus(static_cast<DiagnosticEventId>(item.event_id), DiagEventStatus::kPass);
+      item.pass_recorded = true;
     }
-    if ((event_id_mask & 1) && !diagnostic_recorded_map_[static_cast<DiagnosticEventId>(index)]) {
-      RecordStatus(static_cast<DiagnosticEventId>(index), DiagEventStatus::kFail);
-      diagnostic_recorded_map_[static_cast<DiagnosticEventId>(index)] = true;
-    }
-    event_id_mask >>= 1;
   }
 }
 
@@ -72,7 +70,9 @@ void Diagnostic::ClearStatus(DiagnosticEventId event_id) {
   if (event_id >= kEventMax) {
     return;
   }
-  diagnostic_recorded_map_[event_id] = false;
+  GetTestConfig()[event_id].fail_recorded = false;
+  GetTestConfig()[event_id].pass_recorded = false;
+  SetEventStatus(event_id, kTestNocompleted, "manual clear");
   RecordStatus(event_id, DiagEventStatus::kTestNocompleted);
   INFO_LOG("clear diagnostic event id %d' status ok.", event_id);
 }
