@@ -15,6 +15,7 @@ struct OrderAllocate {
  private:
   bool BuildOrderContent(utils::OrderContent &content);
   bool OpenOrder(utils::OrderContent &content);
+  uint32_t FirstOpenOrder(const std::string &group_id, utils::OrderContent &content);
   uint32_t CycleOpenOrder(const std::string &group_id, utils::OrderContent &content);
   uint32_t ShareOpenOrder(const std::string &group_id, utils::OrderContent &content);
   bool CloseOrder(utils::OrderContent &content);

@@ -79,7 +79,9 @@ bool OrderAllocate::OpenOrder(utils::OrderContent &content) {
       content.once_volume = left_volume;
     }
 
-    if (assign_mode == "cycle") {
+    if (assign_mode == "first") {
+      left_volume -= FirstOpenOrder(item.first, content);
+    } else if (assign_mode == "cycle") {
       left_volume -= CycleOpenOrder(item.first, content);
     } else if (assign_mode == "share") {
       left_volume -= ShareOpenOrder(item.first, content);
@@ -92,6 +94,35 @@ bool OrderAllocate::OpenOrder(utils::OrderContent &content) {
   content.once_volume = left_volume;
 
   return ret;
+}
+
+uint32_t OrderAllocate::FirstOpenOrder(const std::string &group_id, utils::OrderContent &content) {
+  auto &trader_ser = TraderService::GetInstance();
+  auto &account_assign = trader_ser.ROLE(AccountAssign);
+  auto &account_info_map = account_assign.GetAccountInfoMap();
+  auto &group_assign = trader_ser.ROLE(GroupAssign);
+  auto &group_info_map = group_assign.GetAccoutGroupMap();
+
+  std::string temp_key;
+  temp_key += content.instrument_id;
+  temp_key += ".";
+  temp_key += content.index;
+
+  uint32_t openned_volume = 0;
+  auto &account_list = group_info_map[group_id].GetAccountList();
+  auto &account = account_list[0];
+
+  auto &account_info = account_info_map[account];
+  if (account_info->GetAvailable() >= minimum_account_available_ && account_info->NotOnBlacklist(temp_key)) {
+    content.session_id = account_info->GetSessionId();
+    content.order_ref = to_string(account_info->IncOrderRef());
+    content.user_id = account;
+    content.group_id = group_id;
+    openned_volume += content.once_volume;
+    order_list_.push_back(std::make_shared<utils::OrderContent>(content));
+  }
+
+  return openned_volume;
 }
 
 uint32_t OrderAllocate::CycleOpenOrder(const std::string &group_id, utils::OrderContent &content) {

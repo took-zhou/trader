@@ -103,9 +103,12 @@ bool TraderService::RealTimeLoginLogoutChange() {
 bool TraderService::HandleErrorState() {
   auto &recer_sender = RecerSender::GetInstance();
   if (ROLE(TraderTimeState).GetTimeState() == kLoginTime) {
-    if (try_login_heartbeat_++ % 600 == 599 && try_login_count_++ <= 3 && recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogin()) {
-      recer_sender.ROLE(Sender).ROLE(ItpSender).ReqAvailableFunds();
-      UpdateLoginState(kLoginState);
+    uint32_t wait_interval = wait_times[try_login_count_ % 3];
+    if (try_login_heartbeat_++ % wait_interval == wait_interval - 1 && try_login_count_++ <= 10) {
+      if (recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogin()) {
+        recer_sender.ROLE(Sender).ROLE(ItpSender).ReqAvailableFunds();
+        UpdateLoginState(kLoginState);
+      }
     }
   } else if (ROLE(TraderTimeState).GetTimeState() == kLogoutTime) {
     recer_sender.ROLE(Sender).ROLE(ItpSender).ReqUserLogout();

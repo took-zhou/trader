@@ -50,7 +50,7 @@ void MarketEvent::QryInstrumentReqHandle(utils::ItpMsg &msg) {
   ins_exch.ins = "";
 
   auto &recer_sender = RecerSender::GetInstance();
-  recer_sender.ROLE(Sender).ROLE(ItpSender).ReqInstrumentInfo(ins_exch);  // 10000000代表是market的请求
+  recer_sender.ROLE(Sender).ROLE(ItpSender).ReqInstrumentInfo(ins_exch);
 }
 
 void MarketEvent::MarketStateReqHandle(utils::ItpMsg &msg) {
