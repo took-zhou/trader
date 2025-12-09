@@ -63,7 +63,17 @@ void StrategyEvent::OrderCancelReqHandle(utils::ItpMsg &msg) {
     return;
   }
   for (auto &item : order_index_pos->second) {
-    auto content = trader_ser.ROLE(OrderManage).GetOrder(item.second->GetOrderRef());
+    auto content = trader_ser.ROLE(OrderManage).GetOrder(item.second->GetYesterdayOrderRef());
+    if (content != nullptr && content->once_volume > (content->success_volume + content->fail_volume)) {
+      auto account_info_pos = trader_ser.ROLE(AccountAssign).GetAccountInfoMap().find(content->user_id);
+      if (account_info_pos != trader_ser.ROLE(AccountAssign).GetAccountInfoMap().end()) {
+        content->session_id = account_info_pos->second->GetSessionId();
+        content->active_cancle_indication = true;
+        auto &recer_sender = RecerSender::GetInstance();
+        recer_sender.ROLE(Sender).ROLE(ItpSender).CancelOrder(*content);
+      }
+    }
+    content = trader_ser.ROLE(OrderManage).GetOrder(item.second->GetTodayOrderRef());
     if (content != nullptr && content->once_volume > (content->success_volume + content->fail_volume)) {
       auto account_info_pos = trader_ser.ROLE(AccountAssign).GetAccountInfoMap().find(content->user_id);
       if (account_info_pos != trader_ser.ROLE(AccountAssign).GetAccountInfoMap().end()) {

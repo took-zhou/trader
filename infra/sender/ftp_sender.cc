@@ -154,12 +154,17 @@ bool FtpSender::ReqInstrumentInfo(const utils::InstrumentID &ins_exch) {
 }
 
 bool FtpSender::ReqTransactionCost(const utils::InstrumentID &ins_exch) {
-  FtpTransactionCostField field;
-  strcpy(field.exchange_id, ins_exch.exch.c_str());
-  strcpy(field.instrument_id, ins_exch.ins.c_str());
+  for (auto &item : ftp_trader_info_map) {
+    FtpTransactionCostField field;
+    strcpy(field.exchange_id, ins_exch.exch.c_str());
+    strcpy(field.instrument_id, ins_exch.ins.c_str());
+    strcpy(field.user_id, item.second.user_id.c_str());
 
-  int result = trader_api->QryTransactionCost(&field, 0);
-  INFO_LOG("req transaction cost send result is [%d]", result);
+    int result = trader_api->QryTransactionCost(&field, 0);
+    INFO_LOG("req transaction cost send result is [%d]", result);
+    break;
+  }
+
   return true;
 }
 

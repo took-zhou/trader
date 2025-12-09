@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 #include "common/extern/log/log.h"
+#include "common/self/protobuf/strategy-trader.pb.h"
 #include "trader/domain/components/fd_manage.h"
 
 OrderLookup::OrderLookup() {
@@ -20,12 +21,14 @@ OrderLookup::~OrderLookup() {
 }
 
 void OrderLookup::PrepareSqlSentence() {
-  const char *sql = "insert into order_lookup(order_index, user_id, order_ref, yesterday_volume, today_volume) VALUES(?, ?, ?, 0,0);";
+  const char *sql =
+      "insert into order_lookup(order_index, user_id, yesterday_order_ref, today_order_ref, yesterday_volume, today_volume) VALUES(?, ?, "
+      "'', '', 0, 0);";
   if (sqlite3_prepare_v2(FdManage::GetInstance().GetTraderConn(), sql, strlen(sql), &insert_lookup_, 0) != SQLITE_OK) {
     ERROR_LOG("prepare sql sentence error.");
     sqlite3_close(FdManage::GetInstance().GetTraderConn());
   }
-  sql = "update order_lookup set order_ref = ? where order_index = ? and user_id = ?;";
+  sql = "update order_lookup set yesterday_order_ref = ?, today_order_ref = ? where order_index = ? and user_id = ?;";
   if (sqlite3_prepare_v2(FdManage::GetInstance().GetTraderConn(), sql, strlen(sql), &update_order_ref_, 0) != SQLITE_OK) {
     ERROR_LOG("prepare sql sentence error.");
     sqlite3_close(FdManage::GetInstance().GetTraderConn());
@@ -54,8 +57,8 @@ void OrderLookup::RestoreFromSqlite3() {
     sqlite3_close(FdManage::GetInstance().GetTraderConn());
   }
   for (int i = 1; i <= nrow; i++) {
-    OrderPara order_para = {result[i * ncolumn + 2], static_cast<uint32_t>(stoi(result[i * ncolumn + 3])),
-                            static_cast<uint32_t>(stoi(result[i * ncolumn + 4]))};
+    OrderPara order_para = {result[i * ncolumn + 2], result[i * ncolumn + 3], static_cast<uint32_t>(stoi(result[i * ncolumn + 4])),
+                            static_cast<uint32_t>(stoi(result[i * ncolumn + 5]))};
     order_index_map_[result[i * ncolumn + 0]][result[i * ncolumn + 1]] = std::make_unique<OrderPara>(order_para);
   }
   sqlite3_free_table(result);
@@ -64,8 +67,8 @@ void OrderLookup::RestoreFromSqlite3() {
 void OrderLookup::InitDatabase() {
   char *error_msg = nullptr;
   const char *sql =
-      "create table if not exists order_lookup(order_index TEXT, user_id TEXT, order_ref TEXT, yesterday_volume INT, "
-      "today_volume INT);";
+      "create table if not exists order_lookup(order_index TEXT, user_id TEXT, yesterday_order_ref TEXT, today_order_ref TEXT, "
+      "yesterday_volume INT, today_volume INT);";
   if (sqlite3_exec(FdManage::GetInstance().GetTraderConn(), sql, NULL, NULL, &error_msg) != SQLITE_OK) {
     ERROR_LOG("sql error%s.", error_msg);
     sqlite3_free(error_msg);
@@ -99,7 +102,7 @@ bool OrderLookup::DelOrderIndex(const std::string &ins, const std::string &index
 }
 
 bool OrderLookup::UpdateOrderIndex(const std::string &ins, const std::string &index, const std::string &group_id,
-                                   const std::string &user_id, const std::string &order_ref) {
+                                   const std::string &user_id, uint8_t comboffset, const std::string &order_ref) {
   std::string temp_key, temp_user;
   temp_key += ins;
   temp_key += ".";
@@ -109,28 +112,34 @@ bool OrderLookup::UpdateOrderIndex(const std::string &ins, const std::string &in
   temp_user += ".";
   temp_user += user_id;
 
-  if (order_index_map_.find(temp_key) != order_index_map_.end() &&
-      order_index_map_[temp_key].find(temp_user) != order_index_map_[temp_key].end()) {
-    sqlite3_reset(update_order_ref_);
-    sqlite3_bind_text(update_order_ref_, 1, order_ref.c_str(), order_ref.size(), 0);
-    sqlite3_bind_text(update_order_ref_, 2, temp_key.c_str(), temp_key.size(), 0);
-    sqlite3_bind_text(update_order_ref_, 3, temp_user.c_str(), temp_user.size(), 0);
-    if (sqlite3_step(update_order_ref_) != SQLITE_DONE) {
-      ERROR_LOG("do sql sentence error.");
-      sqlite3_close(FdManage::GetInstance().GetTraderConn());
-    }
-    order_index_map_[temp_key][temp_user]->SetOrderRef(order_ref);
-  } else {
+  if (order_index_map_.find(temp_key) == order_index_map_.end() ||
+      order_index_map_[temp_key].find(temp_user) == order_index_map_[temp_key].end()) {
     sqlite3_reset(insert_lookup_);
     sqlite3_bind_text(insert_lookup_, 1, temp_key.c_str(), temp_key.size(), 0);
     sqlite3_bind_text(insert_lookup_, 2, temp_user.c_str(), temp_user.size(), 0);
-    sqlite3_bind_text(insert_lookup_, 3, order_ref.c_str(), order_ref.size(), 0);
     if (sqlite3_step(insert_lookup_) != SQLITE_DONE) {
       ERROR_LOG("do sql sentence error.");
       sqlite3_close(FdManage::GetInstance().GetTraderConn());
     }
-    OrderPara order_para = {order_ref, 0, 0};
+    OrderPara order_para = {"", "", 0, 0};
     order_index_map_[temp_key][temp_user] = std::make_unique<OrderPara>(order_para);
+  }
+
+  if (comboffset == strategy_trader::CombOffsetType::CLOSE_YESTERDAY) {
+    order_index_map_[temp_key][temp_user]->SetYesterdayOrderRef(order_ref);
+  } else {
+    order_index_map_[temp_key][temp_user]->SetTodayOrderRef(order_ref);
+  }
+  auto &yesterday_order_ref = order_index_map_[temp_key][temp_user]->GetYesterdayOrderRef();
+  auto &today_order_ref = order_index_map_[temp_key][temp_user]->GetTodayOrderRef();
+  sqlite3_reset(update_order_ref_);
+  sqlite3_bind_text(update_order_ref_, 1, yesterday_order_ref.c_str(), yesterday_order_ref.size(), 0);
+  sqlite3_bind_text(update_order_ref_, 2, today_order_ref.c_str(), today_order_ref.size(), 0);
+  sqlite3_bind_text(update_order_ref_, 3, temp_key.c_str(), temp_key.size(), 0);
+  sqlite3_bind_text(update_order_ref_, 4, temp_user.c_str(), temp_user.size(), 0);
+  if (sqlite3_step(update_order_ref_) != SQLITE_DONE) {
+    ERROR_LOG("do sql sentence error.");
+    sqlite3_close(FdManage::GetInstance().GetTraderConn());
   }
 
   return true;

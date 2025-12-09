@@ -14,9 +14,11 @@ void OrderAllocate::UpdateOrderList(utils::OrderContent &content) {
   ret = BuildOrderContent(content);
 
   for (auto &item : order_list_) {
-    trader_ser.ROLE(OrderManage).BuildOrder(item->order_ref, item);
-    trader_ser.ROLE(OrderLookup).UpdateOrderIndex(item->instrument_id, item->index, item->group_id, item->user_id, item->order_ref);
-    INFO_LOG("%s %s %s %d %d", item->instrument_id.c_str(), item->index.c_str(), item->order_ref.c_str(), item->comboffset,
+    auto &order_manage = trader_ser.ROLE(OrderManage);
+    auto &order_lookup = trader_ser.ROLE(OrderLookup);
+    order_manage.BuildOrder(item->order_ref, item);
+    order_lookup.UpdateOrderIndex(item->instrument_id, item->index, item->group_id, item->user_id, item->comboffset, item->order_ref);
+    INFO_LOG("%s %s %d %s %d", item->instrument_id.c_str(), item->index.c_str(), item->comboffset, item->order_ref.c_str(),
              item->once_volume);
   }
 

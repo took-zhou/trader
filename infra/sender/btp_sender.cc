@@ -165,12 +165,17 @@ bool BtpSender::ReqInstrumentInfo(const utils::InstrumentID &ins_exch) {
 }
 
 bool BtpSender::ReqTransactionCost(const utils::InstrumentID &ins_exch) {
-  BtpTransactionCostField field;
-  strcpy(field.exchange_id, ins_exch.exch.c_str());
-  strcpy(field.instrument_id, ins_exch.ins.c_str());
+  for (auto &item : btp_trader_info_map) {
+    BtpTransactionCostField field;
+    strcpy(field.exchange_id, ins_exch.exch.c_str());
+    strcpy(field.instrument_id, ins_exch.ins.c_str());
+    strcpy(field.user_id, item.second.user_id.c_str());
 
-  int result = trader_api->QryTransactionCost(&field, 0);
-  INFO_LOG("req transaction cost send result is [%d]", result);
+    int result = trader_api->QryTransactionCost(&field, 0);
+    INFO_LOG("req transaction cost send result is [%d]", result);
+    break;
+  }
+
   return true;
 }
 
