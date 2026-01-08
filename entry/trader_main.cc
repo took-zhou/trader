@@ -79,6 +79,8 @@ void TraderMain::StopService(void) {
   auto &trader_ser = TraderService::GetInstance();
   auto &trader_event = TraderEvent::GetInstance();
 
+  trader_ser.ROLE(PythonApi).ApplyThreadPatch();
+
   trader_ser.Stop();
   std::this_thread::sleep_for(std::chrono::seconds(3));
   trader_event.Stop();
