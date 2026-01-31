@@ -56,6 +56,10 @@ bool OrderAllocate::OpenOrder(utils::OrderContent &content) {
   uint32_t left_volume = content.once_volume;
   auto &order_index_map = order_lookup.GetOrderIndexMap();
   for (auto &item : group_assign.GetAccoutGroupMap()) {
+    if (content.is_special != (item.first.find("special") != std::string::npos)) {
+      continue;
+    }
+
     uint32_t exist_volume = 0;
     for (auto &account : item.second.GetAccountList()) {
       std::string temp_user;

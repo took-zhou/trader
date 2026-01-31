@@ -113,6 +113,7 @@ void StrategyEvent::OrderInsertReqHandle(utils::ItpMsg &msg) {
   content.direction = order_insert_req.order().direction();
   content.comboffset = order_insert_req.order().comb_offset_flag();
   content.order_type = order_insert_req.order().order_type();
+  content.is_special = order_insert_req.order().is_special();
   order_allocate.UpdateOrderList(content);
   if (content.once_volume > 0) {
     strategy_trader::message message;
@@ -229,11 +230,19 @@ void StrategyEvent::GroupSizeReqHandle(utils::ItpMsg &msg) {
   auto &trader_ser = TraderService::GetInstance();
   auto &group_assign = trader_ser.ROLE(GroupAssign);
   if (group_size_req.size_req()) {
-    auto group_size = group_assign.GetAccoutGroupMap().size();
+    auto common_group_size = 0, special_group_size = 0;
+    for (auto &account_group : group_assign.GetAccoutGroupMap()) {
+      if (account_group.first.find("special") != std::string::npos) {
+        special_group_size += 1;
+      } else {
+        common_group_size += 1;
+      }
+    };
 
     strategy_trader::message message2;
     auto *group_size_rsp = message2.mutable_group_size_rsp();
-    group_size_rsp->set_size_rsp(group_size);
+    group_size_rsp->set_common_size_rsp(common_group_size);
+    group_size_rsp->set_special_size_rsp(special_group_size);
 
     utils::ItpMsg send_msg;
     message2.SerializeToString(&send_msg.pb_msg);
